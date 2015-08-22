@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/FaceServiceClient.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/IFaceServiceClient.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/Candidate.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/CreatePersonResult.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/Face.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/FaceAttribute.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/FaceLandmarks.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/FaceRectangle.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/FeatureCoordinate.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/Gender.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/GenderEnum.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/GroupResult.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/HeadPose.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/IdentifyResult.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/Person.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/PersonFace.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/PersonGroup.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/SimilarFace.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/TrainingStatus.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/contract/VerifyResult.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/rest/HttpPatch.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/rest/RESTException.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/rest/ServiceCallException.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/libraries/faceapilibrary/src/main/java/com/microsoft/projectoxford/face/rest/WebServiceRequest.java" charset="windows-1252" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>
