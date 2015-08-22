@@ -2,15 +2,29 @@ package com.labs.okey.freeride;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
-public class DriverRoleActivity extends AppCompatActivity {
+import com.labs.okey.freeride.utils.Globals;
+
+public class DriverRoleActivity extends BaseActivity {
+
+    private static final String LOG_TAG = "FR.Driver";
+
+    TextView mTxtStatus;
+    TextView mTxtMonitorStatus;
+    RecyclerView mPeersRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_role);
+
+        setupUI(getString(R.string.title_activity_driver_role), "");
     }
 
     @Override
@@ -33,5 +47,23 @@ public class DriverRoleActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void setupUI(String title, String subTitle){
+        super.setupUI(title, subTitle);
+
+        mTxtStatus = (TextView)findViewById(R.id.txtStatus);
+        mPeersRecyclerView = (RecyclerView)findViewById(R.id.recyclerViewPeers);
+        mPeersRecyclerView.setHasFixedSize(true);
+        mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mPeersRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+//        mPeersAdapter = new WiFiPeersAdapter2(this, R.layout.peers_header, peers);
+//        mPeersRecyclerView.setAdapter(mPeersAdapter);
+
+        mTxtMonitorStatus = (TextView)findViewById(R.id.status_monitor);
+        Globals.setMonitorStatus(getString(R.string.geofence_outside));
+
     }
 }
