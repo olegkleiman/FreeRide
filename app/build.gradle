@@ -1,0 +1,116 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+apply plugin: 'com.android.model.application'
+
+model {
+
+    compileOptions.with {
+        sourceCompatibility = JavaVersion.VERSION_1_7
+        targetCompatibility = JavaVersion.VERSION_1_7
+    }
+
+    android {
+        compileSdkVersion = 'Google Inc.:Google APIs:22'
+        buildToolsVersion = "22.0.1"
+        packagingOptions.excludes = ['LICENSE.txt']
+
+        defaultConfig.with {
+            applicationId = "com.labs.okey.freeride"
+            minSdkVersion.apiLevel = 16
+            targetSdkVersion.apiLevel = 22
+            versionCode = 1
+            versionName = "1.0"
+        }
+    }
+
+    android.ndk {
+        moduleName = "fastcvUtils"
+
+        abiFilters += ["armeabi", "armeabi-v7a"]
+
+//        toolchain = "clang"
+//        toolchainVersion = "3.5"
+
+        // Link with static OpenCV libraries: the order is important!
+        // The following order taken from OpenCV.mk
+        def opencv_modules = ["shape", "stitching", "objdetect", "superres", "videostab", "calib3d", "features2d", "highgui", "videoio", "imgcodecs", "video", "photo", "ml", "imgproc", "flann", "core", "hal", "tbb"]
+
+        ldLibs += ["log","stdc++","dl", "z", "jnigraphics"]
+
+        abiFilters.each { targetAbi ->
+            println targetAbi
+
+            opencv_modules.each{ module ->
+                if( module.equals("tbb")) {
+                    ldLibs += file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi +"/lib" + module + ".a"
+                } else {
+                    ldLibs += file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/libopencv_" + module + ".a"
+                }
+            }
+        }
+
+        cppFlags   += "-Werror"
+        cppFlags   += "--debug"
+        cppFlags   += "-frtti"
+        cppFlags   += "-fexceptions"
+        cppFlags   += "-D_DEBUG"
+
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            def opencvhome = System.getenv("OPENCV_HOME")
+            cppFlags += "-I" + opencvhome + "\\native\\jni\\include"
+        } else {
+            cppFlags += "-I/Users/Oleg/Downloads/OpenCV-android-sdk/sdk/native/jni/include"
+        }
+        cppFlags    += "-std=c++11" // for lambda-expressions
+
+        //CFlags      += "-D_DEBUG"
+
+        stl = "gnustl_static"
+
+    }
+
+    android.buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles += file('proguard-rules.pro')
+            isJniDebuggable = true
+            isDebuggable = true
+        }
+
+        debug {
+            isJniDebuggable = true
+            isDebuggable = true
+        }
+    }
+
+    android.productFlavors {
+        create("arm") {
+            ndk.with {
+
+                abiFilters += "armeabi"
+                println "*** building for arm"
+            }
+
+        }
+
+        create("armv7") {
+            ndk.with {
+
+                abiFilters += "armeabi-v7a"
+                println "*** building for armv7"
+            }
+
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:support-v4:22.2.1'
+    compile 'com.android.support:design:22.2.1'
+    compile 'com.android.support:appcompat-v7:22.2.1'
+    compile 'com.android.support:cardview-v7:22.2.1'
+    compile 'com.android.support:recyclerview-v7:22.2.1'
+    compile project(':libraries:opencv')
+    compile project(':libraries:faceapilibrary')
+}

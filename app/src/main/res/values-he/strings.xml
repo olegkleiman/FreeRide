@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tutorial_titles">
+        <item>התחלה</item>
+        <item>נהג</item>
+        <item>נוסע</item>
+        <item>ערעור</item>
+    </string-array>
+
+    <string-array name="drawers_array_drawer">
+        <item>התחלה</item>
+        <item>נסיעות שלי</item>
+        <item>הגדרות</item>
+        <item>עזרה</item>
+    </string-array>
+
+    <string name="mode_name_driver">נהג</string>
+    <string name="mode_name_passenger">נוסע</string>
+    <string name="btnFindRide">חפש נסיעה</string>
+    <string name="no_phone_number">חובה להזין מספר טלפון, אך אפשר לבחור לא לשתף אותו עם משתמשים אחרים במתג הבא</string>
+    <string name="btnSubmitText">  בקש פטור</string>
+    <string name="driverTabCaption">נהג</string>
+    <string name="passengerTabCaption">נוסע</string>
+    <string name="action_refresh">רענן</string>
+    <string name="action_register">רישום</string>
+    <string name="action_settings">הגדרות</string>
+    <string name="driver_tutorial_fragment">הדרכת נהג</string>
+    <string name="intro_tutorial_fragment">הדרכה כללית</string>
+    <string name="passenger_tutorial_fragment">הדרכת נוסע</string>
+    <string name="reclaim_tutorial_fragment">הדרכת ערעור</string>
+    <string name="title_activity_driver_role">מצב נהג</string>
+    <string name="title_activity_my_rides">הנסיעות שלי</string>
+    <string name="edit_car_button_title">עריכה</string>
+    <string name="edit_car_dialog_caption1">בחר\י את רכב הנוסע</string>
+    <string name="add_car_dialog_caption">הוסף רכב</string>
+    <string name="yes">כן</string>
+    <string name="dialog_confirm_registration">להחליף רישום קודם?</string>
+    <string name="edit_car_button_save">שמירה</string>
+    <string name="edit_car_button_delete">מחיקה</string>
+    <string name="no">לא</string>
+    <string name="operating_modes">מצבי הפעלה</string>
+    <string name="passengers_header">נוסעים</string>
+    <string name="title_activity_settings">הגדרות</string>
+    <string name="about">מידע על Free Ride</string>
+    <string name="edit_car_button_title2">בחר</string>
+    <string name="enable_wifi_question">להפעיל שירותי Wi-Fi?</string>
+    <string name="prompt_phone">מספר טלפון</string>
+    <string name="add_car_button_cancel">ביטול</string>
+    <string name="ride_code_label">קוד נסיעה</string>
+    <string name="subtitle_activity_my_rides">הנסיעות שלי</string>
+    <string name="geofence_transition_entered">אתה נכנס לאזור פיקוח</string>
+    <string name="add_car_button_add">הוספה</string>
+    <string name="add_car_hint">מספר רכב</string>
+    <string name="subtitle_activity_tutorial">הדרכות</string>
+    <string name="ride_code_dialog_content">אפשר לראות את הקוד הזה על מסך המכשיר של הנהג</string>
+    <string name="ride_code_title">הזן קוד נסיעה</string>
+    <string name="ride_code_hint">5 ספרות ללא מקף</string>
+    <string name="title_activity_passenger_role">מצב נוסע</string>
+    <string name="registration_finish">סיום</string>
+    <string name="drivers_header">בחר את הנהג</string>
+    <string name="title_activity_about">אודות</string>
+    <string name="title_activity_confirm_ride">אישור</string>
+    <string name="version_title">גרסה Alpha 1</string>
+    <string name="geofence_outside">אינך נמצא באזור פיקוח</string>
+    <string name="geofence_positive_answer">כן, תזכירו לי</string>
+    <string name="geofence_negative_answer">לא, אני אנסה מאוחר יותר</string>
+    <string name="geofence_outside_title">להזכיר בכניסה לכביש?</string>
+    <string name="close">סגור</string>
+    <string name="complete_registration">השלמת הרישום</string>
+    <string name="registration_next">הבא</string>
+    <string name="add_cars_caption">הוסף רבכים</string>
+    <string name="add_car_nick">כינוי</string>
+    <string name="prompt_use_phone">אפשר להציג מספר זה לאחרים</string>
+    <string name="edit_car_dialog_caption2">בחר\י את רכב הנוסע</string>
+    <string name="edit_car_dialog_text">טרם בחרת את הרכבים </string>
+    <string name="registration_add_status">רושם את הנתונים שלך</string>
+    <string name="registration_add_title">רישום מתבצע</string>
+    <string name="registration_add_status_wait">נשאר רק כמה שניות</string>
+    <string name="download_geofences">אתחול הגדרות המיקום</string>
+    <string name="download_geofences_desc">מוריד הגדרות גיאוגרפיות</string>
+    <string name="new_version_conent">אנו ממליצים לך להתקין את הגרסה החדשה ביותר של התכנית. האם אתה רוצה לעשות זאת?</string>
+    <string name="new_version_title">גרסה חדשה מוכנה להורדה</string>
+    <string name="geofence_transition_dwell">אתה רוכב באזור פיקוח</string>
+    <string name="action_camera">מצלמה</string>
+    <string name="edit_car_dialog_caption">תאור רכב</string>
+    <string name="edit_phone_dialog_caption">מספר טלפון</string>
+    <string name="title_section_cars">רכבים</string>
+    <string name="title_activity_ride_detail">פרטי נסיעה</string>
+    <string name="detection_center_desc">לשלוח תמונה זו למרכז בקרה?</string>
+    <string name="detection_center_caption">בדיקת התמונה</string>
+    <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
+
+</resources>

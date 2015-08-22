@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="user_profile_background">#607D8B</color>
+    <color name="azure">#ff00a1f1</color>
+    <color name="white">#FFF</color>
+    <color name="black">#000</color>
+    <color name="grey">#ffb9b9b9</color>
+    <color name="light_gray">#ddd</color>
+    <color name="red">#bf360c</color>
+    <color name="ripple_red">#ffbf5232</color>
+
+    <!-- Blue palette. 500 -->
+    <color name="material_blue_500">#2196F3</color>
+    <!-- Blue palette. 700 -->
+    <color name="material_blue_900">#1976d2</color>
+    <!-- Orange palette. 900 -->
+    <color name="material_orange_900">#E65100</color>
+    <!-- Green palette. 500 -->
+    <color name="material_green_500">#4CAF50</color>
+    
+    <color name="ColorPrimary">@color/material_blue_500</color>
+    <color name="ColorPrimaryDark">@color/material_blue_900</color>
+    <!-- Orange palette. 900 -->
+    <color name="ColorAccent">@color/material_green_500</color>
+    <color name="ColorBackground">#FFF</color>
+
+</resources>

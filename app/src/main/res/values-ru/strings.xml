@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tutorial_titles">
+        <item>Начало</item>
+        <item>Водитель</item>
+        <item>Пассажир</item>
+        <item>Апелляция</item>
+    </string-array>
+
+    <string-array name="drawers_array_drawer">
+        <item>Начало</item>
+        <item>Все поездки</item>
+        <item>Настройки</item>
+        <item>Подсказки</item>
+    </string-array>
+
+    <string name="mode_name_driver">Водитель</string>
+    <string name="mode_name_passenger">Пассажир</string>
+    <string name="yes">Да</string>
+    <string name="action_register">Регистрация</string>
+    <string name="action_settings">Настройки</string>
+    <string name="add_car_button_add">Добавить</string>
+    <string name="add_car_button_cancel">Отмена</string>
+    <string name="add_car_hint">Номер машины</string>
+    <string name="add_car_dialog_caption">Добавить машину</string>
+    <string name="action_refresh">Обновить</string>
+    <string name="btnSubmitText">Запросить</string>
+    <string name="edit_car_button_save">Сохранить</string>
+    <string name="edit_car_button_delete">Удалить</string>
+    <string name="driverTabCaption">Водитель</string>
+    <string name="btnFindRide">Найти поездку</string>
+    <string name="edit_car_dialog_caption1">Укажите номер машины, которой вы управляете сейчас</string>
+    <string name="dialog_confirm_registration">Заменить предыдущую регистрацию?</string>
+    <string name="driver_tutorial_fragment">Подсказки водителю</string>
+    <string name="edit_car_button_title">Изменить</string>
+    <string name="edit_car_dialog_caption2">Укажите номер машины</string>
+    <string name="enable_wifi_question">Включить Wi-Fi?</string>
+    <string name="no">Нет</string>
+    <string name="registration_already_performed">Вы уже зарегистрированы в апликации</string>
+    <string name="ride_code_label">Код поездки:</string>
+    <string name="subtitle_activity_driver_role">Водитель</string>
+    <string name="subtitle_activity_my_rides">История поездок</string>
+    <string name="subtitle_activity_passenger_role">Пассажир</string>
+    <string name="title_activity_confirm_ride">Подтвердить</string>
+    <string name="title_activity_my_rides">Мои поездки</string>
+    <string name="operating_modes">Кто вы сейчас?</string>
+    <string name="about">О программе</string>
+    <string name="passengers_header">Пассажиры</string>
+    <string name="drivers_header">Укажите водителя</string>
+    <string name="version_title">Версия Alpha 1</string>
+    <string name="subtitle_activity_settings">Настройки</string>
+    <string name="subtitle_activity_tutorial">Подсказки</string>
+    <string name="title_activity_about">О программе</string>
+    <string name="title_activity_settings">Настройки</string>
+    <string name="title_activity_driver_role">Водитель</string>
+    <string name="title_activity_passenger_role">Пассажир</string>
+    <string name="edit_car_button_title2">Указать</string>
+    <string name="prompt_phone">Номер телефона</string>
+    <string name="geofence_transition_entered">Вы пересекли зону контроля</string>
+    <string name="passengerTabCaption">Пассажир</string>
+    <string name="ride_code_dialog_content">Вы можете увидеть этот код на дисплее телефона водителя</string>
+    <string name="ride_code_title">Введите код поездки</string>
+    <string name="ride_code_hint">5 цифр без разделителя</string>
+    <string name="registration_finish">Завершить</string>
+    <string name="geofence_outside">Вы находитесь вне скоростной трассы</string>
+    <string name="geofence_positive_answer">Напомнить</string>
+    <string name="geofence_negative_answer">Отменить</string>
+    <string name="geofence_outside_title">Напомнить при въезде на трассу?</string>
+    <string name="close">Закрыть</string>
+    <string name="complete_registration">Завершение регистрации</string>
+    <string name="registration_next">Следующий шаг</string>
+    <string name="add_cars_caption">Добавить описание машин</string>
+    <string name="add_car_nick">Название</string>
+    <string name="prompt_use_phone">Показывать этот номер другум пользователям</string>
+    <string name="edit_car_dialog_text">Не указаны машины, на которых осуществляются поездки.</string>
+    <string name="registration_add_status">Ваши данные регистрируются</string>
+    <string name="registration_add_title">Выполняется регистрация</string>
+    <string name="registration_add_status_wait">Осталось несколько секунд</string>
+    <string name="download_geofences">Инициализация</string>
+    <string name="download_geofences_desc">Загрузка привязок к местности</string>
+    <string name="new_version_conent">Мы настоятельно рекомендуем вам установить новую версию программы. Вы согласны?</string>
+    <string name="new_version_title">Новая версия </string>
+    <string name="geofence_transition_dwell">Вы находитесь в зоне контроля</string>
+    <string name="action_camera">Фотография</string>
+    <string name="edit_car_dialog_caption">Описание машины</string>
+    <string name="edit_phone_dialog_caption">Номер телефона</string>
+    <string name="title_section_cars">Мои машины</string>
+    <string name="detection_center_desc">Это изображение будет отправлено на проверку в центр обслуживания. Содержание изображение не будет разглашено.раскрыто.</string>
+    <string name="detection_center_caption">Проверка изображения</string>
+    <string name="detection_freeze">Нажмите чтобы сделать снимок</string>
+</resources>
