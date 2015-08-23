@@ -3,10 +3,14 @@
 //
 #include <jni.h>
 
+#include <time.h>
+#include <fstream>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/objdetect.hpp>
+#include <vector>
 
 #include "FastCVWrapper.h"
 
@@ -41,7 +45,51 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
         (JNIEnv *env, jclass jc, jlong addrGray, jstring face_cascade_name)
 {
     try {
+
+        CascadeClassifier face_cascade;
+        vector<Rect> faces;
+
+        const char *cascade_name = env->GetStringUTFChars(face_cascade_name, NULL);
+        ifstream f(cascade_name);
+        if( !f.good() ) {
+            DPRINTF("Can not access cascade file");
+            return 0;
+        }
+
+        if( !face_cascade.load(cascade_name) ) {
+            DPRINTF("Can not load cascade");
+            return 0;
+        }
+        env->ReleaseStringUTFChars(face_cascade_name, cascade_name);
+
         Mat &mGrayChannel = *(Mat *)addrGray;
+
+        flip(mGrayChannel, mGrayChannel, 1);
+        //equalizeHist(mGrayChannel, mGrayChannel);
+
+        face_cascade.detectMultiScale(mGrayChannel, faces,
+                                      1.2, // 1.1 is for good detection
+                                      // 1.2 for faster detection
+                                      2, // Neighbors
+                                      0 | CV_HAAR_SCALE_IMAGE,
+                                      Size(20, 20));
+
+        int faces_size = faces.size();
+        if( faces_size > 0 ) {
+            DPRINTF("Detected %d faces", faces_size);
+
+            for(int i = 0; i < faces_size; i++) {
+                Rect _rect = faces[i];
+
+                rectangle(mGrayChannel, _rect,
+                          Scalar(255, 255, 255),
+                          1, 8, 0);
+            }
+        }
+
+        return faces_size;
+
+        return 0;
 
     } catch(Exception& e) {
         jclass je = env->FindClass("org/opencv/core/CvException");
@@ -54,5 +102,4 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
         env->ThrowNew(je, "Unknown exception in JNI:DetectFaces");
     }
 
-    return 1;
 }

@@ -136,6 +136,7 @@
     <string name="add_cars_caption">Add your cars</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="ok">OK</string>
     <string name="close">Close</string>
     <string name="download_data">Initializing data</string>
     <string name="download_geofences_desc">Downloading geo-fences</string>
@@ -213,14 +214,15 @@ limitations under the License.</string>
     <!-- OpenCV -->
     <string name="camera_directive_1">Embrace the entire cabin</string>
     <string name="camera_directive_2">Found %d faces</string>
-    <string name="detection_results">Detection results</string>
-    <string name="detection_save">Detected %d faces. Save this picture?</string>
+    <string name="detection_results">Verification results</string>
+    <string name="detection_no_results">No face was detected. Please try again.</string>
+    <string name="detection_save">Verified %d faces. Save this picture?</string>
     <string name="detection_center_caption">Detect with central authority</string>
-    <string name="detection_center_desc">Send this picture to the detection center?</string>
-    <string name="detection_send">Sending the picture to the detection center</string>
+    <string name="detection_center_desc">Upload and verify?</string>
+    <string name="detection_send">Verifying picture</string>
     <string name="detection_wait">Please wait</string>
-    <string name="detection_freeze">Click to make a picture</string>
-    <string name="detection_store">Saving the picture on the detection center</string>
+    <string name="detection_freeze">Click to snapshot</string>
+    <string name="detection_store">Saving the picture</string>
     <string name="detection_update">Updating your data</string>
 
     <string name="hello_world">Hello world!</string>

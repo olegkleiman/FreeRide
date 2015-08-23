@@ -88,5 +88,5 @@
     <string name="title_activity_ride_detail">פרטי נסיעה</string>
     <string name="detection_center_caption">בדיקת התמונה</string>
     <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
-    <string name="detection_center_desc">לשלוח תמונה זו למרכז בקרה?</string>
+    <string name="detection_center_desc">לשמור?</string>
 </resources>

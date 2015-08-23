@@ -9,6 +9,12 @@ import java.io.File;
  */
 public class Globals {
 
+    public static final String WAMS_URL = "https://fastride.azure-mobile.net/";
+    public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
+
+    public static final String USERIDPREF = "userid";
+    public static final String WAMSTOKENPREF = "wamsToken";
+
     private static Object lock2 = new Object();
     private static String MONITOR_STATUS;
     public static String getMonitorStatus() {
