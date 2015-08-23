@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Join;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
@@ -69,11 +70,22 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
         mProgressDialog.dismiss();
 
         if( error != null ) {
-
+            new MaterialDialog.Builder(mContext)
+                    .title(mContext.getString(R.string.save_error))
+                    .content(error.getMessage())
+                    .positiveText(R.string.ok)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            if (mUrlUpdater != null)
+                                mUrlUpdater.finished(false);
+                        }
+                    })
+                    .show();
+        } else {
+            if (mUrlUpdater != null)
+                mUrlUpdater.finished(true);
         }
-
-        if( mUrlUpdater != null )
-            mUrlUpdater.finished();
     }
 
     @Override

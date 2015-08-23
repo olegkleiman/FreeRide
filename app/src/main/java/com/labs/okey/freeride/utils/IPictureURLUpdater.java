@@ -5,5 +5,5 @@ package com.labs.okey.freeride.utils;
  */
 public interface IPictureURLUpdater {
     void update(String url);
-    void finished();
+    void finished(boolean sucess);
 }

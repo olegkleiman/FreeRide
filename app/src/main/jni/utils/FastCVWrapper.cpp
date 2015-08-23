@@ -68,11 +68,11 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
         //equalizeHist(mGrayChannel, mGrayChannel);
 
         face_cascade.detectMultiScale(mGrayChannel, faces,
-                                      1.2, // 1.1 is for good detection
+                                      1.1, // 1.1 is for good detection
                                       // 1.2 for faster detection
                                       2, // Neighbors
                                       0 | CV_HAAR_SCALE_IMAGE,
-                                      Size(20, 20));
+                                      Size(40, 40));
 
         int faces_size = faces.size();
         if( faces_size > 0 ) {

@@ -449,7 +449,10 @@ public class CameraCVActivity extends Activity
     }
 
     @Override
-    public void finished() {
-
+    public void finished(boolean success) {
+        if( !success )
+            restoreFromSendToDetect(null);
+        else
+            finish();
     }
 }
