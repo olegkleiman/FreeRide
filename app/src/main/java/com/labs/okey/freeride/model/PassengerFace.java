@@ -16,4 +16,10 @@ public class PassengerFace {
     }
 
     String pictureUrl;
+    public void setPictureUrl(String value) { pictureUrl = value; }
+    public String getPictureUrl() { return pictureUrl; }
+
+    public PassengerFace(String _faceId){
+        this.faceId = _faceId;
+    }
 }
