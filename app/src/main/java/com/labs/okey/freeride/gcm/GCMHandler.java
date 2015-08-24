@@ -8,8 +8,6 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.renderscript.Matrix2f;
-import android.renderscript.Matrix4f;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -19,9 +17,6 @@ import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.faceapiUtils;
-import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
-import com.microsoft.windowsazure.mobileservices.notifications.Registration;
-import com.microsoft.windowsazure.mobileservices.notifications.RegistrationCallback;
 
 
 /**
@@ -88,12 +83,17 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         boolean bSend = false;
 
         String faceId  = bundle.getString("extras");
-        PassengerFace pf = new PassengerFace(faceId);
 
-        int nIndex = Globals.passengerFaces.indexOf(pf);
-        Globals.passengerFaces.add(pf);
+        // TODO: review this limitation for pictures
+        if( Globals.passengerFaces.size() <= 4 ) {
 
-        faceapiUtils.Analyze(ctx);
+            PassengerFace pf = new PassengerFace(faceId);
+
+            int nIndex = Globals.passengerFaces.indexOf(pf);
+            Globals.passengerFaces.add(pf);
+
+            faceapiUtils.Analyze(ctx);
+        }
 
         String message = bundle.getString("message");
         String[] tokens = message.split(";");
