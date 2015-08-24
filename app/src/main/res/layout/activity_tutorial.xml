@@ -30,7 +30,7 @@
         <!--android:layout_height="fill_parent"-->
         <!--tools:sidebuffer="3"></org.taptwo.android.widget.ViewFlow>-->
 
-        <com.maximum.fastride.views.SlidingTabLayout
+        <com.labs.okey.freeride.views.SlidingTabLayout
             android:id="@+id/sliding_tabs"
             android:background="?attr/colorPrimaryDark"
             android:layout_width="match_parent"
