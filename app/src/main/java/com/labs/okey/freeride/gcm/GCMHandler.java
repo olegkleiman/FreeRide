@@ -8,6 +8,8 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.renderscript.Matrix2f;
+import android.renderscript.Matrix4f;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -86,8 +88,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         boolean bSend = false;
 
         String faceId  = bundle.getString("extras");
-        PassengerFace pf = new PassengerFace();
-        pf.setFaceId(faceId);
+        PassengerFace pf = new PassengerFace(faceId);
 
         int nIndex = Globals.passengerFaces.indexOf(pf);
         Globals.passengerFaces.add(pf);
