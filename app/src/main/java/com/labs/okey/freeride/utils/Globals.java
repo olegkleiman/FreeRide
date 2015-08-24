@@ -2,6 +2,7 @@ package com.labs.okey.freeride.utils;
 
 import android.content.Context;
 import android.os.Build;
+import android.renderscript.Matrix4f;
 
 import com.labs.okey.freeride.model.PassengerFace;
 
@@ -99,5 +100,9 @@ public class Globals {
     }
 
     public static List<PassengerFace> passengerFaces = new ArrayList<>();
+
+    // Identity matrix : ones on the main diagonal
+    // and zeros elsewhere.
+    public static Matrix4f verificationMat = new Matrix4f();
 
 }
