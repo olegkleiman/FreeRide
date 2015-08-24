@@ -1,13 +1,17 @@
 package com.labs.okey.freeride.utils;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
 import android.renderscript.Matrix4f;
 
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.maps.model.LatLng;
 import com.labs.okey.freeride.model.PassengerFace;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -30,6 +34,14 @@ public class Globals {
 
     public static float PICTURE_CORNER_RADIUS = 20;
     public static float PICTURE_BORDER_WIDTH = 4;
+
+    static final public int SERVER_PORT = 4545;
+    static final public int SOCKET_TIMEOUT = 5000;
+    public static final String TXTRECORD_PROP_AVAILABLE = "available";
+    public static final String TXTRECORD_PROP_USERNAME = "username";
+    public static final String TXTRECORD_PROP_PORT = "port";
+    public static final String SERVICE_INSTANCE = "_wififastride";
+    public static final String SERVICE_REG_TYPE = "_presence._tcp";
 
     public static final String WAMS_URL = "https://fastride.azure-mobile.net/";
     public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
@@ -76,7 +88,52 @@ public class Globals {
         }
     }
 
+    // Driver/passenger 'chat' messages
+    public static final int MESSAGE_READ = 0x400 + 1;
+    public static final int MY_HANDLE = 0x400 + 2;
+    public static final int TRACE_MESSAGE = 0x400 + 3;
+
+    // Geofences
+    public static final HashMap<String, LatLng> FWY_AREA_LANDMARKS = new HashMap<String, LatLng>();
+    //    static {
+//        FWY_AREA_LANDMARKS.put("GOOGLE", new LatLng(32.080341,34.780639));
+//    }
+    public static ArrayList<Geofence> GEOFENCES = new ArrayList<Geofence>();
+    public static PendingIntent GeofencePendingIntent;
+
+    public static final long GEOFENCE_EXPIRATION_IN_HOURS = 2;
+    public static final long GEOFENCE_EXPIRATION_IN_MILLISECONDS =
+            GEOFENCE_EXPIRATION_IN_HOURS * 60 * 60 * 1000;
+    public static final float GEOFENCE_RADIUS_IN_METERS = 100;
+    public static final int GEOFENCE_LOITERING_DELAY = 60000; // 1 min
+    public static final int GEOFENCE_RESPONSIVENESS = 5000; // 5 sec
+
     private static final Object lock = new Object();
+    private static boolean inGeofenceArea;
+    public static boolean isInGeofenceArea() {
+        synchronized (lock) {
+            return inGeofenceArea;
+        }
+    }
+    public static void setInGeofenceArea(boolean value) {
+        synchronized (lock) {
+            inGeofenceArea = value;
+        }
+    }
+
+    private static Object lock3 = new Object();
+    private static boolean _REMIND_GEOFENCE_ENTRANCE;
+    public static void setRemindGeofenceEntrance() {
+        synchronized ( lock3 ) {
+            _REMIND_GEOFENCE_ENTRANCE = true;
+        }
+    }
+    public static Boolean getRemindGeofenceEntrance() {
+        synchronized ( lock3 ) {
+            return _REMIND_GEOFENCE_ENTRANCE;
+        }
+    }
+
     public static  String CASCADE_URL = "http://maximum.azurewebsites.net/data/lbpcascades/lbpcascade_frontalface.xml";
     private static String CASCADE_PATH;
     public static void initCascadePath(Context ctx) {

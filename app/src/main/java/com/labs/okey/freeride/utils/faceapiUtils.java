@@ -56,7 +56,7 @@ public class faceapiUtils {
 
 
                                 if( verifyResult.isIdentical ) {
-                                    Log.e(LOG_TAG, "The pictures are identical");
+                                    Log.e(LOG_TAG, "The faces are identical");
                                 }
 
                                 float confidence = (float)verifyResult.confidence;
