@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.renderscript.Matrix4f;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,10 +22,12 @@ import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
 import com.labs.okey.freeride.gcm.GCMHandler;
 import com.labs.okey.freeride.model.FRMode;
+import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.RoundedDrawable;
+import com.labs.okey.freeride.utils.faceapiUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
@@ -54,6 +57,38 @@ public class MainActivity extends BaseActivity
             Log.e(LOG_TAG, ex.toString());
         }
 
+//        PassengerFace pf1 = new PassengerFace("1");
+//        PassengerFace pf2 = new PassengerFace("2");
+//        PassengerFace pf3 = new PassengerFace("3");
+//        PassengerFace pf4 = new PassengerFace("4");
+//        Globals.passengerFaces.add(pf1);
+//        Globals.passengerFaces.add(pf2);
+//        Globals.passengerFaces.add(pf3);
+//        Globals.passengerFaces.add(pf4);
+//
+//        int mDepth = Globals.passengerFaces.size();
+//        faceapiUtils.dumpVerificationMatrix(mDepth);
+//
+//        for(int i = 0; i < mDepth; i++ ) {
+//            for (int j = i; j < mDepth; j++) {
+//
+//                if (i == j)
+//                    continue;
+//
+//                PassengerFace _pf1 = Globals.passengerFaces.get(i);
+//                PassengerFace _pf2 = Globals.passengerFaces.get(j);
+//
+//                float matValue = Globals.verificationMat.get(i, j);
+//                if( matValue == 0.0f) {
+//                    Globals.verificationMat.set(i, j, 2.0f);
+//                    Globals.verificationMat.set(j, i, 2.0f);
+//                }
+//
+//            }
+//        }
+//
+//        faceapiUtils.dumpVerificationMatrix(mDepth);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -78,6 +113,8 @@ public class MainActivity extends BaseActivity
             setupUI(getString(R.string.title_activity_main), "");
         }
     }
+
+
 
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);

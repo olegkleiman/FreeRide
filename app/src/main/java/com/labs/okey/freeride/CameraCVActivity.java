@@ -17,6 +17,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.freeride.fastcv.FastCVCameraView;
@@ -303,11 +304,27 @@ public class CameraCVActivity extends Activity
     public void onPictureTaken(byte[] data, Camera camera) {
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inTempStorage = new byte[16 * 1024];
+
+            Camera.Parameters parameters = camera.getParameters();
+            Camera.Size size = parameters.getPictureSize();
+
+            int height = size.height;
+            int width = size.width;
+            float mb = (width * height) / 1024000;
+
+            if (mb > 4f)
+                options.inSampleSize = 4;
+            else if (mb > 3f)
+                options.inSampleSize = 2;
+
             Bitmap _bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
 
             processFrame(_bitmap);
         } catch(Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+            String message = ex.getMessage();
+            Log.e(LOG_TAG, message);
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         }
     }
 

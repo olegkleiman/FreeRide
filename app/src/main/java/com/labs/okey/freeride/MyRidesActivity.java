@@ -21,6 +21,7 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MyRidesActivity extends BaseActivity
@@ -30,7 +31,7 @@ public class MyRidesActivity extends BaseActivity
 
     MyRideTabAdapter mTabAdapter;
     private String titles[];
-    List<Ride> mRides;
+    List<Ride> mRides = new ArrayList<>();
     ViewPager mViewPager;
     SlidingTabLayout slidingTabLayout;
 
