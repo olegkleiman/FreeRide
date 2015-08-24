@@ -342,6 +342,8 @@ public class CameraCVActivity extends Activity
             // Progress dialog popped up when communicating with server.
             ProgressDialog mProgressDialog;
 
+            InputStream mInputStream;
+
             private String getTempFileName() {
                 String timeStamp = new SimpleDateFormat("yyyyMMdd+HHmmss").format(new Date());
                 return "FR_" + timeStamp;
@@ -356,6 +358,7 @@ public class CameraCVActivity extends Activity
 
             @Override
             protected void onPostExecute(Face[] result) {
+
                 String strFormat = getString(R.string.detection_save);
                 String msg = String.format(strFormat, result.length);
                 Log.i(LOG_TAG, msg);
@@ -363,6 +366,9 @@ public class CameraCVActivity extends Activity
                 mProgressDialog.dismiss();
 
                 try {
+
+                    if( mInputStream != null)
+                        mInputStream.close();
 
                     if( result.length < 1) {
                         new MaterialDialog.Builder(CameraCVActivity.this)
@@ -435,6 +441,8 @@ public class CameraCVActivity extends Activity
             @Override
             protected Face[] doInBackground(InputStream... params) {
 
+                mInputStream = params[0];
+
                 // Get an instance of face service client to detect faces in image.
                 FaceServiceClient faceServiceClient = new FaceServiceClient(getString(R.string.oxford_subscription_key));
 
@@ -443,7 +451,7 @@ public class CameraCVActivity extends Activity
                 // Start detection.
                 try {
                     return faceServiceClient.detect(
-                            params[0],  /* Input stream of image to detect */
+                            mInputStream,  /* Input stream of image to detect */
                             true,       /* Whether to analyzes facial landmarks */
                             false,       /* Whether to analyzes age */
                             false,       /* Whether to analyzes gender */
