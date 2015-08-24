@@ -1,35 +1,109 @@
 package com.labs.okey.freeride;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
+import com.labs.okey.freeride.adapters.ModesPeersAdapter;
+import com.labs.okey.freeride.gcm.GCMHandler;
+import com.labs.okey.freeride.model.FRMode;
+import com.labs.okey.freeride.model.User;
+import com.labs.okey.freeride.utils.Globals;
+import com.labs.okey.freeride.utils.IRecyclerClickListener;
+import com.labs.okey.freeride.utils.RoundedDrawable;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
+import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
+import com.microsoft.windowsazure.notifications.NotificationsManager;
+
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.labs.okey.freeride.adapters.ModesPeersAdapter;
-import com.labs.okey.freeride.model.FRMode;
-import com.labs.okey.freeride.utils.IRecyclerClickListener;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends BaseActivity
                           implements IRecyclerClickListener {
 
+    static final int REGISTER_USER_REQUEST = 1;
+    private static final String LOG_TAG = "FR.Main";
+    public static MobileServiceClient wamsClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        try {
+            // Needed to detect HashCode for FB registration
+            PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(),
+                    PackageManager.GET_SIGNATURES);
+        }
+        catch (PackageManager.NameNotFoundException ex) {
+            Log.e(LOG_TAG, ex.toString());
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setupUI(getString(R.string.title_activity_main), "");
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if( sharedPrefs.getString(Globals.USERIDPREF, "").isEmpty() ) {
+
+            Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
+            startActivityForResult(intent, REGISTER_USER_REQUEST);
+
+            // To be continued on onActivityResult()
+
+        } else {
+
+            NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
+                    GCMHandler.class);
+
+            String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
+
+            // Don't mess with BaseActivity.wamsInit();
+            wamsInit(accessToken);
+
+            setupUI(getString(R.string.title_activity_main), "");
+        }
     }
 
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
+
+        try {
+            User user = User.load(this);
+
+            ImageView imageAvatar = (ImageView) findViewById(R.id.userAvatarView);
+
+            Drawable drawable =
+                    (Globals.drawMan.userDrawable(this,
+                            "1",
+                            user.getPictureURL())).get();
+            if( drawable != null ) {
+                drawable = RoundedDrawable.fromDrawable(drawable);
+                ((RoundedDrawable) drawable)
+                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                        .setBorderColor(Color.WHITE)
+                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                        .setOval(true);
+
+                imageAvatar.setImageDrawable(drawable);
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, e.getMessage());
+        }
 
         RecyclerView recycler = (RecyclerView)findViewById(R.id.recyclerViewModes);
         recycler.setHasFixedSize(true);
@@ -48,6 +122,90 @@ public class MainActivity extends BaseActivity
 
         ModesPeersAdapter adapter = new ModesPeersAdapter(this, modes);
         recycler.setAdapter(adapter);
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        Log.d(LOG_TAG, "onDestroy");
+
+        NotificationsManager.stopHandlingNotifications(this);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch( requestCode ) {
+            case REGISTER_USER_REQUEST: {
+                if (resultCode == RESULT_OK) {
+                    Bundle bundle = data.getExtras();
+                    String accessToken = bundle.getString(Globals.TOKENPREF);
+
+                    wamsInit(accessToken);
+                    NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
+                            GCMHandler.class);
+                    setupUI(getString(R.string.title_activity_main), "");
+
+                }
+            }
+            break;
+
+        }
+    }
+
+    public void wamsInit(String accessToken){
+        try {
+            wamsClient = new MobileServiceClient(
+                    Globals.WAMS_URL,
+                    Globals.WAMS_API_KEY,
+                    this);
+
+            final JsonObject body = new JsonObject();
+            body.addProperty("access_token", accessToken);
+
+            new AsyncTask<Void, Void, Void>() {
+
+                Exception mEx;
+
+                @Override
+                protected void onPostExecute(Void result){
+
+                    if( mEx != null ) {
+                        Toast.makeText(MainActivity.this,
+                                mEx.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+
+                    try {
+                        MobileServiceUser mobileServiceUser =
+                                wamsClient.login(MobileServiceAuthenticationProvider.Facebook,
+                                        body).get();
+                        saveUser(mobileServiceUser);
+                    } catch(ExecutionException | InterruptedException ex ) {
+                        mEx = ex;
+                        Log.e(LOG_TAG, ex.getMessage());
+                    }
+
+                    return null;
+                }
+            }.execute();
+        } catch(MalformedURLException ex ) {
+            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+        }
+    }
+
+    private void saveUser(MobileServiceUser mobileServiceUser) {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString(Globals.WAMSTOKENPREF, mobileServiceUser.getAuthenticationToken());
+        editor.putString(Globals.USERIDPREF, mobileServiceUser.getUserId());
+        editor.apply();
     }
 
     //

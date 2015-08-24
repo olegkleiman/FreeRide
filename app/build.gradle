@@ -106,6 +106,7 @@ model {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    //compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
     compile 'com.android.support:support-v4:22.2.1'
     compile 'com.android.support:design:22.2.1'
     compile 'com.android.support:appcompat-v7:22.2.1'
@@ -125,6 +126,9 @@ dependencies {
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
 
     compile 'com.afollestad:material-dialogs:0.7.8.1'
+
+    compile 'com.android.support:multidex:1.0.1'
+
     compile project(':libraries:opencv')
     compile project(':libraries:faceapilibrary')
 }

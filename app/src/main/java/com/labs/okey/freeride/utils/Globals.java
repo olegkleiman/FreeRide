@@ -3,12 +3,32 @@ package com.labs.okey.freeride.utils;
 import android.content.Context;
 import android.os.Build;
 
+import com.labs.okey.freeride.model.PassengerFace;
+
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Oleg on 22-Aug-15.
  */
 public class Globals {
+
+    private static class DManClassFactory {
+
+        static DrawMan drawMan;
+
+        static DrawMan getDrawMan(){
+            if( drawMan == null )
+                return new DrawMan();
+            else
+                return drawMan;
+        }
+    }
+    public static final DrawMan drawMan = DManClassFactory.getDrawMan();
+
+    public static float PICTURE_CORNER_RADIUS = 20;
+    public static float PICTURE_BORDER_WIDTH = 4;
 
     public static final String WAMS_URL = "https://fastride.azure-mobile.net/";
     public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
@@ -31,6 +51,11 @@ public class Globals {
     public static final String MS_PROVIDER_FOR_STORE = "MS:";
     public static final String TWITTER_PROVIDER_FOR_STORE = "Twitter:";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
+
+    // 'Project number' of project 'FastRide"
+    // See Google Developer Console -> Billing & settings
+    // https://console.developers.google.com/project/third-apex-91200/settings
+    public static final String SENDER_ID = "1041824085053";
 
     public static final String USERIDPREF = "userid";
     public static final String CARS_PREF = "cars";
@@ -72,5 +97,7 @@ public class Globals {
             CASCADE_PATH = path;
         }
     }
+
+    public static List<PassengerFace> passengerFaces = new ArrayList<>();
 
 }
