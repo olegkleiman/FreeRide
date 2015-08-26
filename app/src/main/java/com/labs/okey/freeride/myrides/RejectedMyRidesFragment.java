@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class RejectedMyRidesFragment extends Fragment {
 
-    List<Ride> mRides;
+    List<Ride> mRides = new ArrayList<>();
     private static final String ARG_POSITION = "position";
     private static RejectedMyRidesFragment FragmentInstance;
 
@@ -45,8 +45,13 @@ public class RejectedMyRidesFragment extends Fragment {
     }
 
     public void setRides(List<Ride> rides) {
-        mRides = rides;
-        if (!mRides.isEmpty()) {
+        if( rides == null )
+            return;
+
+        mRides.clear();
+        mRides.addAll(rides);
+
+        if( !mRides.isEmpty() ) {
             sort();
             FilteringApproveAndOtherDrivers();
         }
@@ -54,9 +59,13 @@ public class RejectedMyRidesFragment extends Fragment {
 
     public void updateRides(List<Ride> rides){
 
-        //!rides.isEmpty()
-        if (true) {
-            mRides = rides;
+        if( rides == null )
+            return;
+
+        mRides.clear();
+        mRides.addAll(rides);
+
+        if( !mRides.isEmpty() ) {
             sort();
             FilteringApproveAndOtherDrivers();
             adapter.notifyDataSetChanged();
@@ -76,9 +85,6 @@ public class RejectedMyRidesFragment extends Fragment {
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         recycler.setItemAnimator(new DefaultItemAnimator());
-
-
-
 
         adapter = new MyRidesAdapter(mRides);
         adapter.setOnClickListener(new IRecyclerClickListener() {
@@ -114,8 +120,6 @@ public class RejectedMyRidesFragment extends Fragment {
         }
         mRides =  tempList;
     }
-
-
 
     private void sort(){
 

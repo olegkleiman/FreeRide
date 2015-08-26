@@ -3,6 +3,7 @@ package com.labs.okey.freeride;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
@@ -133,7 +134,11 @@ public class CameraCVActivity extends Activity
             mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
             mOpenCvCameraView.setCvCameraViewListener(this);
 
-            mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
+            PackageManager pm = getPackageManager();
+            if( pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT) )
+                mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
+            else
+                mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
         }
 
         mCameraDirective2 = getString(R.string.camera_directive_2);
@@ -265,39 +270,39 @@ public class CameraCVActivity extends Activity
 
     public void makeFrame(View view){
 
-        mOpenCvCameraView.stopPreview();
-
-        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
-        txtStatus.setText(getString(R.string.detection_center_desc));
-
-        findViewById(R.id.detection_buttons_bar).setVisibility(View.VISIBLE);
+//        mOpenCvCameraView.stopPreview();
+//
+//        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
+//        txtStatus.setText(getString(R.string.detection_center_desc));
+//
+//        findViewById(R.id.detection_buttons_bar).setVisibility(View.VISIBLE);
 
     }
 
     public void sendToDetect(View view){
 
-        // Dismiss buttons
-        findViewById(R.id.detection_buttons_bar).setVisibility(View.GONE);
-
-        // Restore status text
-        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
-        txtStatus.setText(getString(R.string.detection_freeze));
-
-        // Will be continued in onPictureTaken() callback
-        mOpenCvCameraView.takePicture(CameraCVActivity.this);
+//        // Dismiss buttons
+//        findViewById(R.id.detection_buttons_bar).setVisibility(View.GONE);
+//
+//        // Restore status text
+//        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
+//        txtStatus.setText(getString(R.string.detection_freeze));
+//
+//        // Will be continued in onPictureTaken() callback
+//        mOpenCvCameraView.takePicture(CameraCVActivity.this);
     }
 
     public void restoreFromSendToDetect(View view){
 
-        // Restore camera frames processing
-        mOpenCvCameraView.startPreview();
-
-        // Dismiss buttons
-        findViewById(R.id.detection_buttons_bar).setVisibility(View.GONE);
-
-        // Restore status text
-        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
-        txtStatus.setText(getString(R.string.detection_freeze));
+//        // Restore camera frames processing
+//        mOpenCvCameraView.startPreview();
+//
+//        // Dismiss buttons
+//        findViewById(R.id.detection_buttons_bar).setVisibility(View.GONE);
+//
+//        // Restore status text
+//        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
+//        txtStatus.setText(getString(R.string.detection_freeze));
     }
 
     @Override

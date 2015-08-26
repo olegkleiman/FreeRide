@@ -46,6 +46,13 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
 {
     try {
 
+        // test
+
+        vector<string> algorithms;
+//        Algorithm::cre
+
+        // end test
+
         CascadeClassifier face_cascade;
         vector<Rect> faces;
 
@@ -67,11 +74,13 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
         flip(mGrayChannel, mGrayChannel, 1);
         //equalizeHist(mGrayChannel, mGrayChannel);
 
+        int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH; //0 | CV_HAAR_SCALE_IMAGE
+
         face_cascade.detectMultiScale(mGrayChannel, faces,
                                       1.1, // 1.1 is for good detection
                                       // 1.2 for faster detection
                                       2, // Neighbors
-                                      0 | CV_HAAR_SCALE_IMAGE,
+                                      flags,
                                       Size(40, 40));
 
         int faces_size = faces.size();

@@ -17,6 +17,7 @@ import com.labs.okey.freeride.adapters.MyRidesAdapter;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -27,7 +28,7 @@ import java.util.List;
  */
 public class GeneralMyRidesFragment extends Fragment {
 
-    List<Ride> mRides;
+    List<Ride> mRides = new ArrayList<>();
     private static final String ARG_POSITION = "position";
     private static GeneralMyRidesFragment FragmentInstance;
     MyRidesAdapter adapter;
@@ -44,22 +45,31 @@ public class GeneralMyRidesFragment extends Fragment {
     }
 
     public void setRides(List<Ride> rides) {
-        mRides = rides;
+
+        if( rides == null )
+            return;
+
+        mRides.clear();
+        mRides.addAll(rides);
+
         if (!mRides.isEmpty()) {
             sort();
         }
     }
 
     public void updateRides(List<Ride> rides){
-        //!rides.isEmpty()
-        if (true) {
-            mRides = rides;
+
+        if( rides == null )
+            return;
+
+        mRides.clear();
+        mRides.addAll(rides);
+
+        if (!mRides.isEmpty()) {
             sort();
             adapter.notifyDataSetChanged();
         }
     }
-
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,9 +90,6 @@ public class GeneralMyRidesFragment extends Fragment {
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         recycler.setItemAnimator(new DefaultItemAnimator());
-
-
-
 
 
         adapter = new MyRidesAdapter(mRides);
