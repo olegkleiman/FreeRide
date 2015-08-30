@@ -9,6 +9,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -51,10 +52,12 @@ import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 public class DriverRoleActivity extends BaseActivityWithGeofences
         implements ITrace,
@@ -71,6 +74,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 {
 
     private static final String LOG_TAG = "FR.Driver";
+
+    Ride mCurrentRide;
 
     WiFiPeersAdapter2 mPeersAdapter;
     public List<WifiP2pDeviceUser> peers = new ArrayList<>();
@@ -106,9 +111,42 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         ridesTable = getMobileServiceClient().getTable("rides", Ride.class);
+        new AsyncTask<Void, Void, Void>() {
 
-        wifiUtil = new WiFiUtil(this);
-        wifiUtil.deletePersistentGroups();
+            Exception mEx;
+
+            @Override
+            protected void onPostExecute(Void result){
+
+                if( mEx == null ) {
+                    TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+                    txtRideCode.setText(mCurrentRide.getRideCode());
+
+                    invalidateOptionsMenu(); // actually enable OpenCV item
+                } else {
+                    Toast.makeText(DriverRoleActivity.this,
+                            mEx.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+
+                    Ride ride = new Ride();
+                    ride.setCreated(new Date());
+                    ride.setCarNumber(mCarNumber);
+                    mCurrentRide = ridesTable.insert(ride).get();
+
+                } catch(ExecutionException | InterruptedException ex ) {
+                    mEx = ex;
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
+
+                return null;
+            }
+        }.execute();
 
         List<String> _cars = new ArrayList<>();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -120,7 +158,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 _cars.add(carNumber);
             }
         }
-
 
         String[] cars = new String[_cars.size()];
         cars = _cars.toArray(cars);
@@ -171,6 +208,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCarNumber = cars[0];
         }
 
+        wifiUtil = new WiFiUtil(this);
+        wifiUtil.deletePersistentGroups();
+
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -212,6 +252,28 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             }
         }.start();
+    }
+
+    public void onButtonSubmitRide(View v){
+
+        if( mCurrentRide == null )
+            return;
+
+        mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+
+        new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+                    ridesTable.update(mCurrentRide).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    Log.e(LOG_TAG, e.getMessage());
+                }
+                return null;
+            }
+        }.execute();
     }
 
     @Override
