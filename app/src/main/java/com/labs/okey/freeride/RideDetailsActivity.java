@@ -59,7 +59,7 @@ public class RideDetailsActivity extends BaseActivity
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
         carNumber.setText(ride.getCarNumber());
-        nameDriver.setText(ride.getNameDriver());
+        nameDriver.setText(ride.getDriverName());
         created.setText(df.format(ride.getCreated()));
         carNumber.setText(ride.getCarNumber());
 
