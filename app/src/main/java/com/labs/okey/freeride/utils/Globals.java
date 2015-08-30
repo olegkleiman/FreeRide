@@ -17,7 +17,15 @@ import java.util.List;
 /**
  * Created by Oleg on 22-Aug-15.
  */
+
+
 public class Globals {
+
+    public enum RIDE_STATUS {
+        APPROVED,
+        NOT_APPROVED,
+        WAITING
+    }; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
 
     private static class DManClassFactory {
 
