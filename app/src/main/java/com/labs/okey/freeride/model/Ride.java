@@ -1,5 +1,7 @@
 package com.labs.okey.freeride.model;
 
+import com.labs.okey.freeride.utils.Globals;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -25,8 +27,13 @@ public class Ride implements Serializable  {
 
     @com.google.gson.annotations.SerializedName("driverid")
     private String driverid;
-    public String getNameDriver() { return driverid; }
-    public void setNameDriver(String value) { driverid = value; }
+    public String getDriverId() { return driverid; }
+    public void setDriverId(String value) { driverid = value;}
+
+    @com.google.gson.annotations.SerializedName("drivername")
+    private String driverName;
+    public String getDriverName() { return driverName; }
+    public void setDriverName(String value) { driverName = value; }
 
     @com.google.gson.annotations.SerializedName("carnumber")
     private String carNumber;
@@ -34,9 +41,9 @@ public class Ride implements Serializable  {
     public void setCarNumber(String value) { carNumber = value; }
 
     @com.google.gson.annotations.SerializedName("approved")
-    private Boolean approved;
-    public Boolean getApproved() { return approved; }
-    public void setApproved(Boolean value) { approved = value; }
+    private Integer approved;
+    public Integer getApproved() { return approved; }
+    public void setApproved(Integer value) { approved = value; }
 
     @com.google.gson.annotations.SerializedName("picture_url")
     private String picture_url;
