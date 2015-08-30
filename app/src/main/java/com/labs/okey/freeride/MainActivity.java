@@ -6,10 +6,12 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.renderscript.Matrix4f;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +20,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
 import com.labs.okey.freeride.gcm.GCMHandler;
@@ -27,6 +30,7 @@ import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.RoundedDrawable;
+import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.faceapiUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
@@ -39,7 +43,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends BaseActivity
-                          implements IRecyclerClickListener {
+        implements WAMSVersionTable.IVersionMismatchListener,
+                          IRecyclerClickListener {
 
     static final int REGISTER_USER_REQUEST = 1;
     private static final String LOG_TAG = "FR.Main";
@@ -114,7 +119,46 @@ public class MainActivity extends BaseActivity
         }
     }
 
+    //
+    // Implementation of IVersionMismatchListener
+    //
+    public void mismatch(int major, int minor, final String url){
+        try {
 
+            new MaterialDialog.Builder(this)
+                    .title(getString(R.string.new_version_title))
+                    .content(getString(R.string.new_version_conent))
+                    .positiveText(R.string.yes)
+                    .negativeText(R.string.no)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setData(Uri.parse(url));
+                            //intent.setDataAndType(Uri.parse(url), "application/vnd.android.package-archive");
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        }
+                    })
+                    .show();
+        } catch (MaterialDialog.DialogException e) {
+            // better that catch the exception here would be use handle to send events the activity
+        }
+    }
+
+    public void match() {
+
+    }
+
+    public void connectionFailure(Exception ex) {
+
+        if( ex != null ) {
+
+            View v = findViewById(R.id.drawer_layout);
+            Snackbar.make(v, ex.getMessage(), Snackbar.LENGTH_LONG);
+        }
+
+    }
 
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
