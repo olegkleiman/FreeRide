@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Ride;
+import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.views.LayoutRipple;
 
@@ -52,9 +53,9 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
 
         //TODO: need to enter the real name of driver
-        if(ride.getNameDriver() != "current Driver")
+        if(ride.getDriverName() != "current Driver")
         {
-            holder.driverName.setText(ride.getNameDriver());
+            holder.driverName.setText(ride.getDriverName());
             holder.ApprovedSing.setVisibility(View.GONE);
             holder.SteeringWheel.setVisibility(View.GONE);
 
@@ -66,11 +67,11 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
                 if(ride.getApproved() == null){
 
                 }
-                else if(ride.getApproved() == true){
+                else if(ride.getApproved() == Globals.RIDE_STATUS.APPROVED.ordinal()) {
 
                     holder.ApprovedSing.setImageResource(R.drawable.v_sing_26);
                 }
-                else if ( ride.getApproved() == false){
+                else if ( ride.getApproved() != Globals.RIDE_STATUS.APPROVED.ordinal()) {
                     holder.ApprovedSing.setImageResource(R.drawable.ex_sing_26);
                 }
         }
