@@ -14,6 +14,7 @@ import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.RideDetailsActivity;
 import com.labs.okey.freeride.adapters.MyRidesAdapter;
 import com.labs.okey.freeride.model.Ride;
+import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 
 import java.util.ArrayList;
@@ -113,7 +114,8 @@ public class RejectedMyRidesFragment extends Fragment {
         for (Ride ride : mRides ){
             //TODO: the condition: if approve != null need fix
             if(ride.getApproved()!=  null){
-                if (ride.getApproved() == false && ride.getNameDriver() == "current Driver") {
+                if (ride.getApproved() != Globals.RIDE_STATUS.APPROVED.ordinal()
+                        && ride.getDriverName() == "current Driver") {
                     tempList.add(ride);
                 }
             }
