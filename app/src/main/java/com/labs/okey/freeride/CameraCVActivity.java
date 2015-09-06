@@ -75,6 +75,32 @@ public class CameraCVActivity extends Activity
 
     private FastCVCameraView mOpenCvCameraView;
 
+    private String createCascadeFile(int resourceId, String fileName) {
+
+        try {
+            InputStream is = getResources().openRawResource(resourceId);
+            File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+            File cascadeFile = new File(cascadeDir, fileName);
+
+            FileOutputStream os = new FileOutputStream(cascadeFile);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while( (bytesRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+
+            os.close();
+            is.close();
+
+            return cascadeFile.getAbsolutePath();
+
+        } catch (IOException e) {
+            Log.e(LOG_TAG, e.getMessage());
+
+            return "";
+        }
+    }
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -103,7 +129,13 @@ public class CameraCVActivity extends Activity
 
                         //cascadeDir.delete();
 
-                        mCVWrapper = new FastCVWrapper(cascadeFile.getAbsolutePath());
+                        String faceCascadeFilePath = createCascadeFile(R.raw.lbpcascade_frontalface,
+                                                                    "lbpcascade_frontalface.xml");
+                        String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_eye,
+                                                                        "haarcascade_eye.xml");
+
+                        mCVWrapper = new FastCVWrapper(faceCascadeFilePath,
+                                                        eyesCascadeFilePath);
 
                     } catch(IOException ex) {
                         Log.e(LOG_TAG, ex.getMessage());
@@ -179,7 +211,7 @@ public class CameraCVActivity extends Activity
 
         if( !OpenCVLoader.initDebug() ) {
             // Roughly, it's an analog of System.loadLibrary('opencv_java3') - meaning .so library
-            // In our case it is supposed to always return false, because we aare statically linked with opencv_java3.so
+            // In our case it is supposed to always return false, because we are statically linked with opencv_java3.so
             // (in jniLbs/<platform> folder.
             //
             // Such way of linking allowed for running without OpenCV Manager (https://play.google.com/store/apps/details?id=org.opencv.engine&hl=en)
@@ -211,6 +243,8 @@ public class CameraCVActivity extends Activity
     long mExecutionTime = 0;
     long mFramesReceived = 0;
 
+    boolean bTemplateFound = false;
+
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         // input frame has RGBA format
@@ -222,22 +256,17 @@ public class CameraCVActivity extends Activity
         int nFaces = 0;
         try {
 
-//            CascadeClassifier facesCascade = new CascadeClassifier(mCVWrapper.pathToCascade);
-//            //facesCascade.load(mCVWrapper.pathToCascade);
-//
-//            MatOfRect faces = new MatOfRect();
-//
-//            facesCascade.detectMultiScale(mGray, faces,
-//                    1.2,
-//                    3,
-//                    2, // CV_HAAR_SCALE_IMAGE,
-//                    new Size(20, 20),
-//                    new Size(40, 40));
-//
-//            nFaces = faces.toArray().length;
+            if( !bTemplateFound ) {
+                bTemplateFound = mCVWrapper.FindTemplate(mGray.getNativeObjAddr(),
+                        mCVWrapper.pathToFaceCascade,
+                        mCVWrapper.pathToEyesCascade);
+            }
+            else {
+                mCVWrapper.MatchTemplate(mGray.getNativeObjAddr());
+            }
 
-            nFaces = mCVWrapper.DetectFaces(mGray.getNativeObjAddr(),
-                                            mCVWrapper.pathToCascade);
+//            nFaces = mCVWrapper.DetectFaces(mGray.getNativeObjAddr(),
+//                                            mCVWrapper.pathToFaceCascade);
 
 
         }
@@ -249,21 +278,21 @@ public class CameraCVActivity extends Activity
         String msg = String.format("Executed for %d ms.", mExecutionTime / ++mFramesReceived);
         Log.d(LOG_TAG, msg);
 
-        if( nFaces > 0 ) {
-
-            String _s = String.format(mCameraDirective2, nFaces);
-
-            Imgproc.putText(mGray, _s, new Point(100, 500),
-                    3, 1, mCameraFontColor, 2);
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    makeFrame(null);
-                }
-            });
-
-        }
+//        if( nFaces > 0 ) {
+//
+//            String _s = String.format(mCameraDirective2, nFaces);
+//
+//            Imgproc.putText(mGray, _s, new Point(100, 500),
+//                    3, 1, mCameraFontColor, 2);
+//
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    makeFrame(null);
+//                }
+//            });
+//
+//        }
 
         return mGray;
     }
