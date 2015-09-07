@@ -36,10 +36,10 @@ import java.util.Map;
  * Created by Oleg Kleiman on 09-Jun-15.
  */
 public class BaseActivityWithGeofences extends BaseActivity
-                                        implements ResultCallback<Status>,
-                                        GoogleApiClient.ConnectionCallbacks,
-        LocationListener {
-
+        implements ResultCallback<Status>,
+                GoogleApiClient.ConnectionCallbacks,
+                LocationListener
+{
     private static final String LOG_TAG = "FR.GeoFences";
     private MobileServiceSyncTable<GFence> mGFencesSyncTable;
 
