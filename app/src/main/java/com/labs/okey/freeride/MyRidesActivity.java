@@ -47,8 +47,6 @@ public class MyRidesActivity extends BaseActivity
 
         new AsyncTask<Object, Void, Void>() {
 
-
-
             // Runs on UI thread
             @Override
             protected void onPostExecute(Void res) {
@@ -68,7 +66,6 @@ public class MyRidesActivity extends BaseActivity
                     Query pullQuery = getMobileServiceClient().getTable(Ride.class)
                             .where().field("driverid").eq(userID);
                     mRidesSyncTable.pull(pullQuery).get();
-
 
                     final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQuery).get();
 

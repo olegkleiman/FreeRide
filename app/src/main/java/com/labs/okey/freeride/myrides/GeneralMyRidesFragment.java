@@ -1,5 +1,6 @@
 package com.labs.okey.freeride.myrides;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -90,7 +91,6 @@ public class GeneralMyRidesFragment extends Fragment {
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         recycler.setItemAnimator(new DefaultItemAnimator());
-
 
         adapter = new MyRidesAdapter(mRides);
         adapter.setOnClickListener(new IRecyclerClickListener() {

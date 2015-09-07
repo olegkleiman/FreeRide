@@ -106,11 +106,11 @@ public class SettingsActivity extends BaseActivity {
             TextView txtView = (TextView)findViewById(R.id.textUserName);
             txtView.setText(mUser.getFirstName() + " " + mUser.getLastName());
 
-//            txtView = (TextView)findViewById(R.id.textUserEmail);
-//            txtView.setText(mUser.getEmail());
-//
-//            txtView = (TextView)findViewById(R.id.textUserPhone);
-//            txtView.setText(mUser.getPhone());
+            txtView = (TextView)findViewById(R.id.textUserEmail);
+            txtView.setText(mUser.getEmail());
+
+            txtView = (TextView)findViewById(R.id.textUserPhone);
+            txtView.setText(mUser.getPhone());
 
             drawable = (Globals.drawMan.userDrawable(this,
                     "1",

@@ -43,10 +43,11 @@ public class wamsUtils {
                            tableDefinition.put("id", ColumnDataType.String);
                            tableDefinition.put("ridecode", ColumnDataType.String);
                            tableDefinition.put("driverid", ColumnDataType.String);
+                           tableDefinition.put("drivername", ColumnDataType.String);
                            tableDefinition.put("created", ColumnDataType.Date);
                            tableDefinition.put("carnumber", ColumnDataType.String);
                            tableDefinition.put("picture_url", ColumnDataType.String);
-                           tableDefinition.put("approved", ColumnDataType.Boolean);
+                           tableDefinition.put("approved", ColumnDataType.Number);
                            tableDefinition.put("__deleted", ColumnDataType.Boolean);
                            tableDefinition.put("__version", ColumnDataType.String);
                        }

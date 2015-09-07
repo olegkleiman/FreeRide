@@ -4,6 +4,7 @@
 #include <jni.h>
 
 #include <time.h>
+#include <chrono>
 #include <fstream>
 
 #include <opencv2/core.hpp>
@@ -23,6 +24,7 @@
 
 using namespace std;
 using namespace cv;
+using namespace std::chrono;
 
 #define CVWRAPPER_LOG_TAG    "fastcvWrapper"
 #ifdef _DEBUG
@@ -182,6 +184,9 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
 {
     try {
 
+        milliseconds start = duration_cast<milliseconds>(
+                system_clock::now().time_since_epoch());
+
         CascadeClassifier face_cascade;
         vector<Rect> faces;
 
@@ -224,6 +229,12 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
                           1, 8, 0);
             }
         }
+
+        milliseconds finish = duration_cast<milliseconds>(
+                system_clock::now().time_since_epoch());
+
+        long long int dur = duration_cast<milliseconds>(finish - start).count();
+        DPRINTF("Frame processes for %llu", dur);
 
         return faces_size;
 
