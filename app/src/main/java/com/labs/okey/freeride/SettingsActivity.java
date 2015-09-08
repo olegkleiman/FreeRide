@@ -313,7 +313,7 @@ public class SettingsActivity extends BaseActivity {
             protected void onPreExecute() {
                 progress = new MaterialDialog.Builder(SettingsActivity.this)
                         .title("Updating geofences")
-                        .content("Please_wait")
+                        .content(R.string.please_wait)
                         .progress(true, 0)
                         .show();
             }

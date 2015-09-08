@@ -27,7 +27,7 @@
             <ImageButton
                 android:layout_width="@dimen/card_icon_size"
                 android:layout_height="@dimen/card_icon_size"
-                android:contentDescription="Refresh"
+                android:contentDescription="@string/action_refresh"
                 android:background="@android:color/transparent"
                 android:padding="0dp"
                 android:src="@drawable/ic_action_refresh"

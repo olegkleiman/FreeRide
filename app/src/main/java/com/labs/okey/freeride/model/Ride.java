@@ -2,6 +2,8 @@ package com.labs.okey.freeride.model;
 
 import com.labs.okey.freeride.utils.Globals;
 
+import org.opencv.ml.Boost;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -49,4 +51,8 @@ public class Ride implements Serializable  {
     private String picture_url;
     public String getPictureURL() { return picture_url; }
     public void setPictureURL(String value) { picture_url = value; }
+
+    @com.google.gson.annotations.SerializedName("ispicturerequred")
+    private Boolean isPictureRequired;
+    public Boolean isPictureRequired() {return isPictureRequired; }
 }

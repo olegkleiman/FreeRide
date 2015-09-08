@@ -53,7 +53,10 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
                 @Override
                 public void onClick(View view) {
 
-                    IRefreshable refreshable = (IRefreshable)mContext;
+                    IRefreshable refreshable =
+                            (mContext instanceof IRefreshable) ?
+                            (IRefreshable)mContext :
+                             null;
                     if( refreshable != null )
                         refreshable.refresh();
                 }
@@ -77,8 +80,13 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
                     inflate(R.layout.row_devices, parent, false);
         }
 
+        IRecyclerClickListener recyclerClickListener =
+                ( mContext instanceof IRecyclerClickListener ) ?
+                        (IRecyclerClickListener)mContext :
+                         null;
+
         return new ViewHolder(mContext,
-                            (IRecyclerClickListener)mContext,
+                            recyclerClickListener,
                             v, viewType, listener);
 
     }

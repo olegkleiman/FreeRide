@@ -1,6 +1,8 @@
 package com.labs.okey.freeride;
 
+import android.graphics.Color;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -9,7 +11,8 @@ import android.view.MenuItem;
 import com.labs.okey.freeride.adapters.TutorialTabsAdapter;
 import com.labs.okey.freeride.views.SlidingTabLayout;
 
-public class TutorialActivity extends BaseActivity {
+public class TutorialActivity extends BaseActivity
+        implements ActionBar.TabListener{
 
     TutorialTabsAdapter mAppSectionsPagerAdapter;
     ViewPager mViewPager;
@@ -20,6 +23,25 @@ public class TutorialActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tutorial);
+
+        setupUI(getResources().getString(R.string.subtitle_activity_tutorial), "");
+
+        titles = getResources().getStringArray(R.array.tutorial_titles);
+
+        // Set up the ViewPager, attaching the adapter and setting up a listener for when the
+        // user swipes between sections.
+        mViewPager = (ViewPager) findViewById(R.id.viewpager);
+        slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
+        mViewPager.setAdapter(new TutorialTabsAdapter(getSupportFragmentManager(),
+                titles));
+
+        slidingTabLayout.setViewPager(mViewPager);
+        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return Color.WHITE;
+            }
+        });
     }
 
     @Override
@@ -31,16 +53,21 @@ public class TutorialActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onTabSelected(ActionBar.Tab tab, android.support.v4.app.FragmentTransaction fragmentTransaction) {
+
+    }
+
+    @Override
+    public void onTabUnselected(ActionBar.Tab tab, android.support.v4.app.FragmentTransaction fragmentTransaction) {
+
+    }
+
+    @Override
+    public void onTabReselected(ActionBar.Tab tab, android.support.v4.app.FragmentTransaction fragmentTransaction) {
+
     }
 }

@@ -40,6 +40,7 @@ import com.microsoft.windowsazure.notifications.NotificationsManager;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends BaseActivity
@@ -114,6 +115,27 @@ public class MainActivity extends BaseActivity
 
             // Don't mess with BaseActivity.wamsInit();
             wamsInit(accessToken);
+
+            WAMSVersionTable wamsVersionTable = new WAMSVersionTable(this, this);
+            try {
+
+                PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+                String packageVersionName = info.versionName;
+                if (!packageVersionName.isEmpty()) {
+
+                    StringTokenizer tokens = new StringTokenizer(packageVersionName, ".");
+                    if( tokens.countTokens() > 0 ) {
+                        int majorPackageVersion = Integer.parseInt(tokens.nextToken());
+                        int minorPackageVersion = Integer.parseInt(tokens.nextToken());
+
+                        wamsVersionTable.compare(majorPackageVersion, minorPackageVersion);
+                    }
+                }
+
+            }catch(PackageManager.NameNotFoundException ex) {
+
+                Log.e(LOG_TAG, ex.getMessage());
+            }
 
             setupUI(getString(R.string.title_activity_main), "");
         }

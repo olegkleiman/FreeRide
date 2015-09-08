@@ -48,6 +48,7 @@ public class wamsUtils {
                            tableDefinition.put("carnumber", ColumnDataType.String);
                            tableDefinition.put("picture_url", ColumnDataType.String);
                            tableDefinition.put("approved", ColumnDataType.Number);
+                           tableDefinition.put("ispicturerequired", ColumnDataType.Boolean);
                            tableDefinition.put("__deleted", ColumnDataType.Boolean);
                            tableDefinition.put("__version", ColumnDataType.String);
                        }

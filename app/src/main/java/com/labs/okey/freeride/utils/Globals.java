@@ -170,4 +170,5 @@ public class Globals {
     // and zeros elsewhere.
     public static Matrix4f verificationMat = new Matrix4f();
 
+    public static int CHECKING_AROUND_DELAY = 8;
 }

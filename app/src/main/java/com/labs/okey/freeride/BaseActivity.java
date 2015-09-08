@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.UiThread;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -144,6 +145,7 @@ public class BaseActivity extends AppCompatActivity
         return (info != null && info.isConnectedOrConnecting());
     }
 
+    @UiThread
     protected void setupUI(String title, String subTitle) {
         Toolbar toolbar = (Toolbar) findViewById(R.id.fastride_toolbar);
         if( toolbar != null ) {

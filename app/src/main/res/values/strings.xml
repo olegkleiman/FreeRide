@@ -74,7 +74,8 @@
     <string name="default_ride_code">00000</string>
     <string name="ride_code_label">Ride Code:</string>
     <string name="ride_code_title">Type in Ride Code</string>
-    <string name="ride_code_dialog_content">You may see this code on the device\'s display of the driver</string>
+    <string name="ride_code_dialog_content">You may see this code on the driver\'s display</string>
+    <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
     <string name="ride_code_hint">5 digits without dashes</string>
     <string name="passenger_confirm">You want to confirm your ride with</string>
     <string name="ride_code_refill"></string>
@@ -124,6 +125,12 @@
     <string name="code_retry_action">Try again</string>
     <string name="registration_finish">Finish</string>
     <string name="registration_next">Next</string>
+
+    <string name="please_wait">Please wait</string>
+    <string name="processing">Processing</string>
+    <string name="passenger_progress_dialog">Checking around</string>
+    <string name="done">Done</string>
+    <string name="ride_code_prompt">Type in the code as displayed at driver\'s  screen</string>
 
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>

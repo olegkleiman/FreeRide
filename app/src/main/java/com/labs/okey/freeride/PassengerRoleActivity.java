@@ -9,14 +9,20 @@ import android.bluetooth.BluetoothProfile;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.CallSuper;
+import android.support.annotation.ColorInt;
+import android.support.annotation.StringRes;
+import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,6 +34,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -47,6 +54,7 @@ import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
+import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.io.IOException;
@@ -76,6 +84,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     MobileServiceTable<Join> joinsTable;
 
     WiFiUtil wifiUtil;
+    BLEUtil mBLEUtil;
     WiFiPeersAdapter2 mDriversAdapter;
     public List<WifiP2pDeviceUser> drivers = new ArrayList<>();
 
@@ -85,18 +94,20 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
+    @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_passenger_role);
+        setContentView(R.layout.activity_passenger);
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
-        wamsInit(true);
+        wamsInit(false); // without auto-update for this acivity
 
         mTxtStatus = (TextView)findViewById(R.id.txtStatusPassenger);
 
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
         wifiUtil = new WiFiUtil(this);
+        mBLEUtil = new BLEUtil(this);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
@@ -133,8 +144,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
         }.start();
 
+        // This will start WiFi-Direct serviceDiscovery
+        // for (hopefully) already published service
+        refresh();
     }
 
+    @UiThread
     protected void setupUI(String title, String subTitle){
         super.setupUI(title, subTitle);
 
@@ -175,6 +190,31 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @UiThread
+    private void showRideCodePane(@StringRes int contentStringResId,
+                                  @ColorInt int contentColor){
+
+        String dialogContent = getString(contentStringResId);
+
+        new MaterialDialog.Builder(this)
+                .title(R.string.ride_code_title)
+                .content(dialogContent)
+                .contentColor(contentColor)
+                .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
+                .inputMaxLength(5)
+                .input(R.string.ride_code_hint,
+                        R.string.ride_code_refill,
+                        new MaterialDialog.InputCallback() {
+                            @Override
+                            public void onInput(MaterialDialog dialog, CharSequence input) {
+                                String rideCode = input.toString();
+                                onSubmitCode(rideCode);
+                            }
+                        }
+
+                ).show();
     }
 
     public void onCameraCV(View view) {
@@ -283,30 +323,44 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         new AsyncTask<Void, Void, Void>() {
 
             Exception mEx;
-            String mRideCode;
+            MaterialDialog progress;
+
+            @Override
+            protected void onPreExecute() {
+                progress = new MaterialDialog.Builder(PassengerRoleActivity.this)
+                        .title(R.string.processing)
+                        .content(R.string.please_wait)
+                        .progress(true, 0)
+                        .show();
+            }
 
             @Override
             protected void onPostExecute(Void result){
 
+                progress.dismiss();
+
                 if( mEx != null ) {
 
-                    String msg = mEx.getMessage();
-                    String[] tokens = msg.split(":");
-                    if(tokens.length > 1)
-                        msg = tokens[1];
+                    try{
+                        MobileServiceException mse = (MobileServiceException)mEx.getCause();
+                        int responseCode = mse.getResponse().getStatus().getStatusCode();
+                        switch( responseCode ) {
+                            case 409: // HTTP 'Conflict'
+                                      // picture required
+                                onCameraCV(null);
+                                break;
 
-                    Snackbar snackbar =
-                            Snackbar.make(v, msg, Snackbar.LENGTH_LONG);
-                    snackbar.setAction(R.string.code_retry_action,
-                            new View.OnClickListener(){
-                                @Override
-                                public void onClick(View v){
-                                    showSubmitCodeDialog();
-                                }
-                            });
-                    snackbar.setActionTextColor(getResources().getColor(R.color.white));
-                    //snackbar.setDuration(8000);
-                    snackbar.show();
+                            case 404: // HTTP 'Not found'
+                                      // no such ride code
+                                // try again
+                                showRideCodePane(R.string.ride_code_wrong,
+                                                 Color.RED);
+                                break;
+                        }
+                    } catch( Exception e) {
+                        Log.e(LOG_TAG, e.getMessage());
+                    }
+
                 }
             }
 
@@ -321,7 +375,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     joinsTable.insert(_join).get();
 
-                } catch(ExecutionException | InterruptedException ex ) {
+                } catch( ExecutionException | InterruptedException ex ) {
+
                     mEx = ex;
                     Log.e(LOG_TAG, ex.getMessage());
                 }
@@ -354,14 +409,20 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     // Implementation of IRefreshable
     //
     @Override
+    @UiThread
     public void refresh() {
         drivers.clear();
         mDriversAdapter.notifyDataSetChanged();
 
         final ImageButton btnRefresh = (ImageButton)findViewById(R.id.btnRefresh);
-        btnRefresh.setVisibility(View.GONE);
+        if( btnRefresh != null ) // This may happens because
+                                 // the button is actually created by adapter
+            btnRefresh.setVisibility(View.GONE);
         final ProgressBar progress_refresh = (ProgressBar)findViewById(R.id.progress_refresh);
-        progress_refresh.setVisibility(View.VISIBLE);
+        if( progress_refresh != null )
+            progress_refresh.setVisibility(View.VISIBLE);
+
+        mBLEUtil.startScan();
 
         wifiUtil.startRegistrationAndDiscovery(this, mUserID);
 
@@ -369,11 +430,41 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 new Runnable() {
                     @Override
                     public void run() {
-                        btnRefresh.setVisibility(View.VISIBLE);
-                        progress_refresh.setVisibility(View.GONE);
+                        if( btnRefresh != null )
+                            btnRefresh.setVisibility(View.VISIBLE);
+                        if( progress_refresh != null )
+                            progress_refresh.setVisibility(View.GONE);
                     }
                 },
-                5000);
+                Globals.CHECKING_AROUND_DELAY * 1000);
+
+        boolean showMinMax = true;
+        final MaterialDialog dialog = new MaterialDialog.Builder(this)
+                .title(R.string.passenger_progress_dialog)
+                .content(R.string.please_wait)
+                .autoDismiss(false)
+                .progress(false, Globals.CHECKING_AROUND_DELAY, showMinMax)
+                .show();
+
+        new CountDownTimer(Globals.CHECKING_AROUND_DELAY * 1000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+
+                if( drivers.size() == 0)
+                    dialog.incrementProgress(1);
+                else
+                    showRideCodePane(R.string.ride_code_dialog_content,
+                                    Color.BLACK);
+            }
+
+            public void onFinish() {
+                if( drivers.size() == 0)
+                    showRideCodePane(R.string.ride_code_dialog_content,
+                                    Color.BLACK);
+
+                dialog.dismiss();
+            }
+        }.start();
 
     }
 
