@@ -163,8 +163,9 @@ public class MainActivity extends BaseActivity
                         }
                     })
                     .show();
-        } catch (MaterialDialog.DialogException e) {
+        } catch (Exception e) {
             // better that catch the exception here would be use handle to send events the activity
+            Log.e(LOG_TAG, e.getMessage());
         }
     }
 

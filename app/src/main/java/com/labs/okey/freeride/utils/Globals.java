@@ -4,6 +4,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
 import android.renderscript.Matrix4f;
+import android.support.annotation.IntDef;
+import android.support.v7.app.ActionBar;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
@@ -20,6 +22,13 @@ import java.util.List;
 
 
 public class Globals {
+
+//    @IntDef({RIDE_APPROVED, RIDE_NOT_APPROVED, RIDE_WAITING})
+//    public static int RIDE_APPROVED = 0;
+//    public static int RIDE_NOT_APPROVED = 1;
+//    public static int RIDE_WAITING = 2;
+//
+//    public abstract int getRideStatus();
 
     public enum RIDE_STATUS {
         APPROVED,

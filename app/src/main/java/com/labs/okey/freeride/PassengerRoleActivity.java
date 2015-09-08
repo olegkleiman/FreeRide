@@ -438,33 +438,37 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 },
                 Globals.CHECKING_AROUND_DELAY * 1000);
 
-        boolean showMinMax = true;
-        final MaterialDialog dialog = new MaterialDialog.Builder(this)
-                .title(R.string.passenger_progress_dialog)
-                .content(R.string.please_wait)
-                .autoDismiss(false)
-                .progress(false, Globals.CHECKING_AROUND_DELAY, showMinMax)
-                .show();
+        try {
+            boolean showMinMax = true;
+            final MaterialDialog dialog = new MaterialDialog.Builder(this)
+                    .title(R.string.passenger_progress_dialog)
+                    .content(R.string.please_wait)
+                    .autoDismiss(false)
+                    .progress(false, Globals.CHECKING_AROUND_DELAY, showMinMax)
+                    .show();
 
-        new CountDownTimer(Globals.CHECKING_AROUND_DELAY * 1000, 1000) {
+            new CountDownTimer(Globals.CHECKING_AROUND_DELAY * 1000, 1000) {
 
-            public void onTick(long millisUntilFinished) {
+                public void onTick(long millisUntilFinished) {
 
-                if( drivers.size() == 0)
-                    dialog.incrementProgress(1);
-                else
-                    showRideCodePane(R.string.ride_code_dialog_content,
-                                    Color.BLACK);
-            }
+                    if (drivers.size() == 0)
+                        dialog.incrementProgress(1);
+                    else
+                        showRideCodePane(R.string.ride_code_dialog_content,
+                                Color.BLACK);
+                }
 
-            public void onFinish() {
-                if( drivers.size() == 0)
-                    showRideCodePane(R.string.ride_code_dialog_content,
-                                    Color.BLACK);
+                public void onFinish() {
+                    if (drivers.size() == 0)
+                        showRideCodePane(R.string.ride_code_dialog_content,
+                                Color.BLACK);
 
-                dialog.dismiss();
-            }
-        }.start();
+                    dialog.dismiss();
+                }
+            }.start();
+        } catch( Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
 
     }
 

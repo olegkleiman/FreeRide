@@ -85,16 +85,16 @@ public class wamsUtils {
                     Globals.WAMS_API_KEY,
                     context);
 
-//        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-//        String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
-//        MobileServiceUser wamsUser = new MobileServiceUser(userID);
-//
-//        String token = sharedPrefs.getString(Globals.WAMSTOKENPREF, "");
-//        // According to this article (http://www.thejoyofcode.com/Setting_the_auth_token_in_the_Mobile_Services_client_and_caching_the_user_rsquo_s_identity_Day_10_.aspx)
-//        // this should be JWT token, so use WAMS_TOKEN
-//        wamsUser.setAuthenticationToken(token);
-//
-//        wamsClient.setCurrentUser(wamsUser);
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
+        MobileServiceUser wamsUser = new MobileServiceUser(userID);
+
+        String token = sharedPrefs.getString(Globals.WAMSTOKENPREF, "");
+        // According to this article (http://www.thejoyofcode.com/Setting_the_auth_token_in_the_Mobile_Services_client_and_caching_the_user_rsquo_s_identity_Day_10_.aspx)
+        // this should be JWT token, so use WAMS_TOKEN
+        wamsUser.setAuthenticationToken(token);
+
+        wamsClient.setCurrentUser(wamsUser);
 
         return  wamsClient;
 

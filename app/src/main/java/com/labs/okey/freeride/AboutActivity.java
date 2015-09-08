@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.support.annotation.CallSuper;
+import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +23,7 @@ public class AboutActivity extends BaseActivity
     private static final String LOG_TAG = "FR.About";
 
     @Override
+    @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
@@ -39,6 +42,7 @@ public class AboutActivity extends BaseActivity
             setupUI(title, "");
         }
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -63,6 +67,7 @@ public class AboutActivity extends BaseActivity
     }
 
     @Override
+    @UiThread
     public void mismatch(int majorLast, int minorLast, final String url) {
         new MaterialDialog.Builder(this)
                 .title(getString(R.string.new_version_title))
