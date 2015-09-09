@@ -124,7 +124,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
     compile 'com.afollestad:material-dialogs:0.7.8.1'
     compile 'com.android.support:multidex:1.0.1'
-    compile 'com.android.support:support-annotations:22.2.1'
+    compile 'com.android.support:support-annotations:23.0.0'
     compile project(':libraries:opencv')
     compile project(':libraries:faceapilibrary')
 

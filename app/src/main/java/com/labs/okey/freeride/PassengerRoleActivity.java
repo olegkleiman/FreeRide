@@ -196,25 +196,29 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private void showRideCodePane(@StringRes int contentStringResId,
                                   @ColorInt int contentColor){
 
-        String dialogContent = getString(contentStringResId);
+        try {
+            String dialogContent = getString(contentStringResId);
 
-        new MaterialDialog.Builder(this)
-                .title(R.string.ride_code_title)
-                .content(dialogContent)
-                .contentColor(contentColor)
-                .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
-                .inputMaxLength(5)
-                .input(R.string.ride_code_hint,
-                        R.string.ride_code_refill,
-                        new MaterialDialog.InputCallback() {
-                            @Override
-                            public void onInput(MaterialDialog dialog, CharSequence input) {
-                                String rideCode = input.toString();
-                                onSubmitCode(rideCode);
+            new MaterialDialog.Builder(this)
+                    .title(R.string.ride_code_title)
+                    .content(dialogContent)
+                    .contentColor(contentColor)
+                    .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
+                    .inputMaxLength(5)
+                    .input(R.string.ride_code_hint,
+                            R.string.ride_code_refill,
+                            new MaterialDialog.InputCallback() {
+                                @Override
+                                public void onInput(MaterialDialog dialog, CharSequence input) {
+                                    String rideCode = input.toString();
+                                    onSubmitCode(rideCode);
+                                }
                             }
-                        }
 
-                ).show();
+                    ).show();
+        } catch( Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
     }
 
     public void onCameraCV(View view) {
@@ -344,6 +348,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     try{
                         MobileServiceException mse = (MobileServiceException)mEx.getCause();
                         int responseCode = mse.getResponse().getStatus().getStatusCode();
+                        //StatusLine sl = mse.getResponse().getStatus();
                         switch( responseCode ) {
                             case 409: // HTTP 'Conflict'
                                       // picture required

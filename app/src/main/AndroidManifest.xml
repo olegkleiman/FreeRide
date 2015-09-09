@@ -80,9 +80,10 @@
 
         <activity
             android:name=".CameraCVActivity"
-            android:configChanges="keyboardHidden|orientation"
-            android:screenOrientation="landscape"
             android:label="@string/title_activity_camera_cv"
+            android:parentActivityName=".DriverRoleActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="keyboardHidden|orientation"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
         </activity>
 

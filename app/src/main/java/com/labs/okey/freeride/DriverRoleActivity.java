@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Outline;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -14,7 +15,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.CallSuper;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,9 +28,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,6 +64,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -90,6 +98,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     String mUserID;
     String mCarNumber;
 
+    TextToSpeech mTTS;
+
     final int WIFI_CONNECT_REQUEST = 1;// request code for starting WiFi connection
     // handled  in onActivityResult
 
@@ -105,6 +115,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_role);
+
+        mTTS = new TextToSpeech(getApplicationContext(),
+                new TextToSpeech.OnInitListener(){
+
+                    @Override
+                    public void onInit(int status) {
+                        if( status != TextToSpeech.ERROR ) {
+                            mTTS.setLanguage(Locale.US);
+                        }
+                    }
+                });
 
         setupUI(getString(R.string.title_activity_driver_role), "");
         wamsInit(true);
@@ -256,6 +277,36 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }.start();
     }
 
+    @Override
+    @CallSuper
+    public void onResume() {
+        super.onResume();
+
+        wifiUtil.registerReceiver(this);
+    }
+
+    @Override
+    @CallSuper
+    public void onPause() {
+
+        wifiUtil.unregisterReceiver();
+
+        if( mTTS != null) {
+            mTTS.stop();
+            mTTS.shutdown();
+        }
+
+        super.onPause();
+
+    }
+
+    @Override
+    @CallSuper
+    protected void onStop() {
+        wifiUtil.removeGroup();
+        super.onStop();
+    }
+
     public void onButtonSubmitRide(View v){
 
         if( mCurrentRide == null )
@@ -299,7 +350,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_debug) {
+            onDebug(null);
             return true;
         }
 
@@ -315,14 +367,45 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     protected void setupUI(String title, String subTitle){
         super.setupUI(title, subTitle);
 
+        ImageView imgListen = (ImageView)findViewById(R.id.img_listen);
+        imgListen.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+
+                mTTS.speak(txtRideCode.getText().toString(), TextToSpeech.QUEUE_FLUSH, null);
+
+            }
+        });
+
+        View fab = findViewById(R.id.submit_ride_button);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+//            FloatingActionButton _fab = (FloatingActionButton)fab;
+//            _fab.setDrawableIcon(getResources().getDrawable(R.drawable.ic_action_done));
+//            _fab.setBackgroundColor(getResources().getColor(R.color.ColorAccent));
+            FloatingActionButton _fab = (FloatingActionButton)fab;
+            RelativeLayout.LayoutParams p = (RelativeLayout.LayoutParams) _fab.getLayoutParams();
+            p.setMargins(0, 0, 0, 0); // get rid of margins since shadow area is now the margin
+            _fab.setLayoutParams(p);
+        } else {
+            fab.setOutlineProvider(new ViewOutlineProvider() {
+                public void getOutline(View view, Outline outline) {
+                    int diameter = getResources().getDimensionPixelSize(R.dimen.diameter);
+                    outline.setOval(0, 0, diameter, diameter);
+                }
+            });
+            fab.setClipToOutline(true);
+        }
+
         mTxtStatus = (TextView)findViewById(R.id.txtStatus);
         mPeersRecyclerView = (RecyclerView)findViewById(R.id.recyclerViewPeers);
         mPeersRecyclerView.setHasFixedSize(true);
         mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mPeersRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-//        mPeersAdapter = new WiFiPeersAdapter2(this, R.layout.peers_header, peers);
-//        mPeersRecyclerView.setAdapter(mPeersAdapter);
+        mPeersAdapter = new WiFiPeersAdapter2(this, R.layout.peers_header, peers);
+        mPeersRecyclerView.setAdapter(mPeersAdapter);
 
         mTxtMonitorStatus = (TextView)findViewById(R.id.status_monitor);
         Globals.setMonitorStatus(getString(R.string.geofence_outside));
@@ -553,6 +636,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Snackbar.make(v, ex.getMessage(), Snackbar.LENGTH_LONG);
         }
 
+    }
+
+    public void onDebug(View view){
+        LinearLayout layout = (LinearLayout) findViewById(R.id.debugLayout);
+        int visibility = layout.getVisibility();
+        if( visibility == View.VISIBLE )
+            layout.setVisibility(View.GONE);
+        else
+            layout.setVisibility(View.VISIBLE);
     }
 
 }
