@@ -89,4 +89,6 @@
     <string name="detection_center_caption">בדיקת התמונה</string>
     <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
     <string name="detection_center_desc">לשמור?</string>
+    <string name="please_wait">נא להמתין</string>
+    <string name="passenger_progress_dialog">בדיקת הסביבה</string>
 </resources>

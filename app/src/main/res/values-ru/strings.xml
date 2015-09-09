@@ -88,4 +88,6 @@
     <string name="detection_center_desc">Сохранять?</string>
     <string name="detection_center_caption">Проверка изображения</string>
     <string name="detection_freeze">Нажмите чтобы сделать снимок</string>
+    <string name="please_wait">Подождите, пожалуйста.</string>
+    <string name="passenger_progress_dialog">Проверка окружения</string>
 </resources>
