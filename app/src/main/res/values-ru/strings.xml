@@ -71,14 +71,14 @@
     <string name="registration_next">Следующий шаг</string>
     <string name="add_cars_caption">Добавить описание машин</string>
     <string name="add_car_nick">Название</string>
-    <string name="prompt_use_phone">Показывать этот номер другум пользователям</string>
+    <string name="prompt_use_phone">Показывать этот номер другим пользователям</string>
     <string name="edit_car_dialog_text">Не указаны машины, на которых осуществляются поездки.</string>
     <string name="registration_add_status">Ваши данные регистрируются</string>
     <string name="registration_add_title">Выполняется регистрация</string>
     <string name="registration_add_status_wait">Осталось несколько секунд</string>
     <string name="download_geofences">Инициализация</string>
     <string name="download_geofences_desc">Загрузка привязок к местности</string>
-    <string name="new_version_conent">Мы настоятельно рекомендуем вам установить новую версию программы. Вы согласны?</string>
+    <string name="new_version_conent">Мы настоятельно рекомендуем установить новую версию программы. Вы согласны?</string>
     <string name="new_version_title">Новая версия </string>
     <string name="geofence_transition_dwell">Вы находитесь в зоне контроля</string>
     <string name="action_camera">Фотография</string>
@@ -90,4 +90,5 @@
     <string name="detection_freeze">Нажмите чтобы сделать снимок</string>
     <string name="please_wait">Подождите, пожалуйста.</string>
     <string name="passenger_progress_dialog">Проверка окружения</string>
+    <string name="action_refresh_settings">Обновление координат </string>
 </resources>

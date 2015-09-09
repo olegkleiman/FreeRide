@@ -69,13 +69,14 @@
     <string name="drivers_header">Select the driver</string>
 
     <string name="new_version_title">New version is ready</string>
-    <string name="new_version_conent">We strongly recommend you to install the newest version. Would you like to do so?</string>
+    <string name="new_version_conent">We strongly recommend to install the newest version. Would you like to do so?</string>
 
     <string name="default_ride_code">00000</string>
     <string name="ride_code_label">Ride Code:</string>
     <string name="ride_code_title">Type in Ride Code</string>
     <string name="ride_code_dialog_content">You may see this code on the driver\'s display</string>
     <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
+    <string name="connection_lost">The connection lost. Please try again in few seconds</string>
     <string name="ride_code_hint">5 digits without dashes</string>
     <string name="passenger_confirm">You want to confirm your ride with</string>
     <string name="ride_code_refill"></string>

@@ -11,8 +11,13 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
@@ -71,8 +76,8 @@ public class DrawMan {
                     // If the picture was not there, download it from Web
                     try {
                         Log.i(LOG_TAG, "Fetching drawable from URL");
-                        //InputStream is = fetch(pictureURL);
-                        InputStream is = new URL(pictureURL).openStream();
+                        InputStream is = fetch(pictureURL);
+                        //InputStream is = new URL(pictureURL).openStream();
                         drawable = Drawable.createFromStream(is, "src");
 
                         Bitmap bmp = ((BitmapDrawable) drawable).getBitmap();
@@ -115,6 +120,13 @@ public class DrawMan {
 
     private File getFilePath(Context context, String fileName){
         return new File(context.getCacheDir(), fileName);
+    }
+
+    private InputStream fetch(String urlString) throws IOException {
+        DefaultHttpClient httpClient = new DefaultHttpClient();
+        HttpGet request = new HttpGet(urlString);
+        HttpResponse response = httpClient.execute(request);
+        return response.getEntity().getContent();
     }
 
 }

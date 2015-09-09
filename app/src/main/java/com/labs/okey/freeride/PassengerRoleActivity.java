@@ -58,6 +58,7 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -78,12 +79,15 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     TextView mTxtStatus;
     String mUserID;
 
+    final int MAKE_PICTURE_REQUEST = 1;
+    // handled  in onActivityResult
+
     Boolean mDriversShown;
     TextView mTxtMonitorStatus;
 
     MobileServiceTable<Join> joinsTable;
 
-    WiFiUtil wifiUtil;
+    WiFiUtil mWiFiUtil;
     BLEUtil mBLEUtil;
     WiFiPeersAdapter2 mDriversAdapter;
     public List<WifiP2pDeviceUser> drivers = new ArrayList<>();
@@ -106,8 +110,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
-        wifiUtil = new WiFiUtil(this);
-        mBLEUtil = new BLEUtil(this);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
@@ -144,9 +146,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
         }.start();
 
-        // This will start WiFi-Direct serviceDiscovery
-        // for (hopefully) already published service
-        refresh();
+        if( Globals.getRideCode() == null
+            || Globals.getRideCode().isEmpty() ) {
+            // Start WiFi-Direct serviceDiscovery
+            // for (hopefully) already published service
+            mWiFiUtil = new WiFiUtil(this);
+
+            // Start BLE advertising
+            mBLEUtil = new BLEUtil(this);
+
+            refresh();
+        }
     }
 
     @UiThread
@@ -166,6 +176,36 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         mTxtMonitorStatus = (TextView)findViewById(R.id.status_monitor);
         Globals.setMonitorStatus(getString(R.string.geofence_outside));
 
+    }
+
+    @Override
+    @CallSuper
+    public void onResume() {
+        super.onResume();
+
+        if( mWiFiUtil != null)
+            mWiFiUtil.registerReceiver(this);
+    }
+
+    @Override
+    @CallSuper
+    public void onPause() {
+        super.onPause();
+
+        if( mWiFiUtil != null )
+            mWiFiUtil.unregisterReceiver();
+
+        if( mBLEUtil != null )
+            mBLEUtil.unregisterReceiver();
+    }
+
+    @Override
+    @CallSuper
+    protected void onStop() {
+        if( mWiFiUtil != null )
+            mWiFiUtil.removeGroup();
+
+        super.onStop();
     }
 
     @Override
@@ -190,6 +230,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        if( requestCode == MAKE_PICTURE_REQUEST) {
+            if( resultCode == RESULT_OK ) {
+            // How to distinguish between successful connection
+            // and just pressing back from there?
+            //wamsInit(true);
+            }
+        }
     }
 
     @UiThread
@@ -227,7 +278,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         Intent intent = new Intent(this, CameraCVActivity.class);
         //intent.putExtra("rideCode", rideCode);
-        startActivity(intent);
+        startActivityForResult(intent, MAKE_PICTURE_REQUEST);
     }
 
     //
@@ -347,18 +398,34 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     try{
                         MobileServiceException mse = (MobileServiceException)mEx.getCause();
-                        int responseCode = mse.getResponse().getStatus().getStatusCode();
-                        //StatusLine sl = mse.getResponse().getStatus();
+                        int responseCode = 0;
+                        if( mse.getCause() instanceof  UnknownHostException ) {
+                            responseCode = 503; // Some artificially: usually 503 means
+                                                // 'Service Unavailable'.
+                                                // To this extent, we mean 'Connecton lost'
+                        } else {
+                            responseCode = mse.getResponse().getStatus().getStatusCode();
+                        }
+
                         switch( responseCode ) {
                             case 409: // HTTP 'Conflict'
                                       // picture required
+                                // However, ride code was successfully validated,
+                                // so remember it for the future pictures
+                                Globals.setRideCode(rideCode);
                                 onCameraCV(null);
                                 break;
 
-                            case 404: // HTTP 'Not found'
-                                      // no such ride code
-                                // try again
+                            case 404: // HTTP 'Not found' means 'no such ride code'
+                                      // i.e.
+                                // try again with appropriate message
                                 showRideCodePane(R.string.ride_code_wrong,
+                                                 Color.RED);
+                                break;
+
+                            case 503: // HTTP 'Service Unavailable' interpreted as 'Connection Lost'
+                                // Try again
+                                showRideCodePane(R.string.connection_lost,
                                                  Color.RED);
                                 break;
                         }
@@ -429,7 +496,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         mBLEUtil.startScan();
 
-        wifiUtil.startRegistrationAndDiscovery(this, mUserID);
+        mWiFiUtil.startRegistrationAndDiscovery(this, mUserID);
 
         getHandler().postDelayed(
                 new Runnable() {

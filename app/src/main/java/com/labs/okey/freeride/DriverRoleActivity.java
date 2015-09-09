@@ -236,7 +236,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             BLEUtil bleUtil = new BLEUtil(this);
             Boolean bleRes = bleUtil.startAdvertise();
         }

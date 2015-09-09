@@ -180,4 +180,8 @@ public class Globals {
     public static Matrix4f verificationMat = new Matrix4f();
 
     public static int CHECKING_AROUND_DELAY = 8;
+
+    private static String rideCode;
+    public static String getRideCode() { return rideCode; }
+    public static void setRideCode(String value) { rideCode = value; }
 }

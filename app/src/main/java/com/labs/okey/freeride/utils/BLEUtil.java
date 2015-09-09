@@ -74,8 +74,6 @@ public class BLEUtil {
 
             mBluetoothManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
             mBluetoothAdapter = mBluetoothManager.getAdapter();
-
-            mAdvCallback = new FRAdvertiseCallback();
             // Register for broadcasts when a device is discovered
             try {
                 IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -84,6 +82,10 @@ public class BLEUtil {
             } catch (Exception ex) {
                 Log.e(LOG_TAG, ex.getMessage());
             }
+
+            // Advertising (peripheral) BLE is supported only from API >= 21
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP )
+                mAdvCallback = new FRAdvertiseCallback();
         } else
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
@@ -154,6 +156,10 @@ public class BLEUtil {
 //        for(int i = 0; i < advertisingServices.size(); i++) {
 //            gattServer.addService(advertisingServices.get(i));
 //        }
+    }
+
+    public void unregisterReceiver(){
+        mContext.unregisterReceiver(mReceiver);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
