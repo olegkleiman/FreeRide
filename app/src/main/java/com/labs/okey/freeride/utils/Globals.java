@@ -30,6 +30,8 @@ public class Globals {
 //
 //    public abstract int getRideStatus();
 
+    public static String userID;
+
     public enum RIDE_STATUS {
         APPROVED,
         NOT_APPROVED,
@@ -56,6 +58,7 @@ public class Globals {
     static final public int SOCKET_TIMEOUT = 5000;
     public static final String TXTRECORD_PROP_AVAILABLE = "available";
     public static final String TXTRECORD_PROP_USERNAME = "username";
+    public static final String TXTRECORD_PROP_RIDECODE = "ridecode";
     public static final String TXTRECORD_PROP_PORT = "port";
     public static final String SERVICE_INSTANCE = "_wififastride";
     public static final String SERVICE_REG_TYPE = "_presence._tcp";
@@ -64,7 +67,7 @@ public class Globals {
     public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
 
     public static final String FB_USERNAME_PREF = "username";
-    public static final String FB_LASTNAME__PREF = "lastUsername";
+    public static final String FB_LASTNAME_PREF = "lastUsername";
     public static final String REG_PROVIDER_PREF = "registrationProvider";
 
     public static final String FIRST_NAME_PREF = "firstname";

@@ -29,16 +29,27 @@
             android:layout_margin="8dp" />
 
         <android.support.design.widget.FloatingActionButton
-            android:layout_height="@dimen/diameter"
-            android:layout_width="@dimen/diameter"
             android:id="@+id/add_car_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:src="@drawable/ic_action_add"
+            app:elevation="4dp"
+
+            app:layout_anchorGravity="bottom|right|end"
+
+            android:layout_gravity="end|bottom"
+            app:fabSize="normal"
+
             app:backgroundTint="@color/ColorAccent"
-            android:background="@color/ColorAccent"
-            android:layout_marginBottom="64dp"
-            android:layout_alignBottom="@+id/carsListView"
-            android:layout_alignRight="@+id/carsListView"
-            android:layout_marginRight="16dp" />
+            app:borderWidth="0dp"
+
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginBottom="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:visibility="visible" />
 
     </RelativeLayout>
 

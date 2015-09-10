@@ -99,7 +99,7 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
             WifiP2pDeviceUser device = items.get(position - 1);
 
             holder.deviceName.setText(device.deviceName);
-            holder.deviceDetails.setText(device.deviceAddress);
+            holder.deviceDetails.setText(device.getRideCode());
             //holder.deviceStatus.setText(getDeviceStatus(device.status));
             holder.setImageStatus(device.status);
 

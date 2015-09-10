@@ -1,6 +1,10 @@
 package com.labs.okey.freeride.adapters;
 
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,8 +13,10 @@ import android.widget.TextView;
 
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Ride;
+import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
+import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.views.LayoutRipple;
 
 import java.text.DateFormat;
@@ -24,7 +30,8 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
     private List<Ride> items;
     IRecyclerClickListener mClickListener;
-
+    Context context;
+    private static final String LOG_TAG = "FR.Main";
 
     public MyRidesAdapter(List<Ride> objects) {
         items = objects;
@@ -37,6 +44,7 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        context = parent.getContext();
 
         View v = LayoutInflater
                 .from(parent.getContext())
@@ -51,33 +59,58 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
         Ride ride = items.get(position);
 
-
         //TODO: need to enter the real name of driver
-        if(ride.getDriverName() != "current Driver")
+        if(!ride.getDriverId().equals( Globals.userID))
         {
             holder.driverName.setText(ride.getDriverName());
             holder.ApprovedSing.setVisibility(View.GONE);
             holder.SteeringWheel.setVisibility(View.GONE);
-
         }
         else {
 
-                holder.driverName.setVisibility(View.GONE);
+            holder.driverName.setVisibility(View.GONE);
 
-                if(ride.getApproved() == null){
+            if(ride.getApproved() == Globals.RIDE_STATUS.APPROVED.ordinal()){
 
-                }
-                else if(ride.getApproved() == Globals.RIDE_STATUS.APPROVED.ordinal()) {
+                holder.ApprovedSing.setImageResource(R.drawable.v_sing_26);
+            }
+            else if ( ride.getApproved() == Globals.RIDE_STATUS.NOT_APPROVED.ordinal()){
+                holder.ApprovedSing.setImageResource(R.drawable.ex_sing_26);
+            }
+            else if ( ride.getApproved() == Globals.RIDE_STATUS.WAITING.ordinal()) {
+                holder.ApprovedSing.setImageResource(R.drawable.attention_26);
 
-                    holder.ApprovedSing.setImageResource(R.drawable.v_sing_26);
-                }
-                else if ( ride.getApproved() != Globals.RIDE_STATUS.APPROVED.ordinal()) {
-                    holder.ApprovedSing.setImageResource(R.drawable.ex_sing_26);
-                }
+            }
         }
 
 
-        holder.DriverImage.setImageResource(R.drawable.driver50);
+        try {
+            User user = User.load(context);
+
+
+
+            Drawable drawable =
+                    (Globals.drawMan.userDrawable(context,
+                            "1",
+                            user.getPictureURL())).get();
+            if( drawable != null ) {
+                drawable = RoundedDrawable.fromDrawable(drawable);
+                ((RoundedDrawable) drawable)
+                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                        .setBorderColor(Color.WHITE)
+                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                        .setOval(true);
+
+                holder.DriverImage.setImageDrawable(drawable);
+
+            }
+        } catch (Exception e) {
+            //TODO LOG_TAG is from main activity, nedd
+            Log.e(LOG_TAG, e.getMessage());
+        }
+
+
+
 
         DateFormat df = new SimpleDateFormat("MM.dd.yy");
         holder.created.setText(df.format(ride.getCreated()));

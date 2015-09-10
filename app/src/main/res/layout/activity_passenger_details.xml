@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:clickable="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff6f6f6"
+    android:orientation="horizontal"
+    android:id="@+id/PassengerDetail">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/content_frame"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <!-- We use a Toolbar so that our drawer can be displayed
+             in front of the action bar -->
+        <include
+            layout="@layout/tool_bar" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/card_backpanel_height"
+            android:background="?attr/colorPrimary" />
+
+        <ImageView
+            android:layout_width="@dimen/avatar_size"
+            android:layout_height="@dimen/avatar_size"
+            android:layout_marginEnd="@dimen/avatar_margin_end"
+            android:layout_marginRight="@dimen/avatar_margin_end"
+            android:layout_marginTop="@dimen/avatar_margin_top"
+            android:id="@+id/passengerAvatarView"
+            android:layout_gravity="end" />
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/user_details_card"
+        android:layout_width="fill_parent"
+        app:cardElevation="4dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginLeft="@dimen/card_horizontal_margin"
+        android:layout_marginRight="@dimen/card_horizontal_margin"
+        android:layout_marginBottom="@dimen/card_horizontal_margin"
+        android:layout_marginTop="@dimen/card_horizontal_margin">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/settings_card_row_height"
+                android:orientation="horizontal"
+                android:id="@+id/linearLayout3"
+                android:layout_below="@+id/linearLayout4"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true">
+                >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/phone"
+                    android:src="@drawable/ic_action_phone"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginLeft="12dp"
+                    android:layout_gravity="center_vertical" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="phone passenger"
+                    android:id="@+id/phonePassenger"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginLeft="12dp"
+                    android:layout_gravity="center_vertical" />
+
+
+
+            </LinearLayout>
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/Carpooling_card"
+            android:layout_width="fill_parent"
+            app:cardElevation="4dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_below="@+id/user_details_card"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="@dimen/card_horizontal_margin"
+            android:layout_marginRight="@dimen/card_horizontal_margin"
+            android:layout_marginBottom="@dimen/card_horizontal_margin"
+            >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_height="@dimen/settings_card_row_height"
+            android:gravity="center_vertical"
+            android:id="@+id/linearLayout6">
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="40dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/list_of_Carpooling"
+                android:id="@+id/textViewListCarpooling"
+                android:layout_gravity="center_vertical" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerCarpooling"
+            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_below="@+id/linearLayout6"
+            />
+
+        </RelativeLayout>
+        </android.support.v7.widget.CardView>
+
+    </LinearLayout>
+
+</LinearLayout>

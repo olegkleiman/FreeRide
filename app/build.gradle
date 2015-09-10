@@ -19,7 +19,7 @@ model {
             minSdkVersion.apiLevel = 16
             targetSdkVersion.apiLevel = 22
             versionCode = 4
-            versionName = "2.6"
+            versionName = "2.7"
         }
     }
 

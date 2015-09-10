@@ -110,7 +110,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
-
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
 
@@ -500,7 +499,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         mBLEUtil.startScan();
 
-        mWiFiUtil.startRegistrationAndDiscovery(this, mUserID);
+        mWiFiUtil.startRegistrationAndDiscovery(this, mUserID,
+                // provide empty rideCode to distinguish
+                // this broadcast from the driver's one
+                "");
 
         getHandler().postDelayed(
                 new Runnable() {

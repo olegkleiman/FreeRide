@@ -143,7 +143,6 @@ public class RideDetailsActivity extends BaseActivity
 
         new MaterialDialog.Builder(this)
                 .title("")
-                .content("")
                 .customView(R.layout.dialog_write_appeal, true)
                 .autoDismiss(true)
                 .cancelable(true)

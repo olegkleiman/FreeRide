@@ -134,7 +134,8 @@ public class RegisterActivity extends FragmentActivity
 
         if (savedInstanceState != null) {
             String name = savedInstanceState.getString(PENDING_ACTION_BUNDLE_KEY);
-            pendingAction = PendingAction.valueOf(name);
+            if( name != null && name.isEmpty() )
+                pendingAction = PendingAction.valueOf(name);
         }
 
         setContentView(R.layout.activity_register);
@@ -302,7 +303,7 @@ public class RegisterActivity extends FragmentActivity
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putString(Globals.FB_USERNAME_PREF, fbUser.getFirstName());
         editor.putString(Globals.REG_PROVIDER_PREF, fbProvider);
-        editor.putString(Globals.FB_LASTNAME__PREF, fbUser.getLastName());
+        editor.putString(Globals.FB_LASTNAME_PREF, fbUser.getLastName());
         editor.putString(Globals.TOKENPREF, mAccessToken);
 
         editor.apply();
@@ -363,7 +364,7 @@ public class RegisterActivity extends FragmentActivity
                 newUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + fbUser.getId());
                 newUser.setFirstName(fbUser.getFirstName());
                 newUser.setLastName(fbUser.getLastName());
-                String pictureURL = "http://graph.facebook.com/" + fbUser.getId() + "/picture?type=large";
+                String pictureURL = "http://graph.facebook.com/" + fbUser.getId() + "/picture?width=100&height=100";
                 newUser.setPictureURL(pictureURL);
                 newUser.setEmail((String) fbUser.getProperty("email"));
                 newUser.setPhone(txtUser.getText().toString());

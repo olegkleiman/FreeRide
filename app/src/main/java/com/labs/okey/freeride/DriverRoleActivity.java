@@ -104,6 +104,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     // handled  in onActivityResult
 
     private Handler handler = new Handler(this);
+
     public Handler getHandler() {
         return handler;
     }
@@ -117,11 +118,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         setContentView(R.layout.activity_driver_role);
 
         mTTS = new TextToSpeech(getApplicationContext(),
-                new TextToSpeech.OnInitListener(){
+                new TextToSpeech.OnInitListener() {
 
                     @Override
                     public void onInit(int status) {
-                        if( status != TextToSpeech.ERROR ) {
+                        if (status != TextToSpeech.ERROR) {
                             mTTS.setLanguage(Locale.US);
                         }
                     }
@@ -139,13 +140,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Exception mEx;
 
             @Override
-            protected void onPostExecute(Void result){
+            protected void onPostExecute(Void result) {
 
-                if( mEx == null ) {
+                if (mEx == null) {
                     TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
-                    txtRideCode.setText(mCurrentRide.getRideCode());
+                    String rideCode = mCurrentRide.getRideCode();
+                    txtRideCode.setText(rideCode);
 
-                    invalidateOptionsMenu(); // actually enable OpenCV item
+                    if (!mCurrentRide.isPictureRequired())
+                        startAdvertise(mUserID, rideCode);
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
                             mEx.getMessage(), Toast.LENGTH_LONG).show();
@@ -162,7 +165,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     ride.setCarNumber(mCarNumber);
                     mCurrentRide = ridesTable.insert(ride).get();
 
-                } catch(ExecutionException | InterruptedException ex ) {
+                } catch (ExecutionException | InterruptedException ex) {
                     mEx = ex;
                     Log.e(LOG_TAG, ex.getMessage());
                 }
@@ -174,7 +177,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         List<String> _cars = new ArrayList<>();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Set<String> carsSet = sharedPrefs.getStringSet(Globals.CARS_PREF, new HashSet<String>());
-        if( carsSet != null ) {
+        if (carsSet != null) {
             Iterator<String> iterator = carsSet.iterator();
             while (iterator.hasNext()) {
                 String carNumber = iterator.next();
@@ -185,7 +188,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         String[] cars = new String[_cars.size()];
         cars = _cars.toArray(cars);
 
-        if( cars.length == 0 ) {
+        if (cars.length == 0) {
             new MaterialDialog.Builder(this)
                     .title(R.string.edit_car_dialog_caption2)
                     .content(R.string.edit_car_dialog_text)
@@ -201,7 +204,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         }
                     })
                     .show();
-        }else if( cars.length > 1) {
+        } else if (cars.length > 1) {
 
             new MaterialDialog.Builder(this)
                     .title(R.string.edit_car_dialog_caption1)
@@ -236,19 +239,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            BLEUtil bleUtil = new BLEUtil(this);
-            Boolean bleRes = bleUtil.startAdvertise();
-        }
-
-        // This will publish the service in DNS-SD and start serviceDiscovery()
-        wifiUtil.startRegistrationAndDiscovery(this, mUserID);
-
         new Thread() {
             @Override
-            public void run(){
+            public void run() {
 
-                try{
+                try {
 
                     while (true) {
 
@@ -268,13 +263,27 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                         Thread.sleep(1000);
                     }
-                }
-                catch(InterruptedException ex) {
+                } catch (InterruptedException ex) {
                     Log.e(LOG_TAG, ex.getMessage());
                 }
 
             }
         }.start();
+    }
+
+    private void startAdvertise(String userID,
+                                String rideCode) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            BLEUtil bleUtil = new BLEUtil(this);
+            Boolean bleRes = bleUtil.startAdvertise();
+        }
+
+        // This will publish the service in DNS-SD and start serviceDiscovery()
+        wifiUtil.startRegistrationAndDiscovery(this,
+                userID,
+                rideCode);
+
     }
 
     @Override
@@ -291,7 +300,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         wifiUtil.unregisterReceiver();
 
-        if( mTTS != null) {
+        if (mTTS != null) {
             mTTS.stop();
             mTTS.shutdown();
         }
@@ -307,9 +316,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         super.onStop();
     }
 
-    public void onButtonSubmitRide(View v){
+    public void onButtonSubmitRide(View v) {
 
-        if( mCurrentRide == null )
+        if (mCurrentRide == null)
             return;
 
         mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
@@ -364,10 +373,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
-    protected void setupUI(String title, String subTitle){
+    protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
 
-        ImageView imgListen = (ImageView)findViewById(R.id.img_listen);
+        ImageView imgListen = (ImageView) findViewById(R.id.img_listen);
         imgListen.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -384,7 +393,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //            FloatingActionButton _fab = (FloatingActionButton)fab;
 //            _fab.setDrawableIcon(getResources().getDrawable(R.drawable.ic_action_done));
 //            _fab.setBackgroundColor(getResources().getColor(R.color.ColorAccent));
-            FloatingActionButton _fab = (FloatingActionButton)fab;
+            FloatingActionButton _fab = (FloatingActionButton) fab;
             RelativeLayout.LayoutParams p = (RelativeLayout.LayoutParams) _fab.getLayoutParams();
             p.setMargins(0, 0, 0, 0); // get rid of margins since shadow area is now the margin
             _fab.setLayoutParams(p);
@@ -398,8 +407,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             fab.setClipToOutline(true);
         }
 
-        mTxtStatus = (TextView)findViewById(R.id.txtStatus);
-        mPeersRecyclerView = (RecyclerView)findViewById(R.id.recyclerViewPeers);
+        mTxtStatus = (TextView) findViewById(R.id.txtStatus);
+        mPeersRecyclerView = (RecyclerView) findViewById(R.id.recyclerViewPeers);
         mPeersRecyclerView.setHasFixedSize(true);
         mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mPeersRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -407,7 +416,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mPeersAdapter = new WiFiPeersAdapter2(this, R.layout.peers_header, peers);
         mPeersRecyclerView.setAdapter(mPeersAdapter);
 
-        mTxtMonitorStatus = (TextView)findViewById(R.id.status_monitor);
+        mTxtMonitorStatus = (TextView) findViewById(R.id.status_monitor);
         Globals.setMonitorStatus(getString(R.string.geofence_outside));
 
     }
@@ -433,10 +442,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             @Override
             public void onClick(DialogInterface dialogInterface, int which) {
-                if( which == DialogInterface.BUTTON_POSITIVE ) {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
                     startActivityForResult(new Intent(actionIntent), WIFI_CONNECT_REQUEST);
                 }
-            }};
+            }
+        };
 
         new AlertDialogWrapper.Builder(this)
                 .setTitle(message)
@@ -456,7 +466,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 break;
 
             case Globals.MESSAGE_READ:
-                byte[] buffer = (byte[] )msg.obj;
+                byte[] buffer = (byte[]) msg.obj;
                 strMessage = new String(buffer);
                 trace(strMessage);
                 break;
@@ -474,12 +484,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         peers.clear();
         mPeersAdapter.notifyDataSetChanged();
 
-        final ImageButton btnRefresh = (ImageButton)findViewById(R.id.btnRefresh);
+        final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
         btnRefresh.setVisibility(View.GONE);
-        final ProgressBar progress_refresh = (ProgressBar)findViewById(R.id.progress_refresh);
+        final ProgressBar progress_refresh = (ProgressBar) findViewById(R.id.progress_refresh);
         progress_refresh.setVisibility(View.VISIBLE);
 
-        wifiUtil.startRegistrationAndDiscovery(this, mUserID);
+        TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+        String rideCode = txtRideCode.getText().toString();
+
+        wifiUtil.startRegistrationAndDiscovery(this, mUserID, rideCode);
 
         getHandler().postDelayed(
                 new Runnable() {
@@ -508,15 +521,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         "Device should be in available state",
                         Toast.LENGTH_LONG).show();
             }
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             Log.e(LOG_TAG, ex.getMessage());
         }
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        if( requestCode == WIFI_CONNECT_REQUEST) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == WIFI_CONNECT_REQUEST) {
             // if( resultCode == RESULT_OK ) {
             // How to distinguish between successful connection
             // and just pressing back from there?
@@ -544,8 +556,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     // Used to synchronize peers statuses after connection
 
     @Override
-    public void onPeersAvailable(WifiP2pDeviceList list){
-        for(WifiP2pDevice device : list.getDeviceList()) {
+    public void onPeersAvailable(WifiP2pDeviceList list) {
+        for (WifiP2pDevice device : list.getDeviceList()) {
             WifiP2pDeviceUser d = new WifiP2pDeviceUser(device);
             d.setUserId(mUserID);
             mPeersAdapter.updateItem(d);
@@ -558,7 +570,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo p2pInfo) {
-        TextView txtMe = (TextView)findViewById(R.id.txtMe);
+        TextView txtMe = (TextView) findViewById(R.id.txtMe);
         Thread handler = null;
 
         wifiUtil.requestPeers(this);
@@ -575,7 +587,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 handler = new GroupOwnerSocketHandler(getHandler());
                 handler.start();
                 trace("Server socket opened.");
-            } catch (IOException e){
+            } catch (IOException e) {
                 trace("Failed to create a server thread - " + e.getMessage());
             }
         } else {
@@ -599,7 +611,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     // Implementation of IVersionMismatchListener
     //
     @Override
-    public void mismatch(int major, int minor, final String url){
+    public void mismatch(int major, int minor, final String url) {
         try {
             new MaterialDialog.Builder(getApplicationContext())
                     .title(getString(R.string.new_version_title))
@@ -630,7 +642,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     public void connectionFailure(Exception ex) {
 
-        if( ex != null ) {
+        if (ex != null) {
 
             View v = findViewById(R.id.drawer_layout);
             Snackbar.make(v, ex.getMessage(), Snackbar.LENGTH_LONG);
@@ -638,10 +650,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    public void onDebug(View view){
+    public void onDebug(View view) {
         LinearLayout layout = (LinearLayout) findViewById(R.id.debugLayout);
         int visibility = layout.getVisibility();
-        if( visibility == View.VISIBLE )
+        if (visibility == View.VISIBLE)
             layout.setVisibility(View.GONE);
         else
             layout.setVisibility(View.VISIBLE);

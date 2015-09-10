@@ -15,6 +15,7 @@ import android.util.Log;
 
 
 import com.labs.okey.freeride.WiFiDirectBroadcastReceiver;
+import com.labs.okey.freeride.model.AdvertisedRide;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 
 import java.io.BufferedReader;
@@ -115,14 +116,15 @@ public class WiFiUtil {
      * Registers a local service and then initiates a service discovery
      */
     public void startRegistrationAndDiscovery(final IPeersChangedListener peersChangedListener,
-                                              final String userName) {
+                                              final String userName,
+                                              final String rideCode) {
 
         mManager.clearLocalServices(mChannel,
                 new WifiP2pManager.ActionListener() {
 
                     @Override
                     public void onSuccess() {
-                        registerDnsSdService(userName);
+                        registerDnsSdService(userName, rideCode);
                         discoverService(peersChangedListener);
                     }
 
@@ -134,10 +136,13 @@ public class WiFiUtil {
 
     }
 
-    public void registerDnsSdService(String userName) {
+    public void registerDnsSdService(String userName,
+                                     String rideCode) {
+
         Map<String, String> record = new HashMap<>();
         record.put(Globals.TXTRECORD_PROP_AVAILABLE, "visible");
         record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
+        record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
         record.put(Globals.TXTRECORD_PROP_PORT, Integer.toString(Globals.SERVER_PORT));
 
         // Service information.  Pass it an instance name, service type
@@ -153,7 +158,7 @@ public class WiFiUtil {
 
     public void discoverService(final IPeersChangedListener peersChangedListener) {
 
-        final HashMap<String, String> buddies = new HashMap<>();
+        final HashMap<String, AdvertisedRide> buddies = new HashMap<>();
 
           /*
          * Register listeners for DNS-SD services. These are callbacks invoked
@@ -177,8 +182,12 @@ public class WiFiUtil {
                             if (peersChangedListener != null) {
                                 WifiP2pDeviceUser deviceUser =
                                         new WifiP2pDeviceUser(device);
-                                String userId = buddies.get(device.deviceName);
+                                AdvertisedRide advRide = buddies.get(device.deviceName);
+                                String userId = advRide.getUserId();
                                 deviceUser.setUserId(userId);
+                                String rideCode = advRide.getRideCode();
+                                deviceUser.setRideCode(rideCode);
+
                                 peersChangedListener.add(deviceUser);
                             }
                         } else {
@@ -201,11 +210,15 @@ public class WiFiUtil {
 
                         String traceMessage = "DNS-SD TXT Records: " +
                                 device.deviceName + " is " + record.get(Globals.TXTRECORD_PROP_AVAILABLE);
-                        traceMessage += "\nUser Name:" + record.get(Globals.TXTRECORD_PROP_USERNAME);
+                        String userId = record.get(Globals.TXTRECORD_PROP_USERNAME);
+                        traceMessage += "\nUser Name: " + userId;
+                        String rideCode = record.get(Globals.TXTRECORD_PROP_RIDECODE);
+                        traceMessage += "\nRide Code: " + rideCode;
                         ((ITrace) mContext).trace(traceMessage);
                         Log.d(LOG_TAG, traceMessage);
 
-                        buddies.put(device.deviceName, record.get(Globals.TXTRECORD_PROP_USERNAME));
+                        AdvertisedRide advRide = new AdvertisedRide(userId, rideCode);
+                        buddies.put(device.deviceName, advRide);
                     }
                 });
 

@@ -109,18 +109,20 @@ public class RejectedMyRidesFragment extends Fragment {
     }
 
     private  void FilteringApproveAndOtherDrivers(){
+
         List<Ride> tempList = new ArrayList<Ride>();
 
         for (Ride ride : mRides ){
-            //TODO: the condition: if approve != null need fix
-            if(ride.getApproved()!=  null){
-                if (ride.getApproved() != Globals.RIDE_STATUS.APPROVED.ordinal()
-                        && ride.getDriverName() == "current Driver") {
-                    tempList.add(ride);
-                }
+
+            if (ride.getApproved() != Globals.RIDE_STATUS.APPROVED.ordinal()
+                        && ride.getDriverName() == Globals.userID) {
+                tempList.add(ride);
             }
+
         }
-        mRides =  tempList;
+
+        mRides.clear();
+        mRides.addAll(tempList);
     }
 
     private void sort(){

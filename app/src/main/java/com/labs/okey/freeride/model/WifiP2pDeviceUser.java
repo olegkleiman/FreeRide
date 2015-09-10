@@ -14,6 +14,10 @@ public class WifiP2pDeviceUser extends WifiP2pDevice {
         _userName = value;
     }
 
+    private String _rideCode;
+    public String getRideCode() { return  _rideCode; }
+    public void setRideCode(String value) { _rideCode = value; }
+
     public WifiP2pDeviceUser(WifiP2pDevice device) {
         super(device);
     }

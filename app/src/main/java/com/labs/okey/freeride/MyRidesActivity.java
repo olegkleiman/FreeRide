@@ -31,7 +31,7 @@ public class MyRidesActivity extends BaseActivity
 
     MyRideTabAdapter mTabAdapter;
     private String titles[];
-    List<Ride> mRides = new ArrayList<>();
+    List<Ride> mRides;
     ViewPager mViewPager;
     SlidingTabLayout slidingTabLayout;
 
@@ -41,6 +41,9 @@ public class MyRidesActivity extends BaseActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_rides);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        Globals.userID = sharedPrefs.getString(Globals.USERIDPREF, "");
 
         wamsInit(false);
         mRidesSyncTable = getMobileServiceClient().getSyncTable("rides", Ride.class);
@@ -59,18 +62,14 @@ public class MyRidesActivity extends BaseActivity
                 try {
 
                     wamsUtils.sync(getMobileServiceClient(), "rides");
-
-                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
+                    String userID = Globals.userID;
 
                     Query pullQuery = getMobileServiceClient().getTable(Ride.class)
                             .where().field("driverid").eq(userID);
                     mRidesSyncTable.pull(pullQuery).get();
 
                     final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQuery).get();
-
                     mRides = ridesList;
-
 
 //                   mTabAdapter.notifyDataSetChanged();
 
@@ -102,6 +101,38 @@ public class MyRidesActivity extends BaseActivity
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
 
+        // Read the rides from local cache
+//        new AsyncTask<Object, Void, Void>() {
+//
+//            @Override
+//            protected void onPostExecute(Void result){
+//                mViewPager.setAdapter(new MyRideTabAdapter(getSupportFragmentManager(),
+//                        titles, mRides));
+//            }
+//
+//            @Override
+//            protected Void doInBackground(Object... objects) {
+//
+//                try {
+//                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+//                    String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
+//
+//                    Query pullQuery = getMobileServiceClient().getTable(Ride.class)
+//                            .where().field("driverid").eq(userID);
+//                    final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQuery).get();
+//                    mRides = ridesList;
+//
+//                } catch(InterruptedException | ExecutionException ex) {
+//                    Log.e(LOG_TAG, ex.getMessage());
+//                }
+//
+//                return null;
+//            }
+//        }.execute();
+
+
+
+        mRides = new ArrayList<Ride>();
         mTabAdapter= new MyRideTabAdapter(getSupportFragmentManager(),
                 titles, mRides);
         mViewPager.setAdapter(mTabAdapter);
@@ -114,6 +145,7 @@ public class MyRidesActivity extends BaseActivity
             }
         });
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -141,4 +173,15 @@ public class MyRidesActivity extends BaseActivity
     public void onTabReselected(ActionBar.Tab tab, android.support.v4.app.FragmentTransaction fragmentTransaction) {
 
     }
+
+//    @Override
+//    public void clicked(View   view, int position) {
+//        Toast.makeText(this, "Yaaaa", Toast.LENGTH_LONG).show();
+//
+//
+//        Intent intent = new Intent(this, DriverRoleActivity.class);
+//        //intent.putExtra("aaa",);
+//        startActivity(intent);
+//
+//    }
 }
