@@ -9,8 +9,8 @@
     <!-- If you have one subscription key, you can add it here to use the service -->
     <string name="oxford_subscription_key">f862259efc314bdbbef51000f399f168</string>
 
-    <string name="app_name" translatable="false">FreeRide</string>
-    <string name="app_label" translatable="false">Free Ride</string>
+    <string name="app_name" translatable="false">FastRide</string>
+    <string name="app_label" translatable="false">Fast Ride</string>
     <string name="action_settings">Settings</string>
     <string name="complete_registration">Complete your info</string>
     <string name="title_activity_camera">CameraActivity</string>
@@ -46,7 +46,7 @@
     <string name="mode_name_passenger">Passenger</string>
     <string name="btnFindRide">Find a ride</string>
 
-    <string name="title_activity_main">Free Ride</string>
+    <string name="title_activity_main">Fast Ride</string>
     <string name="title_activity_driver_role">Driver Mode</string>
     <string name="subtitle_activity_driver_role">Driver Mode</string>
 
@@ -156,7 +156,7 @@
     <string name="latest_version">You already have a latest version of FastRide.</string>
     <string name="about">About</string>
     <string name="no_face_detection">This camera does not support Face detection feature</string>
-    <string name="copyright">&#169; 2015 Maximum. All rights reserved.</string>
+    <string name="copyright">&#169; 2015 FastRide. All rights reserved.</string>
     <string name="license" translatable="false">Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at

@@ -205,8 +205,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         if( mWiFiUtil != null )
             mWiFiUtil.removeGroup();
 
+        // Ride Code will be re-newed on next activity's launch
+        Globals.setRideCode("");
+
         super.onStop();
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -535,7 +539,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         showRideCodePane(R.string.ride_code_dialog_content,
                                 Color.BLACK);
 
-                    dialog.dismiss();
+                    try {
+                        dialog.dismiss();
+                    } catch(IllegalArgumentException ex) {
+                        // Safely dismiss when called due to
+                        // 'Not attached to window manager'.
+                        // In this case the activity just was passed by
+                        // to some other activity
+                    }
                 }
             }.start();
         } catch( Exception ex) {

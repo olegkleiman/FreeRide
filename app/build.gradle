@@ -18,8 +18,8 @@ model {
             applicationId = "com.labs.okey.freeride"
             minSdkVersion.apiLevel = 16
             targetSdkVersion.apiLevel = 22
-            versionCode = 1
-            versionName = "1.0"
+            versionCode = 4
+            versionName = "2.6"
         }
     }
 

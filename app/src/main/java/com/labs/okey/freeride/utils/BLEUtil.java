@@ -159,7 +159,13 @@ public class BLEUtil {
     }
 
     public void unregisterReceiver(){
-        mContext.unregisterReceiver(mReceiver);
+        try {
+            mContext.unregisterReceiver(mReceiver);
+        } catch(IllegalArgumentException ex) {
+            // It's safely to dismiss the exception such exception
+            // because receiver is created on the first launch of the activity
+            Log.i(LOG_TAG, ex.getMessage());
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

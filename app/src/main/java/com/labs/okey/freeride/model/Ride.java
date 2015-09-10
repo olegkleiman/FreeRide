@@ -66,7 +66,7 @@ public class Ride implements Serializable  {
     public void setPictureURL(String value) { picture_url = value; }
 
     @Expose
-    @com.google.gson.annotations.SerializedName("ispicturerequred")
+    @com.google.gson.annotations.SerializedName("ispicturerequired")
     private Boolean isPictureRequired;
     public Boolean isPictureRequired() {return isPictureRequired; }
 }

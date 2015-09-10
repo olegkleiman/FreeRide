@@ -32,7 +32,7 @@
     <string name="title_activity_about">نبذة عن البرنامج</string>
     <string name="title_activity_my_rides">جميع الرحلات</string>
     <string name="title_activity_settings">الإعدادات</string>
-    <string name="version_title">نسخة ألفا 1</string>
+    <string name="version_title"> نسخة</string>
     <string name="btnSubmitText">أطلب الإعفاء</string>
     <string name="add_car_dialog_caption">إضافة مركبة</string>
     <string name="add_car_button_cancel">إلغاء</string>

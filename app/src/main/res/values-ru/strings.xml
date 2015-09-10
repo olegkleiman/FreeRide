@@ -47,7 +47,7 @@
     <string name="about">О программе</string>
     <string name="passengers_header">Пассажиры</string>
     <string name="drivers_header">Укажите водителя</string>
-    <string name="version_title">Версия Alpha 1</string>
+    <string name="version_title">Версия </string>
     <string name="subtitle_activity_settings">Настройки</string>
     <string name="subtitle_activity_tutorial">Подсказки</string>
     <string name="title_activity_about">О программе</string>

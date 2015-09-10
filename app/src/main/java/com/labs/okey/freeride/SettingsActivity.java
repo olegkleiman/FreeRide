@@ -266,6 +266,32 @@ public class SettingsActivity extends BaseActivity {
     void onRefreshClassifiers() {
         new AsyncTask<Void, Void, Void>() {
 
+            Exception mEx;
+            MaterialDialog progress;
+
+            @Override
+            protected void onPreExecute() {
+                progress = new MaterialDialog.Builder(SettingsActivity.this)
+                        .title("Updating classifiers")
+                        .content(R.string.please_wait)
+                        .progress(true, 0)
+                        .show();
+            }
+
+            @Override
+            protected void onPostExecute(Void result){
+                progress.dismiss();
+
+                String msg = "Classifiers updated";
+
+                if( mEx != null ) {
+                    msg = mEx.getMessage() + " Cause: " + mEx.getCause();
+                }
+
+                Toast.makeText(SettingsActivity.this, msg,
+                        Toast.LENGTH_LONG).show();
+            }
+
             @Override
             protected Void doInBackground(Void... voids) {
 
@@ -293,8 +319,9 @@ public class SettingsActivity extends BaseActivity {
 
                     Globals.setCascadePath(file.getAbsolutePath());
 
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+                    mEx = ex;
                 }
 
                 return null;
