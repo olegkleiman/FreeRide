@@ -272,7 +272,7 @@ public class SettingsActivity extends BaseActivity {
             @Override
             protected void onPreExecute() {
                 progress = new MaterialDialog.Builder(SettingsActivity.this)
-                        .title("Updating classifiers")
+                        .title(getString(R.string.download_classifiers_desc))
                         .content(R.string.please_wait)
                         .progress(true, 0)
                         .show();
@@ -339,7 +339,7 @@ public class SettingsActivity extends BaseActivity {
             @Override
             protected void onPreExecute() {
                 progress = new MaterialDialog.Builder(SettingsActivity.this)
-                        .title("Updating geofences")
+                        .title(getString(R.string.download_geofences_desc))
                         .content(R.string.please_wait)
                         .progress(true, 0)
                         .show();
