@@ -71,15 +71,19 @@ model {
 
     android.buildTypes {
         release {
-            isMinifyEnabled = false
+            minifyEnabled = false
             proguardFiles += file('proguard-rules.pro')
-            isJniDebuggable = true
-            isDebuggable = true
+            debuggable = false
+            ndk.with {
+                debuggable = false
+            }
         }
 
         debug {
-            isJniDebuggable = true
-            isDebuggable = true
+            debuggable = true
+            ndk.with {
+                debuggable = true
+            }
         }
     }
 
