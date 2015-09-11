@@ -180,15 +180,20 @@ public class WiFiUtil {
                             Log.d(LOG_TAG, traceMessage);
 
                             if (peersChangedListener != null) {
-                                WifiP2pDeviceUser deviceUser =
-                                        new WifiP2pDeviceUser(device);
-                                AdvertisedRide advRide = buddies.get(device.deviceName);
-                                String userId = advRide.getUserId();
-                                deviceUser.setUserId(userId);
-                                String rideCode = advRide.getRideCode();
-                                deviceUser.setRideCode(rideCode);
 
-                                peersChangedListener.add(deviceUser);
+                                AdvertisedRide advRide = buddies.get(device.deviceName);
+                                if( advRide != null ) {
+
+                                    WifiP2pDeviceUser deviceUser =
+                                            new WifiP2pDeviceUser(device);
+
+                                    String userId = advRide.getUserId();
+                                    deviceUser.setUserId(userId);
+                                    String rideCode = advRide.getRideCode();
+                                    deviceUser.setRideCode(rideCode);
+
+                                    peersChangedListener.add(deviceUser);
+                                }
                             }
                         } else {
                             Log.d(LOG_TAG, "Other DNS_SD service discovered: "
