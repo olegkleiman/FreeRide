@@ -99,5 +99,6 @@
     <string name="ride_code_wrong">קוד שגוי. נסו שוב בבקשה.</string>
     <string name="fb_error_msg">שגיה:</string>
     <string name="fb_error">אין גישה לרשת</string>
+    <string name="passenger_confirm">לאשר את הנסיעה עם </string>
 
 </resources>

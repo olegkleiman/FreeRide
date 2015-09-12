@@ -99,4 +99,5 @@
     <string name="passenger_progress_dialog">מחפש התקנים חדשים</string>
     <string name="fb_error_msg">שגיה:</string>
     <string name="fb_error">אין גישה לרשת</string>
+    <string name="passenger_confirm">לאשר את הנסיעה עם </string>
 </resources>

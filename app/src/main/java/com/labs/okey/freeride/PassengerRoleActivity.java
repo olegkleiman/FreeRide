@@ -191,8 +191,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onPause() {
         super.onPause();
 
-        if( mWiFiUtil != null )
+        if( mWiFiUtil != null ) {
             mWiFiUtil.unregisterReceiver();
+            mWiFiUtil.stopDiscovery();
+        }
 
         if( mBLEUtil != null )
             mBLEUtil.unregisterReceiver();
@@ -256,6 +258,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             new MaterialDialog.Builder(this)
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
+                    .positiveText(R.string.ok)
                     .contentColor(contentColor)
                     .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
                     .inputMaxLength(5)
@@ -358,7 +361,15 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 }
             };
 
-            String message = getString(R.string.passenger_confirm) + driverDevice.deviceName;
+            StringBuilder sb = new StringBuilder(R.string.passenger_confirm);
+            sb.append(" ");
+            sb.append(driverDevice.getUserName());
+            sb.append("?");
+            String message = sb.toString();
+//                    getString(R.string.passenger_confirm)
+//                    + " " +
+//                    driverDevice.getUserName()
+//                    + "?";
 
             new AlertDialogWrapper.Builder(this)
                     .setTitle(message)
@@ -500,11 +511,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         //mBLEUtil.startScan();
 
         mWiFiUtil.startRegistrationAndDiscovery(this,
-                getUser().Id,
+                getUser().getRegistrationId(),
                 getUser().getFullName(),
                 // provide empty rideCode to distinguish
                 // this broadcast from the driver's one
-                "");
+                "",
+                getHandler(),
+                1000);
 
         getHandler().postDelayed(
                 new Runnable() {
@@ -540,8 +553,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         dialog.incrementProgress(1);
                     else {
                         this.cancel();
-                        showRideCodePane(R.string.ride_code_dialog_content,
-                                Color.BLACK);
+                        dialog.dismiss();
+                        Log.d(LOG_TAG, "Cancelling timer");
                     }
                 }
 

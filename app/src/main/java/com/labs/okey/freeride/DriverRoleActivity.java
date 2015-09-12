@@ -90,7 +90,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     WiFiPeersAdapter2 mPeersAdapter;
     public List<WifiP2pDeviceUser> peers = new ArrayList<>();
 
-    WiFiUtil wifiUtil;
+    WiFiUtil mWiFiUtil;
 
     TextView mTxtStatus;
     TextView mTxtMonitorStatus;
@@ -237,8 +237,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCarNumber = cars[0];
         }
 
-        wifiUtil = new WiFiUtil(this);
-        wifiUtil.deletePersistentGroups();
+        mWiFiUtil = new WiFiUtil(this);
+        mWiFiUtil.deletePersistentGroups();
 
         new Thread() {
             @Override
@@ -282,10 +282,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
 
         // This will publish the service in DNS-SD and start serviceDiscovery()
-        wifiUtil.startRegistrationAndDiscovery(this,
+        mWiFiUtil.startRegistrationAndDiscovery(this,
                 userID,
                 userName,
-                rideCode);
+                rideCode,
+                getHandler(),
+                500);
 
     }
 
@@ -294,14 +296,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
-        wifiUtil.registerReceiver(this);
+        mWiFiUtil.registerReceiver(this);
     }
 
     @Override
     @CallSuper
     public void onPause() {
 
-        wifiUtil.unregisterReceiver();
+        mWiFiUtil.unregisterReceiver();
+        mWiFiUtil.stopDiscovery();
 
         if (mTTS != null) {
             mTTS.stop();
@@ -315,7 +318,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     protected void onStop() {
-        wifiUtil.removeGroup();
+        mWiFiUtil.removeGroup();
         super.onStop();
     }
 
@@ -520,7 +523,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             WifiP2pDeviceUser device = peers.get(position);
 
             if (device.status == WifiP2pDevice.AVAILABLE) {
-                wifiUtil.connectToDevice(device, 0);
+                mWiFiUtil.connectToDevice(device, 0);
             } else {
                 Toast.makeText(this,
                         "Device should be in available state",
@@ -578,7 +581,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         TextView txtMe = (TextView) findViewById(R.id.txtMe);
         Thread handler = null;
 
-        wifiUtil.requestPeers(this);
+        mWiFiUtil.requestPeers(this);
 
          /*
          * The group owner accepts connections using a server socket and then spawns a

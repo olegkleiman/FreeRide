@@ -74,11 +74,11 @@
     <string name="default_ride_code">00000</string>
     <string name="ride_code_label">Ride Code:</string>
     <string name="ride_code_title">Type in Ride Code</string>
-    <string name="ride_code_dialog_content">You may see this code on the driver\'s display</string>
+    <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>
     <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
     <string name="connection_lost">The connection lost. Please try again in few seconds</string>
     <string name="ride_code_hint">5 digits without dashes</string>
-    <string name="passenger_confirm">You want to confirm your ride with</string>
+    <string name="passenger_confirm">Do you want to confirm your ride with </string>
     <string name="ride_code_refill"></string>
     <string name="passenger_details">passenger details</string>
     <string name="list_of_Carpooling">list of Carpooling</string>

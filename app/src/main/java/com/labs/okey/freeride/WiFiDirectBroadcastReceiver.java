@@ -16,8 +16,6 @@ import com.labs.okey.freeride.utils.ITrace;
 
 public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
-
-
     private static final String LOG_TAG = "FR.BR";
 
     Activity mActivityListener;

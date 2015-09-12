@@ -6,6 +6,7 @@ import android.content.IntentFilter;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
@@ -33,7 +34,10 @@ import java.util.Map;
 /**
  * Created by Oleg Kleiman on 26-Apr-15.
  */
-public class WiFiUtil {
+public class WiFiUtil
+    implements WifiP2pManager.DnsSdServiceResponseListener,
+               WifiP2pManager.DnsSdTxtRecordListener,
+               WifiP2pManager.GroupInfoListener{
 
     private static final String LOG_TAG = "FR.WiFiUtil";
 
@@ -45,6 +49,9 @@ public class WiFiUtil {
     WifiP2pDnsSdServiceRequest mServiceRequest;
 
     WiFiDirectBroadcastReceiver mReceiver;
+
+    IPeersChangedListener mPeersChangedListener;
+    final HashMap<String, AdvertisedRide> mBuddies = new HashMap<>();
 
     public interface IPeersChangedListener {
         public void add(WifiP2pDeviceUser device);
@@ -84,10 +91,14 @@ public class WiFiUtil {
         /** register the BroadcastReceiver with the intent values to be matched */
         mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, listener);
         mContext.registerReceiver(mReceiver, intentFilter);
+
+        Log.d(LOG_TAG, "Receiver registered");
     }
 
     public void unregisterReceiver(){
         mContext.unregisterReceiver(mReceiver);
+
+        Log.d(LOG_TAG, "Receiver un-registered");
     }
 
     public void deletePersistentGroups() {
@@ -118,7 +129,11 @@ public class WiFiUtil {
     public void startRegistrationAndDiscovery(final IPeersChangedListener peersChangedListener,
                                               final String userId,
                                               final String userName,
-                                              final String rideCode) {
+                                              final String rideCode,
+                                              final Handler handler,
+                                              final int delayMills) {
+
+        mPeersChangedListener = peersChangedListener;
 
         mManager.clearLocalServices(mChannel,
                 new WifiP2pManager.ActionListener() {
@@ -126,7 +141,7 @@ public class WiFiUtil {
                     @Override
                     public void onSuccess() {
                         registerDnsSdService(userId, userName, rideCode);
-                        discoverService(peersChangedListener);
+                        discoverService(peersChangedListener, handler, delayMills);
                     }
 
                     @Override
@@ -159,7 +174,63 @@ public class WiFiUtil {
                 new TaggedActionListener((ITrace) mContext, "Add Local Service"));
     }
 
-    public void discoverService(final IPeersChangedListener peersChangedListener) {
+    @Override
+    public void onDnsSdServiceAvailable(String instanceName,
+                                        String registrationType,
+                                        WifiP2pDevice device) {
+        Log.d(LOG_TAG, "onDnsSdServiceAvailable() called");
+
+        // A service has been discovered. Is this our app?
+        if (instanceName.equalsIgnoreCase(Globals.SERVICE_INSTANCE)) {
+            String traceMessage = "DNS-SD SRV Record: " + instanceName;
+            ((ITrace) mContext).trace(traceMessage);
+            Log.d(LOG_TAG, traceMessage);
+
+            if (mPeersChangedListener != null) {
+
+                AdvertisedRide advRide = mBuddies.get(device.deviceName);
+                if( advRide != null ) {
+
+                    WifiP2pDeviceUser deviceUser =
+                            new WifiP2pDeviceUser(device);
+
+                    deviceUser.setUserName(advRide.getUserName());
+                    deviceUser.setUserId(advRide.getUserId());
+                    deviceUser.setRideCode(advRide.getRideCode());
+
+                    mPeersChangedListener.add(deviceUser);
+                }
+            }
+        } else {
+            Log.d(LOG_TAG, "Other DNS_SD service discovered: "
+                    + instanceName);
+        }
+    }
+
+    @Override
+    public void onDnsSdTxtRecordAvailable(String fullDomainName,
+                                          Map<String, String> record,
+                                          WifiP2pDevice device) {
+        Log.d(LOG_TAG, "onDnsSdTxtRecordAvailable() called");
+
+        String traceMessage = "DNS-SD TXT Records: " +
+                device.deviceName + " is " + record.get(Globals.TXTRECORD_PROP_AVAILABLE);
+        String userId = record.get(Globals.TXTRECORD_PROP_USERID);
+        traceMessage += "\nUser Id: " + userId;
+        String userName = record.get(Globals.TXTRECORD_PROP_USERNAME);
+        traceMessage += "\nUser Id: " + userName;
+        String rideCode = record.get(Globals.TXTRECORD_PROP_RIDECODE);
+        traceMessage += "\nRide Code: " + rideCode;
+        ((ITrace) mContext).trace(traceMessage);
+        Log.d(LOG_TAG, traceMessage);
+
+        AdvertisedRide advRide = new AdvertisedRide(userId, userName, rideCode);
+        mBuddies.put(device.deviceName, advRide);
+    }
+
+    public void discoverService(final IPeersChangedListener peersChangedListener,
+                                Handler handler,
+                                int DelayMills) {
 
         final HashMap<String, AdvertisedRide> buddies = new HashMap<>();
 
@@ -169,92 +240,54 @@ public class WiFiUtil {
          */
 
         mManager.setDnsSdResponseListeners(mChannel,
-                new WifiP2pManager.DnsSdServiceResponseListener() {
-
-                    @Override
-                    public void onDnsSdServiceAvailable(String instanceName,
-                                                        String registrationType,
-                                                        WifiP2pDevice device) {
-
-                        // A service has been discovered. Is this our app?
-                        if (instanceName.equalsIgnoreCase(Globals.SERVICE_INSTANCE)) {
-                            String traceMessage = "DNS-SD SRV Record: " + instanceName;
-                            ((ITrace) mContext).trace(traceMessage);
-                            Log.d(LOG_TAG, traceMessage);
-
-                            if (peersChangedListener != null) {
-
-                                AdvertisedRide advRide = buddies.get(device.deviceName);
-                                if( advRide != null ) {
-
-                                    WifiP2pDeviceUser deviceUser =
-                                            new WifiP2pDeviceUser(device);
-
-                                    deviceUser.setUserName(advRide.getUserName());
-                                    deviceUser.setUserId(advRide.getUserId());
-                                    deviceUser.setRideCode(advRide.getRideCode());
-
-                                    peersChangedListener.add(deviceUser);
-                                }
-                            }
-                        } else {
-                            Log.d(LOG_TAG, "Other DNS_SD service discovered: "
-                                    + instanceName);
-                        }
-                    }
-                },
-                new WifiP2pManager.DnsSdTxtRecordListener() {
-
-                    @Override
-                     /* Callback includes:
-                     * fullDomain: full domain name: e.g "printer._ipp._tcp.local."
-                     * record: TXT record dta as a map of key/value pairs.
-                     * device: The device running the advertised service.
-                     */
-                    public void onDnsSdTxtRecordAvailable(String fullDomainName,
-                                                          Map<String, String> record,
-                                                          WifiP2pDevice device) {
-
-                        String traceMessage = "DNS-SD TXT Records: " +
-                                device.deviceName + " is " + record.get(Globals.TXTRECORD_PROP_AVAILABLE);
-                        String userId = record.get(Globals.TXTRECORD_PROP_USERID);
-                        traceMessage += "\nUser Id: " + userId;
-                        String userName = record.get(Globals.TXTRECORD_PROP_USERNAME);
-                        traceMessage += "\nUser Id: " + userName;
-                        String rideCode = record.get(Globals.TXTRECORD_PROP_RIDECODE);
-                        traceMessage += "\nRide Code: " + rideCode;
-                        ((ITrace) mContext).trace(traceMessage);
-                        Log.d(LOG_TAG, traceMessage);
-
-                        AdvertisedRide advRide = new AdvertisedRide(userId, userName, rideCode);
-                        buddies.put(device.deviceName, advRide);
-                    }
-                });
+                this,
+                this);
 
         // After attaching listeners, create a new service request and initiate
         // discovery.
         mServiceRequest = WifiP2pDnsSdServiceRequest.newInstance();
 
         mManager.addServiceRequest(mChannel, mServiceRequest,
-                new TaggedActionListener((ITrace)mContext, "add service discovery request"));
+                new TaggedActionListener((ITrace) mContext, "add service discovery request"));
 
-        mManager.discoverServices(mChannel,
-                new TaggedActionListener((ITrace) mContext, "service discovery init"));
+        if( handler != null ) {
 
-        ((ITrace)mContext).trace("discovery started");
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mManager.discoverServices(mChannel,
+                            new TaggedActionListener((ITrace) mContext,
+                                                     "service discovery init"));
+
+                    ((ITrace) mContext).trace("discovery started");
+                }
+            }, DelayMills);
+
+        }
 
     }
 
-    public void removeServiceRequest(){
+    public void stopDiscovery(){
         if( mServiceRequest != null ) {
-            mManager.removeServiceRequest(mChannel, mServiceRequest,
-                    new TaggedActionListener((ITrace)mContext, "remove service request"));
+            mManager.clearServiceRequests(mChannel,
+                    new TaggedActionListener((ITrace)mContext, "clear service requests"));
+//            mManager.removeServiceRequest(mChannel, mServiceRequest,
+//                    new TaggedActionListener((ITrace) mContext, "remove service request"));
         }
     }
 
     public void removeGroup() {
-        mManager.removeGroup(mChannel,
-                new TaggedActionListener((ITrace)mContext, "remove group request"));
+        mManager.requestGroupInfo(mChannel, this);
+    }
+
+    @Override
+    public void onGroupInfoAvailable(WifiP2pGroup group) {
+        if( group != null ) {
+            Log.d(LOG_TAG, "Group detected. Trying to remove");
+
+            mManager.removeGroup(mChannel,
+                    new TaggedActionListener((ITrace) mContext, "remove group request"));
+        }
     }
 
     public void disconnect(){
@@ -264,7 +297,7 @@ public class WiFiUtil {
 
     public void connectToDevice(WifiP2pDevice device, int delay){
 
-        removeServiceRequest();
+        stopDiscovery();
 
         final WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
