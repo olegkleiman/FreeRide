@@ -45,6 +45,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.Ride;
+import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.BLEUtil;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
@@ -147,8 +148,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     String rideCode = mCurrentRide.getRideCode();
                     txtRideCode.setText(rideCode);
 
-                    if (!mCurrentRide.isPictureRequired())
-                        startAdvertise(mUserID, rideCode);
+                    if (!mCurrentRide.isPictureRequired()) {
+                        User _user = User.load(DriverRoleActivity.this);
+                        String userName = _user.getFirstName() + " " + _user.getLastName();
+                        startAdvertise(mUserID, userName, rideCode);
+                    }
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
                             mEx.getMessage(), Toast.LENGTH_LONG).show();
@@ -272,6 +276,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     private void startAdvertise(String userID,
+                                String userName,
                                 String rideCode) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
