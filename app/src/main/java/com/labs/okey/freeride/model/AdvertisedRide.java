@@ -6,11 +6,14 @@ package com.labs.okey.freeride.model;
 public class AdvertisedRide {
 
     private String mUserId;
+    private String mUserName;
     private String mRideCode;
 
     public AdvertisedRide(String userId,
+                          String userName,
                           String rideCode){
         mUserId = userId;
+        mUserName = userName;
         mRideCode = rideCode;
     }
 
@@ -27,4 +30,7 @@ public class AdvertisedRide {
     public void setRideCode(String value){
         mRideCode = value;
     }
+
+    public String getUserName() { return mUserName; }
+    public void setUseName(String value) { mUserName = value; }
 }

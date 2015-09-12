@@ -116,6 +116,7 @@ public class WiFiUtil {
      * Registers a local service and then initiates a service discovery
      */
     public void startRegistrationAndDiscovery(final IPeersChangedListener peersChangedListener,
+                                              final String userId,
                                               final String userName,
                                               final String rideCode) {
 
@@ -124,7 +125,7 @@ public class WiFiUtil {
 
                     @Override
                     public void onSuccess() {
-                        registerDnsSdService(userName, rideCode);
+                        registerDnsSdService(userId, userName, rideCode);
                         discoverService(peersChangedListener);
                     }
 
@@ -136,11 +137,13 @@ public class WiFiUtil {
 
     }
 
-    public void registerDnsSdService(String userName,
+    public void registerDnsSdService(String userId,
+                                     String userName,
                                      String rideCode) {
 
         Map<String, String> record = new HashMap<>();
         record.put(Globals.TXTRECORD_PROP_AVAILABLE, "visible");
+        record.put(Globals.TXTRECORD_PROP_USERID, userId);
         record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
         record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
         record.put(Globals.TXTRECORD_PROP_PORT, Integer.toString(Globals.SERVER_PORT));
@@ -187,10 +190,9 @@ public class WiFiUtil {
                                     WifiP2pDeviceUser deviceUser =
                                             new WifiP2pDeviceUser(device);
 
-                                    String userId = advRide.getUserId();
-                                    deviceUser.setUserId(userId);
-                                    String rideCode = advRide.getRideCode();
-                                    deviceUser.setRideCode(rideCode);
+                                    deviceUser.setUserName(advRide.getUserName());
+                                    deviceUser.setUserId(advRide.getUserId());
+                                    deviceUser.setRideCode(advRide.getRideCode());
 
                                     peersChangedListener.add(deviceUser);
                                 }
@@ -215,14 +217,16 @@ public class WiFiUtil {
 
                         String traceMessage = "DNS-SD TXT Records: " +
                                 device.deviceName + " is " + record.get(Globals.TXTRECORD_PROP_AVAILABLE);
-                        String userId = record.get(Globals.TXTRECORD_PROP_USERNAME);
-                        traceMessage += "\nUser Name: " + userId;
+                        String userId = record.get(Globals.TXTRECORD_PROP_USERID);
+                        traceMessage += "\nUser Id: " + userId;
+                        String userName = record.get(Globals.TXTRECORD_PROP_USERNAME);
+                        traceMessage += "\nUser Id: " + userName;
                         String rideCode = record.get(Globals.TXTRECORD_PROP_RIDECODE);
                         traceMessage += "\nRide Code: " + rideCode;
                         ((ITrace) mContext).trace(traceMessage);
                         Log.d(LOG_TAG, traceMessage);
 
-                        AdvertisedRide advRide = new AdvertisedRide(userId, rideCode);
+                        AdvertisedRide advRide = new AdvertisedRide(userId, userName, rideCode);
                         buddies.put(device.deviceName, advRide);
                     }
                 });

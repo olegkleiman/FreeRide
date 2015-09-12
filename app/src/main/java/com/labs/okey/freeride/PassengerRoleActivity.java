@@ -497,9 +497,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         if( progress_refresh != null )
             progress_refresh.setVisibility(View.VISIBLE);
 
-        mBLEUtil.startScan();
+        //mBLEUtil.startScan();
 
-        mWiFiUtil.startRegistrationAndDiscovery(this, mUserID,
+        mWiFiUtil.startRegistrationAndDiscovery(this,
+                getUser().Id,
+                getUser().getFullName(),
                 // provide empty rideCode to distinguish
                 // this broadcast from the driver's one
                 "");
@@ -529,11 +531,18 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 public void onTick(long millisUntilFinished) {
 
+                    Log.d(LOG_TAG,
+                            String.format("CountDown tick. Remains %d Drivers size: %d",
+                                        millisUntilFinished, drivers.size()));
+
+
                     if (drivers.size() == 0)
                         dialog.incrementProgress(1);
-                    else
+                    else {
+                        this.cancel();
                         showRideCodePane(R.string.ride_code_dialog_content,
                                 Color.BLACK);
+                    }
                 }
 
                 public void onFinish() {

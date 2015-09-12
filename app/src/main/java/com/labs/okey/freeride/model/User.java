@@ -33,6 +33,8 @@ public class User {
         last_name = value;
     }
 
+    public String getFullName() { return first_name + " " + last_name;}
+
     @com.google.gson.annotations.SerializedName("registration_id")
     private String registration_id;
     public String getRegistrationId() { return registration_id; }

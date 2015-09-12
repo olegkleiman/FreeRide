@@ -58,23 +58,35 @@
                 android:id="@+id/linearLayout">
 
                 <TextView
-                    fontPath="fonts/Roboto-Regular.ttf"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:id="@+id/device_name"
-                    android:text="Device Name"
+                    android:id="@+id/txt_driver_name"
+                    android:text="Driver Name"
                     android:gravity="center_vertical"/>
 
-                <TextView
-                    fontPath="fonts/Roboto-Regular.ttf"
-                    android:id="@+id/device_details"
-                    android:text="address"
-                    android:layout_width="fill_parent"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="0dip"
                     android:layout_weight="1"
-                    android:singleLine="true"
-                    android:ellipsize="marquee"/>
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ride_code_label"/>
+
+                    <TextView
+                        android:id="@+id/txt_ride_code"
+                        android:text="ride code"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:layout_marginLeft="4dp"
+                        android:layout_marginStart="4dp" />
+
+                </LinearLayout>
 
             </LinearLayout>
 

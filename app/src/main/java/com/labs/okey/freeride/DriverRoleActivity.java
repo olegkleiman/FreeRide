@@ -96,7 +96,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     TextView mTxtMonitorStatus;
     RecyclerView mPeersRecyclerView;
 
-    String mUserID;
     String mCarNumber;
 
     TextToSpeech mTTS;
@@ -149,9 +148,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     txtRideCode.setText(rideCode);
 
                     if (!mCurrentRide.isPictureRequired()) {
-                        User _user = User.load(DriverRoleActivity.this);
-                        String userName = _user.getFirstName() + " " + _user.getLastName();
-                        startAdvertise(mUserID, userName, rideCode);
+                        startAdvertise(getUser().Id,
+                                       getUser().getFullName(),
+                                       rideCode);
                     }
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
@@ -241,8 +240,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         wifiUtil = new WiFiUtil(this);
         wifiUtil.deletePersistentGroups();
 
-        mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
-
         new Thread() {
             @Override
             public void run() {
@@ -287,6 +284,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // This will publish the service in DNS-SD and start serviceDiscovery()
         wifiUtil.startRegistrationAndDiscovery(this,
                 userID,
+                userName,
                 rideCode);
 
     }
@@ -497,7 +495,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
         String rideCode = txtRideCode.getText().toString();
 
-        wifiUtil.startRegistrationAndDiscovery(this, mUserID, rideCode);
+        startAdvertise(getUser().Id,
+                       getUser().getFullName(),
+                       rideCode);
 
         getHandler().postDelayed(
                 new Runnable() {
@@ -564,7 +564,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onPeersAvailable(WifiP2pDeviceList list) {
         for (WifiP2pDevice device : list.getDeviceList()) {
             WifiP2pDeviceUser d = new WifiP2pDeviceUser(device);
-            d.setUserId(mUserID);
+            d.setUserId(getUser().Id);
             mPeersAdapter.updateItem(d);
         }
     }

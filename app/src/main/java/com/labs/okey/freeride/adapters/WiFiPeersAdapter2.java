@@ -98,8 +98,8 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
 
             WifiP2pDeviceUser device = items.get(position - 1);
 
-            holder.deviceName.setText(device.deviceName);
-            holder.deviceDetails.setText(device.getRideCode());
+            holder.txtDriverName.setText(device.getUserName());
+            holder.txtRideCode.setText(device.getRideCode());
             //holder.deviceStatus.setText(getDeviceStatus(device.status));
             holder.setImageStatus(device.status);
 
@@ -202,8 +202,8 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
         ImageButton btnRefresh;
 
         // Row views
-        TextView deviceName;
-        TextView deviceDetails;
+        TextView txtDriverName;
+        TextView txtRideCode;
         TextView deviceStatus;
         ImageView userPicture;
         RelativeLayout rowLayout;
@@ -229,8 +229,8 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
 
                 holderId = viewType;
 
-                deviceName = (TextView) itemLayoutView.findViewById(R.id.device_name);
-                deviceDetails = (TextView) itemLayoutView.findViewById(R.id.device_details);
+                txtDriverName = (TextView) itemLayoutView.findViewById(R.id.txt_driver_name);
+                txtRideCode = (TextView) itemLayoutView.findViewById(R.id.txt_ride_code);
                 userPicture = (ImageView) itemLayoutView.findViewById(R.id.userPicture);
                 rowLayout = (RelativeLayout)itemLayoutView.findViewById(R.id.device_row);
                 imageStatus = (ImageView) itemLayoutView.findViewById(R.id.imgStatus);

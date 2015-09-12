@@ -7,11 +7,19 @@ import android.net.wifi.p2p.WifiP2pDevice;
  */
 public class WifiP2pDeviceUser extends WifiP2pDevice {
     private String _userName;
-    public String getUserId() {
+    public String getUserName() {
         return _userName;
     }
-    public void setUserId(String value) {
+    public void setUserName(String value) {
         _userName = value;
+    }
+
+    private String _userId;
+    public String getUserId() {
+        return _userId;
+    }
+    public void setUserId(String value) {
+        _userId = value;
     }
 
     private String _rideCode;
