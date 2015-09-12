@@ -148,7 +148,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     txtRideCode.setText(rideCode);
 
                     if (!mCurrentRide.isPictureRequired()) {
-                        startAdvertise(getUser().Id,
+                        startAdvertise(getUser().getRegistrationId(),
                                        getUser().getFullName(),
                                        rideCode);
                     }
@@ -495,9 +495,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
         String rideCode = txtRideCode.getText().toString();
 
-        startAdvertise(getUser().Id,
-                       getUser().getFullName(),
-                       rideCode);
+        startAdvertise(getUser().getRegistrationId(),
+                getUser().getFullName(),
+                rideCode);
 
         getHandler().postDelayed(
                 new Runnable() {
@@ -564,7 +564,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onPeersAvailable(WifiP2pDeviceList list) {
         for (WifiP2pDevice device : list.getDeviceList()) {
             WifiP2pDeviceUser d = new WifiP2pDeviceUser(device);
-            d.setUserId(getUser().Id);
+            d.setUserId(getUser().getRegistrationId());
             mPeersAdapter.updateItem(d);
         }
     }
