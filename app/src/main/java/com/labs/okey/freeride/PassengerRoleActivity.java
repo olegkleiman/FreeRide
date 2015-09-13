@@ -351,17 +351,19 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .show();
         } else {
 
+            final String rideCode = driverDevice.getRideCode();
+
             DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 
                 @Override
                 public void onClick(DialogInterface dialogInterface, int which) {
                     if (which == DialogInterface.BUTTON_POSITIVE) {
-                        onSubmit();
+                        onSubmitCode(rideCode);
                     }
                 }
             };
 
-            StringBuilder sb = new StringBuilder(R.string.passenger_confirm);
+            StringBuilder sb = new StringBuilder(getString(R.string.passenger_confirm));
             sb.append(" ");
             sb.append(driverDevice.getUserName());
             sb.append("?");
@@ -378,10 +380,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .show();
         }
 
-    }
-
-    public void onSubmit() {
-        onSubmitCode("");
     }
 
     public void onSubmitCode(final String rideCode){
@@ -416,7 +414,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         if( mse.getCause() instanceof  UnknownHostException ) {
                             responseCode = 503; // Some artificially: usually 503 means
                                                 // 'Service Unavailable'.
-                                                // To this extent, we mean 'Connecton lost'
+                                                // To this extent, we mean 'Connection lost'
                         } else {
                             responseCode = mse.getResponse().getStatus().getStatusCode();
                         }
