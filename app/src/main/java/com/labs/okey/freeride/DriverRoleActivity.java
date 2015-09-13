@@ -394,25 +394,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
         });
 
-        View fab = findViewById(R.id.submit_ride_button);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-//            FloatingActionButton _fab = (FloatingActionButton)fab;
-//            _fab.setDrawableIcon(getResources().getDrawable(R.drawable.ic_action_done));
-//            _fab.setBackgroundColor(getResources().getColor(R.color.ColorAccent));
-            FloatingActionButton _fab = (FloatingActionButton) fab;
-            RelativeLayout.LayoutParams p = (RelativeLayout.LayoutParams) _fab.getLayoutParams();
-            p.setMargins(0, 0, 0, 0); // get rid of margins since shadow area is now the margin
-            _fab.setLayoutParams(p);
-        } else {
-            fab.setOutlineProvider(new ViewOutlineProvider() {
-                public void getOutline(View view, Outline outline) {
-                    int diameter = getResources().getDimensionPixelSize(R.dimen.diameter);
-                    outline.setOval(0, 0, diameter, diameter);
-                }
-            });
-            fab.setClipToOutline(true);
-        }
-
         mTxtStatus = (TextView) findViewById(R.id.txtStatus);
         mPeersRecyclerView = (RecyclerView) findViewById(R.id.recyclerViewPeers);
         mPeersRecyclerView.setHasFixedSize(true);

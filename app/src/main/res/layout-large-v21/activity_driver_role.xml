@@ -69,11 +69,19 @@
         android:layout_marginBottom="@dimen/card_horizontal_margin"
         android:layout_marginTop="@dimen/negativeActionBarSize">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerViewPeers"
-            android:layout_height="match_parent"
+        <FrameLayout
+            android:id="@+id/drivers_layout"
             android:layout_width="fill_parent"
-            android:background="@color/ColorBackground" />
+            android:layout_height="fill_parent"
+            android:visibility="visible">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerViewPeers"
+                android:layout_height="match_parent"
+                android:layout_width="fill_parent"
+                android:background="@color/ColorBackground" />
+
+        </FrameLayout>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/submit_ride_button"
@@ -82,7 +90,6 @@
             android:src="@drawable/ic_action_done"
             app:elevation="4dp"
 
-            app:layout_anchor="@id/recyclerViewPeers"
             app:layout_anchorGravity="bottom|right|end"
 
             android:layout_gravity="end|bottom"
@@ -90,13 +97,13 @@
 
             app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
+
             android:onClick="onButtonSubmitRide"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_marginBottom="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp" />
+            android:visibility="visible" />
 
     </RelativeLayout>
 
