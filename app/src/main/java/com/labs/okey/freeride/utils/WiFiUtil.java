@@ -14,10 +14,10 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 
-
 import com.labs.okey.freeride.WiFiDirectBroadcastReceiver;
 import com.labs.okey.freeride.model.AdvertisedRide;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
+import com.labs.okey.freeride.utils.wifip2p.TaggedActionListener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,6 +47,7 @@ public class WiFiUtil
     WifiP2pManager mManager;
     WifiP2pManager.Channel mChannel;
     WifiP2pDnsSdServiceRequest mServiceRequest;
+    WifiP2pDnsSdServiceInfo mServiceInfo;
 
     WiFiDirectBroadcastReceiver mReceiver;
 
@@ -163,14 +164,16 @@ public class WiFiUtil
         record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
         record.put(Globals.TXTRECORD_PROP_PORT, Integer.toString(Globals.SERVER_PORT));
 
-        // Service information.  Pass it an instance name, service type
+        // Service information for Bonjour.
+        // Pass it an instance name, service type
         // _protocol._transportlayer , and the map containing
         // information other devices will want once they connect to this one.
-        WifiP2pDnsSdServiceInfo service = WifiP2pDnsSdServiceInfo.newInstance(
+        mServiceInfo = WifiP2pDnsSdServiceInfo.newInstance(
                 Globals.SERVICE_INSTANCE,
-                Globals.SERVICE_REG_TYPE, record);
+                Globals.SERVICE_REG_TYPE,
+                record);
 
-        mManager.addLocalService(mChannel, service,
+        mManager.addLocalService(mChannel, mServiceInfo,
                 new TaggedActionListener((ITrace) mContext, "Add Local Service"));
     }
 
@@ -269,10 +272,12 @@ public class WiFiUtil
 
     public void stopDiscovery(){
         if( mServiceRequest != null ) {
+            mManager.removeLocalService(mChannel, mServiceInfo,
+                            new TaggedActionListener((ITrace)mContext,
+                                                     "remove local service"));
             mManager.clearServiceRequests(mChannel,
-                    new TaggedActionListener((ITrace)mContext, "clear service requests"));
-//            mManager.removeServiceRequest(mChannel, mServiceRequest,
-//                    new TaggedActionListener((ITrace) mContext, "remove service request"));
+                            new TaggedActionListener((ITrace)mContext,
+                                                     "clear service requests"));
         }
     }
 
@@ -335,52 +340,6 @@ public class WiFiUtil
             mManager.requestGroupInfo(mChannel, listener);
     }
 
-    class TaggedActionListener implements WifiP2pManager.ActionListener{
-
-        String tag;
-        ITrace mTracer;
-
-        TaggedActionListener(ITrace tracer, String tag){
-            this.tag = tag;
-            mTracer = tracer;
-        }
-
-        @Override
-        public void onSuccess() {
-            String message = tag + " succeeded";
-            Log.d(LOG_TAG, message);
-        }
-
-        @Override
-        public void onFailure(int reasonCode) {
-            String message = tag + " failed. Reason :" + failureReasonToString(reasonCode);
-            if( mTracer != null )
-                mTracer.trace(message);
-            Log.d(LOG_TAG, message);
-        }
-
-        private String failureReasonToString(int reason) {
-
-            // Failure reason codes:
-            // 0 - internal error
-            // 1 - P2P unsupported
-            // 2- busy
-
-            switch ( reason ){
-                case 0:
-                    return "Internal Error";
-
-                case 1:
-                    return "P2P unsupported";
-
-                case 2:
-                    return "Busy";
-
-                default:
-                    return "Unknown";
-            }
-        }
-    }
 
     public static class ClientAsyncTask extends AsyncTask<Void, Void, String> {
 
