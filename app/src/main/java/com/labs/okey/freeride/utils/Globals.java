@@ -54,6 +54,8 @@ public class Globals {
     public static float PICTURE_CORNER_RADIUS = 20;
     public static float PICTURE_BORDER_WIDTH = 4;
 
+    public static int RIDE_CODE_INPUT_LENGTH = 6;
+
     static final public int SERVER_PORT = 4545;
     static final public int SOCKET_TIMEOUT = 5000;
     public static final String TXTRECORD_PROP_AVAILABLE = "available";

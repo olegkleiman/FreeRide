@@ -156,6 +156,9 @@
             android:exported="true">
         </service>
 
+        <service android:enabled="true"
+            android:name=".utils.wifip2p.SearchService" />
+
     </application>
 
     <supports-screens android:resizeable="true"

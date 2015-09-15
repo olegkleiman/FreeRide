@@ -125,7 +125,7 @@
     <string name="car_number_validation_error">Type in a valid car number</string>
     <string name="enable_wifi_question">Enable Wi-Fi on your device?</string>
     <string name="enable_location_question">Do you want to enable location services on the device?</string>
-    <string name="code_retry_action">Try again</string>
+    <string name="code_retry_action">Try search again</string>
     <string name="registration_finish">Finish</string>
     <string name="registration_next">Next</string>
 

@@ -255,13 +255,21 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         try {
             String dialogContent = getString(contentStringResId);
 
+
             new MaterialDialog.Builder(this)
+                    .callback(new MaterialDialog.ButtonCallback(){
+                        @Override
+                        public void onNegative(MaterialDialog dialog){
+                            refresh();
+                        }
+                    })
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
                     .positiveText(R.string.ok)
+                    .negativeText(R.string.code_retry_action)
                     .contentColor(contentColor)
                     .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
-                    .inputMaxLength(5)
+                    .inputMaxLength(Globals.RIDE_CODE_INPUT_LENGTH)
                     .input(R.string.ride_code_hint,
                             R.string.ride_code_refill,
                             new MaterialDialog.InputCallback() {
@@ -368,10 +376,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             sb.append(driverDevice.getUserName());
             sb.append("?");
             String message = sb.toString();
-//                    getString(R.string.passenger_confirm)
-//                    + " " +
-//                    driverDevice.getUserName()
-//                    + "?";
 
             new AlertDialogWrapper.Builder(this)
                     .setTitle(message)
