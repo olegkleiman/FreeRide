@@ -63,19 +63,6 @@ public class RegisterCarsFragment extends Fragment {
             listView.setAdapter(mCarsAdapter);
 
             View addButton = v.findViewById(R.id.add_car_button);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                FloatingActionButton fab = (FloatingActionButton)addButton;
-                fab.setBackgroundColor(getResources().getColor(R.color.ColorAccent));
-            } else {
-                addButton.setOutlineProvider(new ViewOutlineProvider() {
-                    public void getOutline(View view, Outline outline) {
-                        int diameter = getResources().getDimensionPixelSize(R.dimen.diameter);
-                        outline.setOval(0, 0, diameter, diameter);
-                    }
-                });
-                addButton.setClipToOutline(true);
-            }
-
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

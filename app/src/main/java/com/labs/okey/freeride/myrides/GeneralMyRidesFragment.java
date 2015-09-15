@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 
 import com.labs.okey.freeride.R;
@@ -38,9 +39,6 @@ public class GeneralMyRidesFragment extends Fragment {
 
         if (FragmentInstance == null ) {
             FragmentInstance = new GeneralMyRidesFragment();
-//            Bundle b = new Bundle();
-//            b.putInt(ARG_POSITION, position);
-//            FragmentInstance.setArguments(b);
         }
         return FragmentInstance;
     }
@@ -52,24 +50,24 @@ public class GeneralMyRidesFragment extends Fragment {
 
         mRides.clear();
         mRides.addAll(rides);
-
-        if (!mRides.isEmpty()) {
-            sort();
-        }
+        sort();
     }
 
     public void updateRides(List<Ride> rides){
 
-        if( rides == null )
+        final ProgressBar progress_refresh = (ProgressBar)getView().findViewById(R.id.progress_refresh);
+
+        if (progress_refresh.getVisibility() == View.VISIBLE) {
+            progress_refresh.setVisibility(View.GONE);
+        }
+
+        if (rides == null || rides.isEmpty())
             return;
 
         mRides.clear();
         mRides.addAll(rides);
-
-        if (!mRides.isEmpty()) {
-            sort();
-            adapter.notifyDataSetChanged();
-        }
+        sort();
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -86,6 +84,12 @@ public class GeneralMyRidesFragment extends Fragment {
 
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_myride_general, container, false);
+
+        if (mRides.isEmpty()) {
+
+            final ProgressBar progress_refresh = (ProgressBar) rootView.findViewById(R.id.progress_refresh);
+            progress_refresh.setVisibility(View.VISIBLE);
+        }
 
         RecyclerView recycler = (RecyclerView)rootView.findViewById(R.id.recyclerMyRides);
         recycler.setHasFixedSize(true);

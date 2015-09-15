@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.RideDetailsActivity;
@@ -38,39 +39,38 @@ public class RejectedMyRidesFragment extends Fragment {
 
         if (FragmentInstance == null ) {
           FragmentInstance = new RejectedMyRidesFragment();
-//        Bundle b = new Bundle();
-//        b.putInt(ARG_POSITION, position);
-//        f.setArguments(b);
         }
         return FragmentInstance;
     }
 
     public void setRides(List<Ride> rides) {
-        if( rides == null )
+
+        if (rides == null || rides.isEmpty())
             return;
 
         mRides.clear();
         mRides.addAll(rides);
-
-        if( !mRides.isEmpty() ) {
-            sort();
-            FilteringApproveAndOtherDrivers();
-        }
+        sort();
+        FilteringApproveAndOtherDrivers();
     }
 
     public void updateRides(List<Ride> rides){
 
-        if( rides == null )
+        final ProgressBar progress_refresh = (ProgressBar)getView().findViewById(R.id.progress_refresh);
+
+        if (progress_refresh.getVisibility() == View.VISIBLE) {
+            progress_refresh.setVisibility(View.GONE);
+        }
+
+        if (rides == null || rides.isEmpty())
             return;
 
         mRides.clear();
         mRides.addAll(rides);
 
-        if( !mRides.isEmpty() ) {
-            sort();
-            FilteringApproveAndOtherDrivers();
-            adapter.notifyDataSetChanged();
-        }
+        FilteringApproveAndOtherDrivers();
+        sort();
+        adapter.notifyDataSetChanged();
     }
 
     @Override
