@@ -64,7 +64,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
         } else {
             traceMessage = "P2P state changed to disabled";
             String message = mActivityListener.getString(R.string.enable_wifi_question);
-            ((ITrace)mActivityListener).alert(message, Settings.ACTION_WIFI_SETTINGS);
+            //((ITrace)mActivityListener).alert(message, Settings.ACTION_WIFI_SETTINGS);
         }
 
         _log(traceMessage);

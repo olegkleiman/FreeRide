@@ -13,7 +13,8 @@
         android:required="true" />
     <!-- Needed if camera pictures are stored locally -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!--Required for Wi-Fi Direct-->
+
+    <!--Required for Wi-Fi Direct, especially for restarting WiFi -->
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
         android:required="true" />

@@ -3,6 +3,7 @@ package com.labs.okey.freeride.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -11,6 +12,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.util.Log;
 
@@ -53,6 +55,11 @@ public class WiFiUtil
 
     IPeersChangedListener mPeersChangedListener;
     final HashMap<String, AdvertisedRide> mBuddies = new HashMap<>();
+
+    // Stored only for recovery
+    String mUserId;
+    String mUserName;
+    String mRideCode;
 
     public interface IPeersChangedListener {
         public void add(WifiP2pDeviceUser device);
@@ -124,6 +131,12 @@ public class WiFiUtil
                 new TaggedActionListener((ITrace) mContext, "discover peers request"));
     }
 
+    interface IContinuation{
+        void exec();
+    }
+
+
+
     /**
      * Registers a local service and then initiates a service discovery
      */
@@ -134,6 +147,12 @@ public class WiFiUtil
                                               final Handler handler,
                                               final int delayMills) {
 
+        // Duplicate for recovery, i.e. for restarting after WiFi reset.
+        // Reset is done within discoverService() when WiFiP2pManager.discoverServices() failed.
+        mUserId = userId;
+        mUserName = userName;
+        mRideCode = rideCode;
+
         mPeersChangedListener = peersChangedListener;
 
         mManager.clearLocalServices(mChannel,
@@ -141,8 +160,17 @@ public class WiFiUtil
 
                     @Override
                     public void onSuccess() {
-                        registerDnsSdService(userId, userName, rideCode);
-                        discoverService(peersChangedListener, handler, delayMills);
+
+                        registerDnsSdService(userId,
+                                            userName,
+                                            rideCode,
+                                            new IContinuation(){
+                                                @Override
+                                                public void exec() {
+                                                    discoverService(peersChangedListener, handler, delayMills);
+                                                }
+                                            });
+
                     }
 
                     @Override
@@ -155,10 +183,15 @@ public class WiFiUtil
 
     public void registerDnsSdService(String userId,
                                      String userName,
-                                     String rideCode) {
+                                     String rideCode,
+                                     final IContinuation continuation) {
 
+        // Put the records to map with extreme care:
+        // the size of the buffer that holds these fields varies in different OSs.
+        // Generally it is about 200 bytes, but may be smaller.
+        // (see here: https://code.google.com/p/android/issues/detail?id=59858 )
         Map<String, String> record = new HashMap<>();
-        record.put(Globals.TXTRECORD_PROP_AVAILABLE, "visible");
+        //record.put(Globals.TXTRECORD_PROP_AVAILABLE, "visible");
         record.put(Globals.TXTRECORD_PROP_USERID, userId);
         record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
         record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
@@ -174,7 +207,24 @@ public class WiFiUtil
                 record);
 
         mManager.addLocalService(mChannel, mServiceInfo,
-                new TaggedActionListener((ITrace) mContext, "Add Local Service"));
+                new WifiP2pManager.ActionListener() {
+                    @Override
+                    public void onSuccess() {
+                        String message = "addLocalService succeeded";
+                        Log.d(LOG_TAG, message);
+
+                        continuation.exec();
+                    }
+
+                    @Override
+                    public void onFailure(int reason) {
+                        String message = "addLocalService failed. Reason: " + failureReasonToString(reason);
+                        Log.d(LOG_TAG, message);
+                        ((ITrace) mContext).trace(message);
+
+                    }
+                });
+
     }
 
     @Override
@@ -216,8 +266,7 @@ public class WiFiUtil
                                           WifiP2pDevice device) {
         Log.d(LOG_TAG, "onDnsSdTxtRecordAvailable() called");
 
-        String traceMessage = "DNS-SD TXT Records: " +
-                device.deviceName + " is " + record.get(Globals.TXTRECORD_PROP_AVAILABLE);
+        String traceMessage = "DNS-SD TXT Records: " + device.deviceName;
         String userId = record.get(Globals.TXTRECORD_PROP_USERID);
         traceMessage += "\nUser Id: " + userId;
         String userName = record.get(Globals.TXTRECORD_PROP_USERNAME);
@@ -232,8 +281,8 @@ public class WiFiUtil
     }
 
     public void discoverService(final IPeersChangedListener peersChangedListener,
-                                Handler handler,
-                                int DelayMills) {
+                                final Handler handler,
+                                final int delayMills) {
 
         final HashMap<String, AdvertisedRide> buddies = new HashMap<>();
 
@@ -251,7 +300,7 @@ public class WiFiUtil
         mServiceRequest = WifiP2pDnsSdServiceRequest.newInstance();
 
         mManager.addServiceRequest(mChannel, mServiceRequest,
-                new TaggedActionListener((ITrace) mContext, "add service discovery request"));
+                new TaggedActionListener((ITrace) mContext, "addServiceRequest"));
 
         if( handler != null ) {
 
@@ -259,12 +308,30 @@ public class WiFiUtil
                 @Override
                 public void run() {
                     mManager.discoverServices(mChannel,
-                            new TaggedActionListener((ITrace) mContext,
-                                                     "service discovery init"));
+                            new WifiP2pManager.ActionListener(){
 
-                    ((ITrace) mContext).trace("discovery started");
+                                @Override
+                                public void onSuccess() {
+
+                                }
+
+                                @Override
+                                public void onFailure(int reason) {
+                                    stopDiscovery();
+
+                                    WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+                                    wifiManager.setWifiEnabled(false);
+                                    wifiManager.setWifiEnabled(true);
+
+                                    startRegistrationAndDiscovery(mPeersChangedListener, mUserId,
+                                                                 mUserName, mRideCode,
+                                                                 handler, delayMills);
+                                }
+                            });
+//                            new TaggedActionListener((ITrace) mContext,
+//                                                     "discoverServices"));
                 }
-            }, DelayMills);
+            }, delayMills);
 
         }
 
@@ -273,11 +340,11 @@ public class WiFiUtil
     public void stopDiscovery(){
         if( mServiceRequest != null ) {
             mManager.removeLocalService(mChannel, mServiceInfo,
-                            new TaggedActionListener((ITrace)mContext,
-                                                     "remove local service"));
+                    new TaggedActionListener((ITrace) mContext,
+                            "remove local service"));
             mManager.clearServiceRequests(mChannel,
-                            new TaggedActionListener((ITrace)mContext,
-                                                     "clear service requests"));
+                    new TaggedActionListener((ITrace) mContext,
+                            "clear service requests"));
         }
     }
 
@@ -340,6 +407,27 @@ public class WiFiUtil
             mManager.requestGroupInfo(mChannel, listener);
     }
 
+    private String failureReasonToString(int reason) {
+
+        // Failure reason codes:
+        // 0 - internal error
+        // 1 - P2P unsupported
+        // 2- busy
+
+        switch ( reason ){
+            case 0:
+                return "Internal Error";
+
+            case 1:
+                return "P2P unsupported";
+
+            case 2:
+                return "Busy";
+
+            default:
+                return "Unknown";
+        }
+    }
 
     public static class ClientAsyncTask extends AsyncTask<Void, Void, String> {
 

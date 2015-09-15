@@ -23,32 +23,29 @@ public class TaggedActionListener implements WifiP2pManager.ActionListener{
     @Override
     public void onSuccess() {
         String message = tag + " succeeded";
-        Log.d(LOG_TAG, message);
-    }
-
-    @Override
-    public void onFailure(int reasonCode) {
-        String message = tag + " failed. Reason :" + failureReasonToString(reasonCode);
         if( mTracer != null )
             mTracer.trace(message);
         Log.d(LOG_TAG, message);
     }
 
+    @Override
+    public void onFailure(int reasonCode) {
+        String message = tag + " failed. Reason: " + failureReasonToString(reasonCode);
+        if( mTracer != null )
+            mTracer.trace(message);
+        Log.e(LOG_TAG, message);
+    }
+
     private String failureReasonToString(int reason) {
 
-        // Failure reason codes:
-        // 0 - internal error
-        // 1 - P2P unsupported
-        // 2- busy
-
         switch ( reason ){
-            case 0:
-                return "Internal Error";
+            case WifiP2pManager.ERROR:
+                return "Error";
 
-            case 1:
+            case WifiP2pManager.P2P_UNSUPPORTED:
                 return "P2P unsupported";
 
-            case 2:
+            case WifiP2pManager.BUSY:
                 return "Busy";
 
             default:

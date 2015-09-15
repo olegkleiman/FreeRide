@@ -71,7 +71,7 @@
     <string name="new_version_title">New version is ready</string>
     <string name="new_version_conent">We strongly recommend to install the newest version. Would you like to do so?</string>
 
-    <string name="default_ride_code">00000</string>
+    <string name="default_ride_code">000000</string>
     <string name="ride_code_label">Ride Code:</string>
     <string name="ride_code_title">Type in Ride Code</string>
     <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>

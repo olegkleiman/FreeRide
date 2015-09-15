@@ -92,11 +92,9 @@
             app:borderWidth="0dp"
             android:onClick="onButtonSubmitRide"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp" />
+            android:layout_marginEnd="16dp" />
 
     </RelativeLayout>
 
@@ -109,14 +107,13 @@
             android:id="@+id/status_monitor"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:paddingLeft="@dimen/snackbar_leftpadding"
-            android:paddingRight="@dimen/snackbar_rightpadding"
+            android:paddingStart="@dimen/snackbar_leftpadding"
             android:paddingEnd="@dimen/snackbar_rightpadding"
             android:background="@color/ColorPrimary"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@color/white"
             android:text="@string/geofence_outside"
-            android:gravity="left|center_vertical|fill_vertical|start|center_horizontal" />
+            android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
 
     </LinearLayout>
 
