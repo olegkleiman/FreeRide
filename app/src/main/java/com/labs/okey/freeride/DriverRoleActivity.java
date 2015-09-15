@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Outline;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -98,7 +99,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     String mCarNumber;
 
-    TextToSpeech mTTS;
+    ImageView mImageTransmit;
 
     final int WIFI_CONNECT_REQUEST = 1;// request code for starting WiFi connection
     // handled  in onActivityResult
@@ -116,17 +117,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_role);
-
-        mTTS = new TextToSpeech(getApplicationContext(),
-                new TextToSpeech.OnInitListener() {
-
-                    @Override
-                    public void onInit(int status) {
-                        if (status != TextToSpeech.ERROR) {
-                            mTTS.setLanguage(Locale.US);
-                        }
-                    }
-                });
 
         setupUI(getString(R.string.title_activity_driver_role), "");
         wamsInit(true);
@@ -148,9 +138,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     txtRideCode.setText(rideCode);
 
                     if (!mCurrentRide.isPictureRequired()) {
+                        mImageTransmit.setVisibility(View.VISIBLE);
+                        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+                        animationDrawable.start();
+
                         startAdvertise(getUser().getRegistrationId(),
-                                       getUser().getFullName(),
-                                       rideCode);
+                                getUser().getFullName(),
+                                rideCode);
                     }
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
@@ -283,11 +277,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         // This will publish the service in DNS-SD and start serviceDiscovery()
         mWiFiUtil.startRegistrationAndDiscovery(this,
-                userID,
-                userName,
-                rideCode,
-                getHandler(),
-                500);
+                                                userID,
+                                                userName,
+                                                rideCode,
+                                                getHandler(),
+                                                500);
 
     }
 
@@ -306,13 +300,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mWiFiUtil.unregisterReceiver();
         mWiFiUtil.stopDiscovery();
 
-        if (mTTS != null) {
-            mTTS.stop();
-            mTTS.shutdown();
-        }
-
         super.onPause();
-
     }
 
     @Override
@@ -382,17 +370,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
 
-        ImageView imgListen = (ImageView) findViewById(R.id.img_listen);
-        imgListen.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
-
-                mTTS.speak(txtRideCode.getText().toString(), TextToSpeech.QUEUE_FLUSH, null);
-
-            }
-        });
+        mImageTransmit = (ImageView) findViewById(R.id.img_transmit);
 
         mTxtStatus = (TextView) findViewById(R.id.txtStatus);
         mPeersRecyclerView = (RecyclerView) findViewById(R.id.recyclerViewPeers);
