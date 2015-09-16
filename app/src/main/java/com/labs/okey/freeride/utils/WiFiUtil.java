@@ -227,6 +227,64 @@ public class WiFiUtil
 
     }
 
+    public void discoverService(final IPeersChangedListener peersChangedListener,
+                                final Handler handler,
+                                final int delayMills) {
+
+        final HashMap<String, AdvertisedRide> buddies = new HashMap<>();
+
+          /*
+         * Register listeners for DNS-SD services. These are callbacks invoked
+         * by the system when a service is actually discovered.
+         */
+
+        mManager.setDnsSdResponseListeners(mChannel,
+                this,
+                this);
+
+        // After attaching listeners, create a new service request and initiate
+        // discovery.
+        mServiceRequest = WifiP2pDnsSdServiceRequest.newInstance();
+
+        mManager.addServiceRequest(mChannel, mServiceRequest,
+                new TaggedActionListener((ITrace) mContext, "addServiceRequest"));
+
+        if( handler != null ) {
+
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mManager.discoverServices(mChannel,
+                            new WifiP2pManager.ActionListener(){
+
+                                @Override
+                                public void onSuccess() {
+                                    ((ITrace)mContext).alert("restored", "");
+                                }
+
+                                @Override
+                                public void onFailure(int reason) {
+                                    stopDiscovery();
+
+                                    ((ITrace)mContext).alert("discoverServices() failed with error code: " + Integer.toString(reason), "error");
+
+                                    WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+                                    wifiManager.setWifiEnabled(false);
+                                    wifiManager.setWifiEnabled(true);
+
+                                    startRegistrationAndDiscovery(mPeersChangedListener, mUserId,
+                                            mUserName, mRideCode,
+                                            handler, delayMills);
+                                }
+                            });
+
+                }
+            }, delayMills);
+
+        }
+
+    }
+
     @Override
     public void onDnsSdServiceAvailable(String instanceName,
                                         String registrationType,
@@ -280,62 +338,6 @@ public class WiFiUtil
         mBuddies.put(device.deviceName, advRide);
     }
 
-    public void discoverService(final IPeersChangedListener peersChangedListener,
-                                final Handler handler,
-                                final int delayMills) {
-
-        final HashMap<String, AdvertisedRide> buddies = new HashMap<>();
-
-          /*
-         * Register listeners for DNS-SD services. These are callbacks invoked
-         * by the system when a service is actually discovered.
-         */
-
-        mManager.setDnsSdResponseListeners(mChannel,
-                this,
-                this);
-
-        // After attaching listeners, create a new service request and initiate
-        // discovery.
-        mServiceRequest = WifiP2pDnsSdServiceRequest.newInstance();
-
-        mManager.addServiceRequest(mChannel, mServiceRequest,
-                new TaggedActionListener((ITrace) mContext, "addServiceRequest"));
-
-        if( handler != null ) {
-
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mManager.discoverServices(mChannel,
-                            new WifiP2pManager.ActionListener(){
-
-                                @Override
-                                public void onSuccess() {
-
-                                }
-
-                                @Override
-                                public void onFailure(int reason) {
-                                    stopDiscovery();
-
-                                    WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
-                                    wifiManager.setWifiEnabled(false);
-                                    wifiManager.setWifiEnabled(true);
-
-                                    startRegistrationAndDiscovery(mPeersChangedListener, mUserId,
-                                                                 mUserName, mRideCode,
-                                                                 handler, delayMills);
-                                }
-                            });
-//                            new TaggedActionListener((ITrace) mContext,
-//                                                     "discoverServices"));
-                }
-            }, delayMills);
-
-        }
-
-    }
 
     public void stopDiscovery(){
         if( mServiceRequest != null ) {

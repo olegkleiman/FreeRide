@@ -157,6 +157,8 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
         int index = items.indexOf(device);
         if( index != -1 )
             items.set(index, device);
+        else
+            items.add(device);
     }
 
     private String getDeviceStatus(int deviceStatus) {

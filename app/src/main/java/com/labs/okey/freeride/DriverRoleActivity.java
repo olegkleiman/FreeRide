@@ -45,6 +45,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
+import com.labs.okey.freeride.model.GlobalSettings;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
@@ -58,6 +59,7 @@ import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.io.IOException;
@@ -101,6 +103,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     ImageView mImageTransmit;
 
+    private MobileServiceTable<Ride> ridesTable;
+    private MobileServiceTable<GlobalSettings> settingsTable;
+
+    AsyncTask<Void, Void, Void> mAdvertiseTask;
+
     final int WIFI_CONNECT_REQUEST = 1;// request code for starting WiFi connection
     // handled  in onActivityResult
 
@@ -110,7 +117,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
-    private MobileServiceTable<Ride> ridesTable;
+
 
     @Override
     @CallSuper
@@ -124,8 +131,43 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // Keep device awake when advertising fow Wi-Fi Direct
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        settingsTable = getMobileServiceClient().getTable("globalsettings", GlobalSettings.class);
+        new AsyncTask<Void, Void, Void>(){
+
+            Exception mEx;
+            boolean mAppMode;
+
+            @Override
+            protected void onPostExecute(Void result) {
+                if( !mAppMode ) { // picture is not required by server
+                    mWiFiUtil.discoverPeers();
+                } else {
+                    mAdvertiseTask.execute();
+                }
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+                    MobileServiceList<GlobalSettings> settings =
+                            settingsTable.where().field("s_name").eq("app_mode").execute().get();
+
+                    if( settings.size() > 0 ) {
+                        GlobalSettings _settings = settings.get(0);
+
+                        mAppMode = Boolean.parseBoolean(_settings.getValue());
+                    }
+                } catch(Exception ex) {
+                    mEx = ex;
+                }
+
+                return null;
+            }
+        }.execute();
+
         ridesTable = getMobileServiceClient().getTable("rides", Ride.class);
-        new AsyncTask<Void, Void, Void>() {
+        mAdvertiseTask = new AsyncTask<Void, Void, Void>() {
 
             Exception mEx;
 
@@ -169,7 +211,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 return null;
             }
-        }.execute();
+        };
 
         List<String> _cars = new ArrayList<>();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -403,21 +445,29 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void alert(String message, final String actionIntent) {
-        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+//        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+//
+//            @Override
+//            public void onClick(DialogInterface dialogInterface, int which) {
+//                if (which == DialogInterface.BUTTON_POSITIVE) {
+//                    startActivityForResult(new Intent(actionIntent), WIFI_CONNECT_REQUEST);
+//                }
+//            }
+//        };
+//
+//        new AlertDialogWrapper.Builder(this)
+//                .setTitle(message)
+//                .setNegativeButton(R.string.no, dialogClickListener)
+//                .setPositiveButton(R.string.yes, dialogClickListener)
+//                .show();
 
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                if (which == DialogInterface.BUTTON_POSITIVE) {
-                    startActivityForResult(new Intent(actionIntent), WIFI_CONNECT_REQUEST);
-                }
-            }
-        };
+        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+        if( actionIntent.isEmpty() ) {
+            animationDrawable.start();
+        } else {
+            animationDrawable.stop();
+        }
 
-        new AlertDialogWrapper.Builder(this)
-                .setTitle(message)
-                .setNegativeButton(R.string.no, dialogClickListener)
-                .setPositiveButton(R.string.yes, dialogClickListener)
-                .show();
     }
 
     @Override
@@ -529,6 +579,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             d.setUserId(getUser().getRegistrationId());
             mPeersAdapter.updateItem(d);
         }
+
+        if( list.getDeviceList().size() > 0 )
+            mPeersAdapter.notifyDataSetChanged();
     }
 
     //

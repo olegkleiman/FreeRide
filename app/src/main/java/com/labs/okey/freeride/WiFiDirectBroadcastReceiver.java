@@ -44,8 +44,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
             onStateChanged(intent);
         //      Peers will be obtained from DNS-SD listeners
-        //} else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-        //    onPeersChanged(intent);
+        } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
+            onPeersChanged(intent);
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             onConnectionChanged(intent);
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
