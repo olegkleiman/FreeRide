@@ -56,30 +56,32 @@ public class DrawMan {
                     return dMap.get(userId);
                 }
 
-                String fileName = UserIdToFileName(userId);
-                final File filePath = getFilePath(context, fileName);
-
                 Drawable drawable = null;
 
-                // Try load user picture from file cache
-                if (filePath.exists()) {
+                try {
+                    String fileName = UserIdToFileName(userId);
+                    final File filePath = getFilePath(context, fileName);
 
-                    Log.i(LOG_TAG, "Returning drawable from file");
+                    // Try load user picture from file cache
+                    if (filePath.exists()) {
 
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                        Log.i(LOG_TAG, "Returning drawable from file");
 
-                    Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString(), options);
-                    drawable = new BitmapDrawable(bitmap);
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
-                } else {
-                    // If the picture was not there, download it from Web
-                    try {
+                        Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString(), options);
+                        drawable = new BitmapDrawable(bitmap);
+
+                    } else {
+                        // If the picture was not there, download it from Web
+
                         Log.i(LOG_TAG, "Fetching drawable from URL");
                         InputStream is = fetch(pictureURL);
                         //InputStream is = new URL(pictureURL).openStream();
                         drawable = Drawable.createFromStream(is, "src");
 
+                        // ... and store it in the file
                         Bitmap bmp = ((BitmapDrawable) drawable).getBitmap();
                         if (bmp != null) {
                             filePath.createNewFile();
@@ -88,13 +90,14 @@ public class DrawMan {
                             fileOut.flush();
                             fileOut.close();
                         }
-                    } catch (Exception ex) {
-                        Log.e(LOG_TAG, ex.getCause().toString());
                     }
-                }
 
-                dMap.put(userId, drawable);
-                Log.i(LOG_TAG, "Drawable added to map");
+                    dMap.put(userId, drawable);
+                    Log.i(LOG_TAG, "Drawable added to map");
+
+                } catch(Exception ex) {
+                    Log.e(LOG_TAG, ex.getCause().toString());
+                }
 
                 return drawable;
             }

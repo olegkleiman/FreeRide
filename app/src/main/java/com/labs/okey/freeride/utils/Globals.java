@@ -31,6 +31,7 @@ public class Globals {
 //    public abstract int getRideStatus();
 
     public static String userID;
+    public static boolean myrides_update_required = true;
 
     public enum RIDE_STATUS {
         APPROVED,
@@ -186,6 +187,7 @@ public class Globals {
     public static Matrix4f verificationMat = new Matrix4f();
 
     public static int CHECKING_AROUND_DELAY = 8;
+    public static int PASSENGER_ADVERTISING_PERIOD = 30;
 
     private static String rideCode;
     public static String getRideCode() { return rideCode; }

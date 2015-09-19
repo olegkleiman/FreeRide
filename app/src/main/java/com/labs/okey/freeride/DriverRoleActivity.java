@@ -44,6 +44,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.labs.okey.freeride.adapters.PeersAdapter;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.GlobalSettings;
 import com.labs.okey.freeride.model.Ride;
@@ -90,8 +91,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     Ride mCurrentRide;
 
-    WiFiPeersAdapter2 mPeersAdapter;
-    public List<WifiP2pDeviceUser> peers = new ArrayList<>();
+    WiFiPeersAdapter2 mPassengersAdapter;
+    public List<WifiP2pDeviceUser> passengers = new ArrayList<>();
 
     WiFiUtil mWiFiUtil;
 
@@ -117,8 +118,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
-
-
     @Override
     @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,7 +139,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             @Override
             protected void onPostExecute(Void result) {
                 if( !mAppMode ) { // picture is not required by server
-                    mWiFiUtil.discoverPeers();
+                    discoverPassengers();
                 } else {
                     mAdvertiseTask.execute();
                 }
@@ -308,6 +307,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }.start();
     }
 
+    private void discoverPassengers() {
+        mWiFiUtil.startRegistrationAndDiscovery(this,
+                "", "", "",
+                getHandler(),
+                500);
+    }
+
     private void startAdvertise(String userID,
                                 String userName,
                                 String rideCode) {
@@ -420,8 +426,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mPeersRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        mPeersAdapter = new WiFiPeersAdapter2(this, R.layout.peers_header, peers);
-        mPeersRecyclerView.setAdapter(mPeersAdapter);
+        mPassengersAdapter = new WiFiPeersAdapter2(this,
+                                            R.layout.peers_header,
+                                            R.layout.row_passenger,
+                                            passengers);
+        mPeersRecyclerView.setAdapter(mPassengersAdapter);
 
         mTxtMonitorStatus = (TextView) findViewById(R.id.status_monitor);
         Globals.setMonitorStatus(getString(R.string.geofence_outside));
@@ -496,8 +505,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     // Implementation of IRefreshable
     //
     public void refresh() {
-        peers.clear();
-        mPeersAdapter.notifyDataSetChanged();
+        passengers.clear();
+        mPassengersAdapter.notifyDataSetChanged();
 
         final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
         btnRefresh.setVisibility(View.GONE);
@@ -529,7 +538,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         try {
 
-            WifiP2pDeviceUser device = peers.get(position);
+            WifiP2pDevice device = passengers.get(position);
 
             if (device.status == WifiP2pDevice.AVAILABLE) {
                 mWiFiUtil.connectToDevice(device, 0);
@@ -562,8 +571,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mPeersAdapter.add(device);
-                mPeersAdapter.notifyDataSetChanged();
+                mPassengersAdapter.add(device);
+                mPassengersAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -577,11 +586,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         for (WifiP2pDevice device : list.getDeviceList()) {
             WifiP2pDeviceUser d = new WifiP2pDeviceUser(device);
             d.setUserId(getUser().getRegistrationId());
-            mPeersAdapter.updateItem(d);
+            mPassengersAdapter.updateItem(d);
         }
 
         if( list.getDeviceList().size() > 0 )
-            mPeersAdapter.notifyDataSetChanged();
+            mPassengersAdapter.notifyDataSetChanged();
     }
 
     //

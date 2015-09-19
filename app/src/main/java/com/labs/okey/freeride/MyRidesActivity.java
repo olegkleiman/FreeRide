@@ -54,6 +54,8 @@ public class MyRidesActivity extends BaseActivity
             @Override
             protected void onPostExecute(Void res) {
                 mTabAdapter.updateRides(mRides);
+
+                Globals.myrides_update_required = false;
             }
 
             @Override
@@ -70,21 +72,6 @@ public class MyRidesActivity extends BaseActivity
 
                     final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQuery).get();
                     mRides = ridesList;
-
-//                   mTabAdapter.notifyDataSetChanged();
-
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            //mRidesAdapter.clear();
-//
-//                            for(Ride _ride : ridesList) {
-//                                Log.d(LOG_TAG, _ride.getRideCode());
-//                                //mRidesAdapter.add(_ride);
-//                            }
-//                        }
-//                    });
-
 
                 } catch (Exception ex) {
                     Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());

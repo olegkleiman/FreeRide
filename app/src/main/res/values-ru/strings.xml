@@ -94,10 +94,13 @@
     <string name="detection_center_caption">Проверка изображения</string>
     <string name="detection_freeze">Нажмите чтобы сделать снимок</string>
     <string name="please_wait">Подождите, пожалуйста.</string>
-    <string name="passenger_progress_dialog">Проверка окружения</string>
+    <string name="passenger_progress_dialog">Поиск водителя</string>
     <string name="action_refresh_settings">Обновление координат </string>
     <string name="fb_error_msg">Ошибка:</string>
     <string name="fb_error">Нет доступа к сети</string>
     <string name="title_activity_register">Free Ride: Регистрация</string>
     <string name="passenger_confirm">Вы подтверждаете поездку с </string>
+    <string name="passenger_advertising">Устройство будет передает информацию о себе водителю</string>
+    <string name="stop">Стоп</string>
+    <string name="passenger_adv_description">Устройство будет передает информацию о себе водителю в течение 30 сек.</string>
 </resources>

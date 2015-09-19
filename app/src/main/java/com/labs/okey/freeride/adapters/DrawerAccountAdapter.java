@@ -127,14 +127,16 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
                 drawable = (Globals.drawMan.userDrawable(mContext,
                         "1",
                         mPictureURL)).get();
-                drawable = RoundedDrawable.fromDrawable(drawable);
-                ((RoundedDrawable) drawable)
-                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                        .setBorderColor(Color.LTGRAY)
-                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                        .setOval(true);
+                if( drawable != null ) {
+                    drawable = RoundedDrawable.fromDrawable(drawable);
+                    ((RoundedDrawable) drawable)
+                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                            .setBorderColor(Color.LTGRAY)
+                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                            .setOval(true);
 
-                holder.imageProfile.setImageDrawable(drawable);
+                    holder.imageProfile.setImageDrawable(drawable);
+                }
             } catch (InterruptedException | ExecutionException e) {
                 Log.e(LOG_TAG, e.getMessage());
             }

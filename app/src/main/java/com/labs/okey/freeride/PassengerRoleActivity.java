@@ -24,7 +24,6 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -34,14 +33,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
@@ -56,6 +54,7 @@ import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+import com.skyfishjy.library.RippleBackground;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -76,7 +75,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     private static final String LOG_TAG = "FR.Passenger";
 
-    TextView mTxtStatus;
     String mUserID;
 
     final int MAKE_PICTURE_REQUEST = 1;
@@ -92,6 +90,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     WiFiPeersAdapter2 mDriversAdapter;
     public List<WifiP2pDeviceUser> drivers = new ArrayList<>();
 
+    CountDownTimer mAdvertiseTimer;
+
     private Handler handler = new Handler(this);
     public Handler getHandler() {
         return handler;
@@ -105,8 +105,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
         wamsInit(false); // without auto-update for this acivity
-
-        mTxtStatus = (TextView)findViewById(R.id.txtStatusPassenger);
 
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
@@ -130,7 +128,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                         Globals.getMonitorStatus() :
                                         getString(R.string.geofence_outside);
 
-                                mTxtMonitorStatus.setText(message);
+                                Log.i(LOG_TAG, message);
+//                                mTxtMonitorStatus.setText(message);
 
                             }
                         });
@@ -154,7 +153,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             // Start BLE advertising
             mBLEUtil = new BLEUtil(this);
 
-            refresh();
+            final RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.ripple_background_content);
+            ImageView imageView=(ImageView)findViewById(R.id.centerImage);
+
+            rippleBackground.startRippleAnimation();
+
+            startAdvertise();
         }
     }
 
@@ -167,7 +171,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         driversRecycler.setLayoutManager(new LinearLayoutManager(this));
         driversRecycler.setItemAnimator(new DefaultItemAnimator());
 
-        mDriversAdapter = new WiFiPeersAdapter2(this, R.layout.drivers_header, drivers);
+        mDriversAdapter = new WiFiPeersAdapter2(this,
+                                    R.layout.drivers_header,
+                                    R.layout.row_devices,
+                                    drivers);
         driversRecycler.setAdapter(mDriversAdapter);
 
         mDriversShown = false;
@@ -212,7 +219,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         super.onStop();
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -254,7 +260,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         try {
             String dialogContent = getString(contentStringResId);
-
 
             new MaterialDialog.Builder(this)
                     .callback(new MaterialDialog.ButtonCallback(){
@@ -493,6 +498,69 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 ).show();
     }
 
+    private void startAdvertise() {
+
+        TextView txtCaption = (TextView) findViewById(R.id.drivers_caption);
+        if( txtCaption != null )
+            txtCaption.setText("Now adverising");
+
+        mWiFiUtil.startRegistrationAndDiscovery(this,
+                getUser().getRegistrationId(),
+                getUser().getFullName(),
+                // provide empty rideCode to distinguish
+                // this broadcast from the driver's one
+                "",
+                getHandler(),
+                1000);
+
+        mTxtMonitorStatus.setText(R.string.passenger_adv_description);
+
+//        boolean showMinMax = true;
+//        final MaterialDialog dialog = new MaterialDialog.Builder(this)
+//                .title(R.string.passenger_advertising)
+//                .content(R.string.passenger_adv_description)
+//                .negativeText(R.string.cancel)
+//                .autoDismiss(false)
+//                .callback(new MaterialDialog.ButtonCallback(){
+//                    @Override
+//                    public void onNegative(MaterialDialog dialog){
+//                        mAdvertiseTimer.cancel();
+//                        dialog.dismiss();
+//
+//                        refresh();
+//                    }
+//                })
+//                .progress(false, Globals.PASSENGER_ADVERTISING_PERIOD, showMinMax)
+//                .show();
+
+        mAdvertiseTimer = new CountDownTimer(Globals.PASSENGER_ADVERTISING_PERIOD * 1000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                int rest = (int) (millisUntilFinished / 1000);
+                Log.i(LOG_TAG, "Yet advertising for " + rest);
+
+                //dialog.incrementProgress(1);
+            }
+
+            @Override
+            public void onFinish() {
+                //dialog.dismiss();
+                refresh();
+            }
+        };
+        mAdvertiseTimer.start();
+    }
+
+    public void stopAdvertise(View view){
+
+        mAdvertiseTimer.cancel();
+
+        mWiFiUtil.stopDiscovery();
+
+        refresh();
+    }
+
     //
     // Implementation of IRefreshable
     //
@@ -605,15 +673,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void trace(final String status) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if( mTxtStatus != null ) {
-                    String current = mTxtStatus.getText().toString();
-                    mTxtStatus.setText(current + "\n" + status);
-                }
-            }
-        });
+
     }
 
     @Override
@@ -657,11 +717,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     //
     @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo p2pInfo) {
-        TextView txtMe = (TextView)findViewById(R.id.txtPassengerMe);
+
         Thread handler = null;
 
         if (p2pInfo.isGroupOwner) {
-            txtMe.setText("ME: GroupOwner, Group Owner IP: " + p2pInfo.groupOwnerAddress.getHostAddress());
+
             try {
                 handler = new GroupOwnerSocketHandler(this.getHandler());
                 handler.start();
@@ -670,7 +730,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
 
         } else {
-            txtMe.setText("ME: NOT GroupOwner, Group Owner IP: " + p2pInfo.groupOwnerAddress.getHostAddress());
 
             handler = new ClientSocketHandler(
                     this.getHandler(),

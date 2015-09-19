@@ -34,12 +34,6 @@ public class MyRideTabAdapter extends FragmentPagerAdapter {
         mRides = rides;
         GeneralMyRidesFragment.getInstance().updateRides(rides);
         RejectedMyRidesFragment.getInstance().updateRides(rides);
-
-
-
-
-
-
     }
 
     @Override

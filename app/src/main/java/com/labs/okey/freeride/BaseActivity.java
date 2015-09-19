@@ -158,6 +158,7 @@ public class BaseActivity extends AppCompatActivity
                 actionBar.setDisplayShowTitleEnabled(true);
 
                 actionBar.setTitle(title);
+                actionBar.setSubtitle(subTitle);
             }
         }
 

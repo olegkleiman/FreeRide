@@ -73,7 +73,7 @@ public class WiFiUtil
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
 
         // Indicates a change in the list of available peers.
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+//        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
 
         // Indicates the state of Wi-Fi P2P connectivity has changed.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -194,7 +194,7 @@ public class WiFiUtil
         //record.put(Globals.TXTRECORD_PROP_AVAILABLE, "visible");
         record.put(Globals.TXTRECORD_PROP_USERID, userId);
         record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
-        record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
+//        record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
         record.put(Globals.TXTRECORD_PROP_PORT, Integer.toString(Globals.SERVER_PORT));
 
         // Service information for Bonjour.
@@ -227,7 +227,7 @@ public class WiFiUtil
 
     }
 
-    public void discoverService(final IPeersChangedListener peersChangedListener,
+    private void discoverService(final IPeersChangedListener peersChangedListener,
                                 final Handler handler,
                                 final int delayMills) {
 
@@ -259,14 +259,14 @@ public class WiFiUtil
 
                                 @Override
                                 public void onSuccess() {
-                                    ((ITrace)mContext).alert("restored", "");
+                                    Log.i(LOG_TAG, "Restored after discroverService() failure");
                                 }
 
                                 @Override
                                 public void onFailure(int reason) {
                                     stopDiscovery();
 
-                                    ((ITrace)mContext).alert("discoverServices() failed with error code: " + Integer.toString(reason), "error");
+                                    Log.e(LOG_TAG, "discoverServices() failed with error code: " + Integer.toString(reason));
 
                                     WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
                                     wifiManager.setWifiEnabled(false);
@@ -285,6 +285,9 @@ public class WiFiUtil
 
     }
 
+    //
+    // Implementation of WifiP2pManager.DnsSdServiceResponseListener
+    //
     @Override
     public void onDnsSdServiceAvailable(String instanceName,
                                         String registrationType,
@@ -318,6 +321,9 @@ public class WiFiUtil
         }
     }
 
+    //
+    // Implementation of WifiP2pManager.DnsSdTxtRecordListener
+    //
     @Override
     public void onDnsSdTxtRecordAvailable(String fullDomainName,
                                           Map<String, String> record,

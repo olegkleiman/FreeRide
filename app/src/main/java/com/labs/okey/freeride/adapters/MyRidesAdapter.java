@@ -31,7 +31,7 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
     private List<Ride> items;
     IRecyclerClickListener mClickListener;
     Context context;
-    private static final String LOG_TAG = "FR.Main";
+    private static final String LOG_TAG = "FR.MyRidesAdapter";
 
     public MyRidesAdapter(List<Ride> objects) {
         items = objects;

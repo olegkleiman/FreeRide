@@ -85,7 +85,7 @@
     <string name="download_geofences_desc">מוריד הגדרות גיאוגרפיות</string>
     <string name="new_version_conent">אנו ממליצים לך להתקין את הגרסה החדשה ביותר של התכנית. האם אתה רוצה לעשות זאת?</string>
     <string name="new_version_title">גרסה חדשה מוכנה להורדה</string>
-    <string name="geofence_transition_dwell">אתה רוכב באזור פיקוח</string>
+    <string name="geofence_transition_dwell">אתה נוהג באזור פיקוח</string>
     <string name="action_camera">מצלמה</string>
     <string name="edit_car_dialog_caption">תאור רכב</string>
     <string name="edit_phone_dialog_caption">מספר טלפון</string>
@@ -95,10 +95,13 @@
     <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
     <string name="detection_center_desc">לשמור?</string>
     <string name="please_wait">נא להמתין</string>
-    <string name="passenger_progress_dialog">מחפש התקנים חדשים</string>
+    <string name="passenger_progress_dialog">מחפש התקן של הנהג</string>
     <string name="ride_code_wrong">קוד שגוי. נסו שוב בבקשה.</string>
     <string name="fb_error_msg">שגיה:</string>
     <string name="fb_error">אין גישה לרשת</string>
     <string name="passenger_confirm">לאשר את הנסיעה עם </string>
+    <string name="passenger_advertising">חושף את המשכיר לנהג</string>
+    <string name="passenger_adv_description">משכיר יהי חשוף לנהג כ 30 שניות</string>
+    <string name="stop">עצור</string>
 
 </resources>

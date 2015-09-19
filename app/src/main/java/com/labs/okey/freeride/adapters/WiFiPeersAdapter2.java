@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.ViewHolder>{
 
-    private static final String LOG_TAG = "FR.PeersAdapter";
+    private static final String LOG_TAG = "FR.DriversAdapter";
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
@@ -38,13 +38,15 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
     private List<WifiP2pDeviceUser> items;
     private Context mContext;
     private int mHeaderLayoutId;
-
+    private int mRowLayoutId;
 
     public WiFiPeersAdapter2(Context context,
                              int headerLayoutId,
+                             int rowLayoutId,
                              List<WifiP2pDeviceUser> objects){
         mContext = context;
         mHeaderLayoutId = headerLayoutId;
+        mRowLayoutId = rowLayoutId;
         items = objects;
     }
 
@@ -77,7 +79,7 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
         } else { // Inflate row layout
             v = LayoutInflater.
                     from(parent.getContext()).
-                    inflate(R.layout.row_devices, parent, false);
+                    inflate(mRowLayoutId, parent, false);
         }
 
         IRecyclerClickListener recyclerClickListener =
@@ -99,7 +101,8 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
             WifiP2pDeviceUser device = items.get(position - 1);
 
             holder.txtDriverName.setText(device.getUserName());
-            holder.txtRideCode.setText(device.getRideCode());
+            if( holder.txtRideCode != null )
+                holder.txtRideCode.setText(device.getRideCode());
             //holder.deviceStatus.setText(getDeviceStatus(device.status));
             holder.setImageStatus(device.status);
 
@@ -112,14 +115,17 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
                         userId,
                         pictureURL)).get(); // May be null because of pictureURL
                                             // but handled in catch block
-                drawable = RoundedDrawable.fromDrawable(drawable);
-                ((RoundedDrawable) drawable)
-                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                        .setBorderColor(Color.LTGRAY)
-                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                        .setOval(true);
+                if( drawable != null ) {
 
-                holder.userPicture.setImageDrawable(drawable);
+                    drawable = RoundedDrawable.fromDrawable(drawable);
+                    ((RoundedDrawable) drawable)
+                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                            .setBorderColor(Color.LTGRAY)
+                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                            .setOval(true);
+
+                    holder.userPicture.setImageDrawable(drawable);
+                }
             } catch (InterruptedException | ExecutionException e) {
                 Log.e(LOG_TAG, e.getMessage());
             } catch (NullPointerException ex) {
@@ -231,7 +237,7 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
 
                 holderId = viewType;
 
-                txtDriverName = (TextView) itemLayoutView.findViewById(R.id.txt_driver_name);
+                txtDriverName = (TextView) itemLayoutView.findViewById(R.id.txt_peer_name);
                 txtRideCode = (TextView) itemLayoutView.findViewById(R.id.txt_ride_code);
                 userPicture = (ImageView) itemLayoutView.findViewById(R.id.userPicture);
                 rowLayout = (RelativeLayout)itemLayoutView.findViewById(R.id.device_row);

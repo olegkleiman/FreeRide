@@ -119,7 +119,7 @@
     <string name="add_car_button_add">Add</string>
     <string name="edit_car_button_save">Save</string>
     <string name="edit_car_button_delete">Delete</string>
-    <string name="add_car_button_cancel">Cancel</string>
+    <string name="cancel">Cancel</string>
     <string name="add_car_hint">Car number</string>
     <string name="add_car_nick">Car nickname</string>
     <string name="car_number_validation_error">Type in a valid car number</string>
@@ -131,7 +131,9 @@
 
     <string name="please_wait">Please wait</string>
     <string name="processing">Processing</string>
-    <string name="passenger_progress_dialog">Searching for devices</string>
+    <string name="passenger_progress_dialog">Searching for driver</string>
+    <string name="passenger_advertising">Advertising</string>
+    <string name="passenger_adv_description">The device will advertise itself for 30 sec.</string>
     <string name="done">Done</string>
     <string name="ride_code_prompt">Type in the code as displayed at driver\'s  screen</string>
 
@@ -148,6 +150,7 @@
     <string name="no">No</string>
     <string name="ok">OK</string>
     <string name="close">Close</string>
+    <string name="stop">Stop</string>
     <string name="download_data">Initializing data</string>
     <string name="download_geofences_desc">Downloading geo-fences</string>
     <string name="download_classifiers_desc">Downloading classifiers</string>
@@ -209,6 +212,7 @@ limitations under the License.</string>
 
     <!-- Nearby Errors -->
     <string name="nearby_error_nowifi">Not connected to WiFi network</string>
+    <string name="mobile_phone_image_description">Mobile Phone Icon</string>
 
     <string name="geofence_transition_notification_text">Click notification to submit your ride</string>
     <string name="geofences_added">Geofences added</string>

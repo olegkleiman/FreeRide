@@ -21,7 +21,8 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="@dimen/card_backpanel_height"
-            android:background="?attr/colorPrimary" />
+            android:background="?attr/colorPrimary"
+            android:visibility="gone" />
 
         <RelativeLayout
             android:layout_width="fill_parent"
@@ -85,7 +86,7 @@
             android:id="@+id/ripple_background_content"
             android:layout_weight="0.5"
             app:rb_color="#0099CC"
-            app:rb_radius="28dp"
+            app:rb_radius="18dp"
             app:rb_rippleAmount="4"
             app:rb_duration="3000"
             app:rb_scale="6"
@@ -114,14 +115,13 @@
                 android:id="@+id/status_monitor"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
-                android:paddingLeft="@dimen/snackbar_leftpadding"
-                android:paddingRight="@dimen/snackbar_rightpadding"
-                android:paddingEnd="@dimen/snackbar_rightpadding"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/white"
                 android:text="@string/geofence_outside"
                 android:layout_weight="8"
-                android:gravity="center_vertical|fill_vertical|start|center_horizontal" />
+                android:gravity="center_vertical|fill_vertical|start"
+                android:layout_marginStart="@dimen/monitored_text_start_margin"
+                android:layout_marginLeft="@dimen/monitored_text_start_margin" />
 
             <View
                 android:layout_width="1dp"

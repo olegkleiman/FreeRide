@@ -120,19 +120,13 @@
 
                 <TextView
                     style="@style/SubCaptionStyle"
-                    android:id="@+id/textViewVincentMi"
-                    android:text="This product includes the software by Vincent Mi, Copyright (&#169;) 2015 Vincent Mi distributed under Apache License, Version 2.0"
-                    android:layout_marginTop="10dp" />
-
-                <TextView
-                    style="@style/SubCaptionStyle"
-                    android:text="This product includes the software by Oğuz Bilgener (https://github.com/oguzbilgener) distributed under MIT licence. See file LICENCE. "
+                    android:text="This product includes 'Android Ripple Background' software by Jason Yu (https://android-arsenal.com/details/1/1107) distributed under MIT licence. See file LICENCE. "
                     android:id="@+id/textView15"
                     android:layout_marginTop="10dp" />
 
                 <TextView
                     style="@style/SubCaptionStyle"
-                    android:text="This product includes the 'material-dialogs' software by Aidan Michael Follestad (https://github.com/afollestad/material-dialogs) distributed under MIT licence. See file LICENCE. "
+                    android:text="This product includes 'material-dialogs' software by Aidan Michael Follestad (https://github.com/afollestad/material-dialogs) distributed under MIT licence. See file LICENCE. "
                     android:id="@+id/textView16"
                     android:layout_marginTop="10dp" />
 

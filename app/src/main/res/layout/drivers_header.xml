@@ -11,6 +11,7 @@
         android:minHeight="@dimen/adjustedActionBarSize">
 
         <TextView
+            android:id="@+id/drivers_caption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
