@@ -19,6 +19,7 @@
         layout="@layout/tool_bar" />
 
     <LinearLayout
+        android:id="@+id/driver_status_layout"
         android:layout_width="match_parent"
         android:layout_height="@dimen/card_backpanel_height"
         android:orientation="horizontal"
@@ -26,6 +27,7 @@
         android:layout_gravity="center_horizontal"
         android:gravity="center_horizontal">
         <TextView android:text="@string/ride_code_label"
+            android:id="@+id/code_label_caption"
             android:textColor="@color/white"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:layout_width="wrap_content"
@@ -59,6 +61,7 @@
         android:background="?attr/colorPrimary" />
 
     <RelativeLayout
+        android:id="@+id/drive_internal_layout"
         android:layout_width="fill_parent"
         android:layout_height="350dp"
         android:layout_gravity="center_horizontal"

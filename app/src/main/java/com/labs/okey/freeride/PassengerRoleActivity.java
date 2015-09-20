@@ -153,9 +153,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             // Start BLE advertising
             mBLEUtil = new BLEUtil(this);
 
-            final RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.ripple_background_content);
-            ImageView imageView=(ImageView)findViewById(R.id.centerImage);
-
+            RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.ripple_background_content);
+            ImageView imageView = (ImageView)findViewById(R.id.centerImage);
             rippleBackground.startRippleAnimation();
 
             startAdvertise();
@@ -515,38 +514,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         mTxtMonitorStatus.setText(R.string.passenger_adv_description);
 
-//        boolean showMinMax = true;
-//        final MaterialDialog dialog = new MaterialDialog.Builder(this)
-//                .title(R.string.passenger_advertising)
-//                .content(R.string.passenger_adv_description)
-//                .negativeText(R.string.cancel)
-//                .autoDismiss(false)
-//                .callback(new MaterialDialog.ButtonCallback(){
-//                    @Override
-//                    public void onNegative(MaterialDialog dialog){
-//                        mAdvertiseTimer.cancel();
-//                        dialog.dismiss();
-//
-//                        refresh();
-//                    }
-//                })
-//                .progress(false, Globals.PASSENGER_ADVERTISING_PERIOD, showMinMax)
-//                .show();
-
         mAdvertiseTimer = new CountDownTimer(Globals.PASSENGER_ADVERTISING_PERIOD * 1000, 1000) {
 
             @Override
             public void onTick(long millisUntilFinished) {
                 int rest = (int) (millisUntilFinished / 1000);
-                Log.i(LOG_TAG, "Yet advertising for " + rest);
-
-                //dialog.incrementProgress(1);
+                Log.i(LOG_TAG, String.format("Left %d sec. for advertising", rest));
             }
 
             @Override
             public void onFinish() {
-                //dialog.dismiss();
-                refresh();
+                stopAdvertise(null);
             }
         };
         mAdvertiseTimer.start();
@@ -558,7 +536,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         mWiFiUtil.stopDiscovery();
 
+        switchLayouts();
         refresh();
+    }
+
+    private void switchLayouts() {
+        findViewById(R.id.ripple_background_content).setVisibility(View.GONE);
+        findViewById(R.id.passenger_internal_layout).setVisibility(View.VISIBLE);
     }
 
     //
@@ -580,6 +564,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         //mBLEUtil.startScan();
 
+        mWiFiUtil.stopDiscovery();
+
         mWiFiUtil.startRegistrationAndDiscovery(this,
                 getUser().getRegistrationId(),
                 getUser().getFullName(),
@@ -599,7 +585,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             progress_refresh.setVisibility(View.GONE);
                     }
                 },
-                Globals.CHECKING_AROUND_DELAY * 1000);
+                Globals.PASSENGER_DISCOVERY_PERIOD * 1000);
 
         try {
             boolean showMinMax = true;
@@ -607,10 +593,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .title(R.string.passenger_progress_dialog)
                     .content(R.string.please_wait)
                     .autoDismiss(false)
-                    .progress(false, Globals.CHECKING_AROUND_DELAY, showMinMax)
+                    .progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, showMinMax)
                     .show();
 
-            new CountDownTimer(Globals.CHECKING_AROUND_DELAY * 1000, 1000) {
+            new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
 
                 public void onTick(long millisUntilFinished) {
 

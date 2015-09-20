@@ -23,6 +23,8 @@ import java.util.List;
 
 public class Globals {
 
+    public static int REQUIRED_PASSENGERS_NUMBER = 3;
+
 //    @IntDef({RIDE_APPROVED, RIDE_NOT_APPROVED, RIDE_WAITING})
 //    public static int RIDE_APPROVED = 0;
 //    public static int RIDE_NOT_APPROVED = 1;
@@ -186,8 +188,9 @@ public class Globals {
     // and zeros elsewhere.
     public static Matrix4f verificationMat = new Matrix4f();
 
-    public static int CHECKING_AROUND_DELAY = 8;
-    public static int PASSENGER_ADVERTISING_PERIOD = 30;
+    public static int PASSENGER_DISCOVERY_PERIOD = 20;
+    public static int PASSENGER_ADVERTISING_PERIOD = 40;
+    public static int DRIVER_DISCOVERY_PERIOD = 20;
 
     private static String rideCode;
     public static String getRideCode() { return rideCode; }

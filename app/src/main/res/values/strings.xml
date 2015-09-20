@@ -77,7 +77,7 @@
     <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>
     <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
     <string name="connection_lost">The connection lost. Please try again in few seconds</string>
-    <string name="ride_code_hint">5 digits without dashes</string>
+    <string name="ride_code_hint">6 digits without dashes</string>
     <string name="passenger_confirm">Do you want to confirm the ride with </string>
     <string name="ride_code_refill"></string>
     <string name="passenger_details">passenger details</string>
@@ -135,6 +135,7 @@
     <string name="passenger_advertising">Advertising</string>
     <string name="passenger_adv_description">The device will advertise itself for 30 sec.</string>
     <string name="done">Done</string>
+    <string name="discover_devices">Discovering devices</string>
     <string name="ride_code_prompt">Type in the code as displayed at driver\'s  screen</string>
 
     <string name="drawer_open">Open navigation drawer</string>

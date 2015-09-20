@@ -3,8 +3,4 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.labs.okey.freeride.DriverRoleActivity">
 
-    <item android:id="@+id/action_debug"
-        android:title="@string/action_debug"
-        android:orderInCategory="300"
-        app:showAsAction="never" />
 </menu>

@@ -136,6 +136,11 @@
                     android:id="@+id/textView18"
                     android:layout_marginTop="10dp" />
 
+                <TextView
+                    style="@style/SubCaptionStyle"
+                    android:text="App icons by icons8.com (https://icons8.com/) distributed by Creative Commons Attribution-NoDerivs 3.0 Unported license"
+                    android:id="@+id/textView19"
+                    android:layout_marginTop="10dp" />
 
             </LinearLayout>
 

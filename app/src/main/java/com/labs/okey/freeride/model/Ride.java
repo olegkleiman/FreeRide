@@ -74,5 +74,8 @@ public class Ride implements Serializable  {
     @com.google.gson.annotations.SerializedName("ispicturerequired_bydriver")
     private Boolean isPictureRequiredByDriver;
     public Boolean isPictureRequiredByDriver() {return isPictureRequiredByDriver; }
+    public void setPictureRequiredByDriver(Boolean value) {
+        isPictureRequiredByDriver = value;
+    }
 
 }

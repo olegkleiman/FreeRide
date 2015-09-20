@@ -100,7 +100,7 @@
                 android:layout_centerInParent="true"
                 android:id="@+id/centerImage"
                 android:contentDescription="@string/mobile_phone_image_description"
-                android:src="@drawable/ic_action_mobile_phone"/>
+                android:src="@drawable/passenger_64_yellow"/>
         </com.skyfishjy.library.RippleBackground>
 
         <LinearLayout

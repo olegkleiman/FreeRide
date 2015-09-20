@@ -59,7 +59,7 @@
     <string name="subtitle_activity_tutorial">הדרכות</string>
     <string name="ride_code_dialog_content">אפשר לראות את הקוד הזה על מסך המכשיר של הנהג</string>
     <string name="ride_code_title">הזן קוד נסיעה</string>
-    <string name="ride_code_hint">5 ספרות ללא מקף</string>
+    <string name="ride_code_hint">6 ספרות ללא מקף</string>
     <string name="title_activity_passenger_role">מצב נוסע</string>
     <string name="registration_finish">סיום</string>
     <string name="drivers_header">בחר את הנהג</string>
@@ -103,4 +103,5 @@
     <string name="passenger_advertising">חושף את המשכיר לנהג</string>
     <string name="passenger_adv_description">משכיר יהי חשוף לנהג כ 30 שניות</string>
     <string name="stop">עצור</string>
+    <string name="discover_devices">מחפש התקני נוסעים</string>
 </resources>

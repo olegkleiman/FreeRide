@@ -1,10 +1,8 @@
 package com.labs.okey.freeride;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.graphics.Outline;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -12,16 +10,13 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
-import android.os.Build;
+import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.speech.tts.TextToSpeech;
 import android.support.annotation.CallSuper;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -29,28 +24,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.labs.okey.freeride.adapters.PeersAdapter;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.GlobalSettings;
 import com.labs.okey.freeride.model.Ride;
-import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
-import com.labs.okey.freeride.utils.BLEUtil;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
@@ -69,7 +58,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -107,6 +95,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private MobileServiceTable<Ride> ridesTable;
     private MobileServiceTable<GlobalSettings> settingsTable;
 
+    CountDownTimer mDiscoveryTimer;
     AsyncTask<Void, Void, Void> mAdvertiseTask;
 
     final int WIFI_CONNECT_REQUEST = 1;// request code for starting WiFi connection
@@ -139,7 +128,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             @Override
             protected void onPostExecute(Void result) {
                 if( !mAppMode ) { // picture is not required by server
+
+                    prepareLayoutForDiscovery();
                     discoverPassengers();
+
                 } else {
                     mAdvertiseTask.execute();
                 }
@@ -169,6 +161,21 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mAdvertiseTask = new AsyncTask<Void, Void, Void>() {
 
             Exception mEx;
+            Boolean mRequestSelfie;
+
+            @Override
+            protected void onPreExecute() {
+
+                mRequestSelfie =
+                        ( passengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER) ?
+                                true : false;
+
+                prepareLayoutForAdvertising();
+
+//                RippleBackground rippleBackground = (RippleBackground)findViewById(R.id.ripple_background_content);
+//                ImageView imageView = (ImageView)findViewById(R.id.centerImage);
+//                rippleBackground.startRippleAnimation();
+            }
 
             @Override
             protected void onPostExecute(Void result) {
@@ -184,8 +191,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         animationDrawable.start();
 
                         startAdvertise(getUser().getRegistrationId(),
-                                getUser().getFullName(),
-                                rideCode);
+                                       getUser().getFullName(),
+                                       rideCode);
                     }
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
@@ -201,6 +208,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Ride ride = new Ride();
                     ride.setCreated(new Date());
                     ride.setCarNumber(mCarNumber);
+                    ride.setPictureRequiredByDriver(mRequestSelfie);
                     mCurrentRide = ridesTable.insert(ride).get();
 
                 } catch (ExecutionException | InterruptedException ex) {
@@ -307,21 +315,73 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }.start();
     }
 
+    private void prepareLayoutForDiscovery() {
+        TextView txtCaption = (TextView)findViewById(R.id.code_label_caption);
+        txtCaption.setText(R.string.discover_devices);
+
+        findViewById(R.id.txtRideCode).setVisibility(View.GONE);
+        findViewById(R.id.img_transmit).setVisibility(View.GONE);
+        findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
+        findViewById(R.id.btnRefresh).setVisibility(View.GONE);
+
+        findViewById(R.id.btnRefresh).setVisibility(View.GONE);
+        findViewById(R.id.progress_refresh).setVisibility(View.VISIBLE);
+
+    }
+
+    private void prepareLayoutForAdvertising(){
+        TextView txtCaption = (TextView)findViewById(R.id.code_label_caption);
+        txtCaption.setText(R.string.ride_code_label);
+
+        findViewById(R.id.txtRideCode).setVisibility(View.VISIBLE);
+        findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
+
+        findViewById(R.id.progress_refresh).setVisibility(View.GONE);
+        findViewById(R.id.btnRefresh).setVisibility(View.VISIBLE);
+
+    }
+
     private void discoverPassengers() {
+
         mWiFiUtil.startRegistrationAndDiscovery(this,
                 "", "", "",
                 getHandler(),
                 500);
+
+        mDiscoveryTimer = new CountDownTimer(Globals.DRIVER_DISCOVERY_PERIOD * 1000, 1000){
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                int rest = (int) (millisUntilFinished / 1000);
+                Log.i(LOG_TAG, String.format("Left %d sec. for discovering", rest));
+                Log.i(LOG_TAG, String.format("Discovered %d passengers", passengers.size()));
+
+                if( passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
+                    prepareLayoutForAdvertising();
+
+                    mAdvertiseTask.execute();
+                }
+
+            }
+
+            @Override
+            public void onFinish() {
+                mWiFiUtil.stopDiscovery();
+
+                mAdvertiseTask.execute();
+
+            }
+        }.start();
     }
 
     private void startAdvertise(String userID,
                                 String userName,
                                 String rideCode) {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            BLEUtil bleUtil = new BLEUtil(this);
-            Boolean bleRes = bleUtil.startAdvertise();
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            BLEUtil bleUtil = new BLEUtil(this);
+//            Boolean bleRes = bleUtil.startAdvertise();
+//        }
 
         // This will publish the service in DNS-SD and start serviceDiscovery()
         mWiFiUtil.startRegistrationAndDiscovery(this,
@@ -400,12 +460,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_debug) {
-            onDebug(null);
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -443,13 +497,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void trace(final String status) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                String current = mTxtStatus.getText().toString();
-                mTxtStatus.setText(current + "\n" + status);
-            }
-        });
+
     }
 
     @Override

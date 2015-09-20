@@ -194,7 +194,8 @@ public class WiFiUtil
         //record.put(Globals.TXTRECORD_PROP_AVAILABLE, "visible");
         record.put(Globals.TXTRECORD_PROP_USERID, userId);
         record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
-//        record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
+        if( rideCode != null && !rideCode.isEmpty())
+            record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
         record.put(Globals.TXTRECORD_PROP_PORT, Integer.toString(Globals.SERVER_PORT));
 
         // Service information for Bonjour.

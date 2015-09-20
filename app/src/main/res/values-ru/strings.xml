@@ -65,7 +65,7 @@
     <string name="passengerTabCaption">Пассажир</string>
     <string name="ride_code_dialog_content">Вы можете увидеть этот код на дисплее телефона водителя</string>
     <string name="ride_code_title">Введите код поездки</string>
-    <string name="ride_code_hint">5 цифр без разделителя</string>
+    <string name="ride_code_hint">6 цифр без разделителя</string>
     <string name="registration_finish">Завершить регистрацию</string>
     <string name="geofence_outside">Вы находитесь вне скоростной трассы</string>
     <string name="geofence_positive_answer">Напомнить</string>
@@ -102,5 +102,6 @@
     <string name="passenger_confirm">Вы подтверждаете поездку с </string>
     <string name="passenger_advertising">Устройство будет передает информацию о себе водителю</string>
     <string name="stop">Стоп</string>
-    <string name="passenger_adv_description">Устройство будет передает информацию о себе водителю в течение 30 сек.</string>
+    <string name="passenger_adv_description">Устройство будет передавать информацию о себе водителю в течение 30 сек.</string>
+    <string name="discover_devices">Поиск пассажиров</string>
 </resources>
