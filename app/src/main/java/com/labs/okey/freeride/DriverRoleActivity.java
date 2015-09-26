@@ -36,9 +36,11 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.labs.okey.freeride.adapters.PassengersAdapter;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.GlobalSettings;
 import com.labs.okey.freeride.model.Ride;
+import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
@@ -59,7 +61,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class DriverRoleActivity extends BaseActivityWithGeofences
         implements ITrace,
@@ -79,8 +86,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     Ride mCurrentRide;
 
-    WiFiPeersAdapter2 mPassengersAdapter;
-    public List<WifiP2pDeviceUser> passengers = new ArrayList<>();
+    PassengersAdapter mPassengersAdapter;
+    private List<User> mPassengers = new ArrayList<>();
+    private int mLastPassengersLength;
 
     WiFiUtil mWiFiUtil;
 
@@ -96,6 +104,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private MobileServiceTable<GlobalSettings> settingsTable;
 
     CountDownTimer mDiscoveryTimer;
+    ScheduledExecutorService mCheckPasengersTimer =
+            Executors.newScheduledThreadPool(1);
     AsyncTask<Void, Void, Void> mAdvertiseTask;
 
     final int WIFI_CONNECT_REQUEST = 1;// request code for starting WiFi connection
@@ -120,42 +130,43 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         settingsTable = getMobileServiceClient().getTable("globalsettings", GlobalSettings.class);
-        new AsyncTask<Void, Void, Void>(){
-
-            Exception mEx;
-            boolean mAppMode;
-
-            @Override
-            protected void onPostExecute(Void result) {
-                if( !mAppMode ) { // picture is not required by server
-
-                    prepareLayoutForDiscovery();
-                    discoverPassengers();
-
-                } else {
-                    mAdvertiseTask.execute();
-                }
-            }
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-                try {
-                    MobileServiceList<GlobalSettings> settings =
-                            settingsTable.where().field("s_name").eq("app_mode").execute().get();
-
-                    if( settings.size() > 0 ) {
-                        GlobalSettings _settings = settings.get(0);
-
-                        mAppMode = Boolean.parseBoolean(_settings.getValue());
-                    }
-                } catch(Exception ex) {
-                    mEx = ex;
-                }
-
-                return null;
-            }
-        }.execute();
+//        new AsyncTask<Void, Void, Void>(){
+//
+//            Exception mEx;
+//            boolean mAppMode;
+//
+//            @Override
+//            protected void onPostExecute(Void result) {
+////                if( !mAppMode ) { // picture is not required by server
+////
+////                    prepareLayoutForDiscovery();
+////                    discoverPassengers();
+////
+////                } else {
+////                    mAdvertiseTask.execute();
+////                }
+//
+//            }
+//
+//            @Override
+//            protected Void doInBackground(Void... voids) {
+//
+//                try {
+//                    MobileServiceList<GlobalSettings> settings =
+//                            settingsTable.where().field("s_name").eq("app_mode").execute().get();
+//
+//                    if( settings.size() > 0 ) {
+//                        GlobalSettings _settings = settings.get(0);
+//
+//                        mAppMode = Boolean.parseBoolean(_settings.getValue());
+//                    }
+//                } catch(Exception ex) {
+//                    mEx = ex;
+//                }
+//
+//                return null;
+//            }
+//        }.execute();
 
         ridesTable = getMobileServiceClient().getTable("rides", Ride.class);
         mAdvertiseTask = new AsyncTask<Void, Void, Void>() {
@@ -163,19 +174,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Exception mEx;
             Boolean mRequestSelfie;
 
-            @Override
-            protected void onPreExecute() {
-
-                mRequestSelfie =
-                        ( passengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER) ?
-                                true : false;
-
-                prepareLayoutForAdvertising();
-
-//                RippleBackground rippleBackground = (RippleBackground)findViewById(R.id.ripple_background_content);
-//                ImageView imageView = (ImageView)findViewById(R.id.centerImage);
-//                rippleBackground.startRippleAnimation();
-            }
+//            @Override
+//            protected void onPreExecute() {
+//
+////                mRequestSelfie =
+////                        ( passengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER) ?
+////                                true : false;
+//
+////                prepareLayoutForAdvertising();
+//
+////                RippleBackground rippleBackground = (RippleBackground)findViewById(R.id.ripple_background_content);
+////                ImageView imageView = (ImageView)findViewById(R.id.centerImage);
+////                rippleBackground.startRippleAnimation();
+//            }
 
             @Override
             protected void onPostExecute(Void result) {
@@ -218,7 +229,37 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 return null;
             }
-        };
+        }.execute();
+
+        mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+
+                final List<User> passengers = Globals.getMyPassengers();
+
+                if( mLastPassengersLength != passengers.size() ) {
+
+                    mLastPassengersLength = passengers.size();
+
+                    // Update UI on UI thread
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPassengers.clear();
+                        mPassengers.addAll(passengers);
+
+                        mPassengersAdapter.notifyDataSetChanged();
+
+                    }
+                });
+
+                }
+
+            }
+        },
+        1, // 1-sec delay
+        2, // period between successive executions
+        TimeUnit.SECONDS);
 
         List<String> _cars = new ArrayList<>();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -341,38 +382,38 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    private void discoverPassengers() {
-
-        mWiFiUtil.startRegistrationAndDiscovery(this,
-                "", "", "",
-                getHandler(),
-                500);
-
-        mDiscoveryTimer = new CountDownTimer(Globals.DRIVER_DISCOVERY_PERIOD * 1000, 1000){
-
-            @Override
-            public void onTick(long millisUntilFinished) {
-                int rest = (int) (millisUntilFinished / 1000);
-                Log.i(LOG_TAG, String.format("Left %d sec. for discovering", rest));
-                Log.i(LOG_TAG, String.format("Discovered %d passengers", passengers.size()));
-
-                if( passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
-                    prepareLayoutForAdvertising();
-
-                    mAdvertiseTask.execute();
-                }
-
-            }
-
-            @Override
-            public void onFinish() {
-                mWiFiUtil.stopDiscovery();
-
-                mAdvertiseTask.execute();
-
-            }
-        }.start();
-    }
+//    private void discoverPassengers() {
+//
+//        mWiFiUtil.startRegistrationAndDiscovery(this,
+//                "", "", "",
+//                getHandler(),
+//                500);
+//
+//        mDiscoveryTimer = new CountDownTimer(Globals.DRIVER_DISCOVERY_PERIOD * 1000, 1000){
+//
+//            @Override
+//            public void onTick(long millisUntilFinished) {
+//                int rest = (int) (millisUntilFinished / 1000);
+//                Log.i(LOG_TAG, String.format("Left %d sec. for discovering", rest));
+//                Log.i(LOG_TAG, String.format("Discovered %d passengers", passengers.size()));
+//
+//                if( passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
+//                    prepareLayoutForAdvertising();
+//
+//                    mAdvertiseTask.execute();
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//                mWiFiUtil.stopDiscovery();
+//
+//                mAdvertiseTask.execute();
+//
+//            }
+//        }.start();
+//    }
 
     private void startAdvertise(String userID,
                                 String userName,
@@ -480,14 +521,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mPeersRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        mPassengersAdapter = new WiFiPeersAdapter2(this,
+        mPassengersAdapter = new PassengersAdapter(this,
                                             R.layout.peers_header,
                                             R.layout.row_passenger,
-                                            passengers);
+                                            mPassengers);
         mPeersRecyclerView.setAdapter(mPassengersAdapter);
 
         mTxtMonitorStatus = (TextView) findViewById(R.id.status_monitor);
-        Globals.setMonitorStatus(getString(R.string.geofence_outside));
+        Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
     }
 
@@ -553,7 +594,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     // Implementation of IRefreshable
     //
     public void refresh() {
-        passengers.clear();
+        mPassengers.clear();
         mPassengersAdapter.notifyDataSetChanged();
 
         final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
@@ -584,20 +625,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     //
     public void clicked(View view, int position) {
 
-        try {
 
-            WifiP2pDevice device = passengers.get(position);
-
-            if (device.status == WifiP2pDevice.AVAILABLE) {
-                mWiFiUtil.connectToDevice(device, 0);
-            } else {
-                Toast.makeText(this,
-                        "Device should be in available state",
-                        Toast.LENGTH_LONG).show();
-            }
-        } catch (Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
-        }
     }
 
     @Override
@@ -616,13 +644,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     //
     @Override
     public void add(final WifiP2pDeviceUser device) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mPassengersAdapter.add(device);
-                mPassengersAdapter.notifyDataSetChanged();
-            }
-        });
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                mPassengersAdapter.add(device);
+//                mPassengersAdapter.notifyDataSetChanged();
+//            }
+//        });
     }
 
     //
@@ -631,14 +659,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void onPeersAvailable(WifiP2pDeviceList list) {
-        for (WifiP2pDevice device : list.getDeviceList()) {
-            WifiP2pDeviceUser d = new WifiP2pDeviceUser(device);
-            d.setUserId(getUser().getRegistrationId());
-            mPassengersAdapter.updateItem(d);
-        }
-
-        if( list.getDeviceList().size() > 0 )
-            mPassengersAdapter.notifyDataSetChanged();
+//        for (WifiP2pDevice device : list.getDeviceList()) {
+//            WifiP2pDeviceUser d = new WifiP2pDeviceUser(device);
+//            d.setUserId(getUser().getRegistrationId());
+//            mPassengersAdapter.updateItem(d);
+//        }
+//
+//        if( list.getDeviceList().size() > 0 )
+//            mPassengersAdapter.notifyDataSetChanged();
     }
 
     //

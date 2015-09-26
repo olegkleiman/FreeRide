@@ -35,7 +35,7 @@
             android:layout_marginRight="@dimen/card_horizontal_margin"
             android:layout_marginTop="@dimen/negativeActionBarSize"
             android:layout_marginBottom="@dimen/card_horizontal_margin"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <FrameLayout
                 android:id="@+id/drivers_layout"
@@ -66,7 +66,7 @@
             app:rb_rippleAmount="4"
             app:rb_duration="3000"
             app:rb_scale="6"
-            android:visibility="visible"
+            android:visibility="gone"
             android:clickable="false">
             <ImageView
                 android:layout_width="64dp"
@@ -96,25 +96,9 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/white"
                 android:text="@string/geofence_outside"
-                android:layout_weight="8"
+                android:layout_weight="10"
                 android:gravity="center_vertical|fill_vertical|start|center_horizontal" />
 
-            <View
-                android:layout_width="1dp"
-                android:layout_height="fill_parent"
-                android:background="@color/white" />
-
-            <Button
-                android:id="@+id/btnStopAdvertise"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:text="@string/stop"
-                android:onClick="stopAdvertise"
-                android:textColor="@color/white"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:layout_weight="2"
-                android:background="@drawable/button_ripple"
-                android:layout_gravity="center_horizontal" />
 
         </LinearLayout>
 

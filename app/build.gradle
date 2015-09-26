@@ -127,6 +127,10 @@ dependencies {
     compile 'com.google.android.gms:play-services-location:7.5.0'
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
     compile 'com.afollestad:material-dialogs:0.7.8.1'
+    // Uncomment if compiled for API v21
+//    compile('com.afollestad.material-dialogs:core:0.8.1.0@aar') {
+//        transitive = true
+//    }
     compile 'com.skyfishjy.ripplebackground:library:1.0.1'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:support-annotations:23.0.1'

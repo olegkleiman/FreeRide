@@ -192,8 +192,7 @@ limitations under the License.</string>
     <string name="geofence_transition_dwell">You\'re riding in monitored area</string>
     <string name="geofence_transition_exited">You exited geofences area</string>
     <string name="unknown_geofence_transition">Unknown Transition</string>
-    <string name="geofence_outside">You are outside of monitored area</string>
-    <string name="geofence_outside_title">Remind you when getting inside?</string>
+    <string name="geofence_outside_title">You are outside of monitored area</string>
     <string name="geofence_positive_answer">Yes, remind me</string>
     <string name="geofence_negative_answer">No, I\'ll try later</string>
 
@@ -243,4 +242,5 @@ limitations under the License.</string>
     <string name="detection_update">Updating your data</string>
 
     <string name="hello_world">Hello world!</string>
+    <string name="geofence_outside">Remind you when getting inside?</string>
 </resources>

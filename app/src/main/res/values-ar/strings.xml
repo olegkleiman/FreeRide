@@ -56,8 +56,8 @@
     <string name="dialog_confirm_registration">استبدال تسجيل السابقة؟</string>
     <string name="download_geofences_desc">تحميل ...</string>
     <string name="geofence_positive_answer">نعم، يذكرني</string>
-    <string name="geofence_outside_title">أذكركم عند الحصول على الداخل؟</string>
-    <string name="geofence_outside">كنت خارج منطقة المراقبة</string>
+    <string name="geofence_outside_title">كنت خارج منطقة المراقبة</string>
+    <string name="geofence_outside">أذكركم عند الحصول على الداخل؟</string>
     <string name="geofence_negative_answer">لا، سأحاول لاحقا</string>
     <string name="geofence_transition_entered">كنت دخلت منطقة المراقبة</string>
     <string name="passenger_progress_dialog"></string>

@@ -90,6 +90,9 @@ public class SettingsActivity extends BaseActivity {
             return true;
         } else if( id == R.id.action_refresh_classifiers) {
             onRefreshClassifiers();
+        } else if( id == R.id.action_debug_without_geofences) {
+            Globals.DEBUG_WITHOUT_GEOFENCES = !Globals.DEBUG_WITHOUT_GEOFENCES;
+            item.setChecked(Globals.DEBUG_WITHOUT_GEOFENCES);
         }
 
         return super.onOptionsItemSelected(item);
@@ -168,7 +171,7 @@ public class SettingsActivity extends BaseActivity {
                             .title(R.string.edit_car_dialog_caption)
                             .customView(R.layout.dialog_add_car, true)
                             .positiveText(R.string.edit_car_button_save)
-                            .negativeText(R.string.add_car_button_cancel)
+                            .negativeText(R.string.cancel)
                             .neutralText(R.string.edit_car_button_delete)
                             .autoDismiss(false)
                             .cancelable(true)
@@ -240,24 +243,6 @@ public class SettingsActivity extends BaseActivity {
             });
             listView.setAdapter(mCarsAdapter);
 
-            View fab = findViewById(R.id.add_car_button);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                //            FloatingActionButton fab = (FloatingActionButton)addButton;
-                //            fab.setDrawableIcon(getResources().getDrawable(R.drawable.ic_action_add));
-                //            fab.setBackgroundColor(getResources().getColor(R.color.ColorAccent));
-                android.support.design.widget.FloatingActionButton _fab = (android.support.design.widget.FloatingActionButton)fab;
-                RelativeLayout.LayoutParams p = (RelativeLayout.LayoutParams) _fab.getLayoutParams();
-                p.setMargins(0, 0, 0, 0); // get rid of margins since shadow area is now the margin
-                _fab.setLayoutParams(p);
-            } else {
-                fab.setOutlineProvider(new ViewOutlineProvider() {
-                    public void getOutline(View view, Outline outline) {
-                        int diameter = getResources().getDimensionPixelSize(R.dimen.diameter);
-                        outline.setOval(0, 0, diameter, diameter);
-                    }
-                });
-                fab.setClipToOutline(true);
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -410,7 +395,7 @@ public class SettingsActivity extends BaseActivity {
                 .title(R.string.add_car_dialog_caption)
                 .customView(R.layout.dialog_add_car, true)
                 .positiveText(R.string.add_car_button_add)
-                .negativeText(R.string.add_car_button_cancel)
+                .negativeText(R.string.cancel)
                 .autoDismiss(true)
                 .cancelable(true)
                 .callback(new MaterialDialog.ButtonCallback() {
@@ -483,7 +468,7 @@ public class SettingsActivity extends BaseActivity {
                 .inputMaxLength(10)
                 .inputType(InputType.TYPE_CLASS_PHONE)
                 .positiveText(R.string.edit_car_button_save)
-                .negativeText(R.string.add_car_button_cancel)
+                .negativeText(R.string.cancel)
                 .callback((new MaterialDialog.ButtonCallback() {
                     @Override
                     public void onPositive(MaterialDialog dialog) {

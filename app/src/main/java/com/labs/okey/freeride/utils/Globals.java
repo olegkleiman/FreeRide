@@ -5,16 +5,21 @@ import android.content.Context;
 import android.os.Build;
 import android.renderscript.Matrix4f;
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.labs.okey.freeride.model.PassengerFace;
+import com.labs.okey.freeride.model.User;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Created by Oleg on 22-Aug-15.
@@ -58,6 +63,25 @@ public class Globals {
     public static float PICTURE_BORDER_WIDTH = 4;
 
     public static int RIDE_CODE_INPUT_LENGTH = 6;
+
+    private static Object lockPassengers = new Object();
+    private static List<User> _passengers = new ArrayList<>();
+    public static List<User> getMyPassengers() {
+        synchronized (lockPassengers) {
+            return _passengers;
+        }
+    }
+    public static boolean isPassengerJoined(String userId){
+        for (User passenger: _passengers) {
+            if( passenger.getRegistrationId().equals(userId))
+                return true;
+        };
+
+        return false;
+    }
+    public static void addMyPassenger(User passenger) {
+        _passengers.add(passenger);
+    }
 
     static final public int SERVER_PORT = 4545;
     static final public int SOCKET_TIMEOUT = 5000;
@@ -134,11 +158,16 @@ public class Globals {
     public static final int GEOFENCE_LOITERING_DELAY = 60000; // 1 min
     public static final int GEOFENCE_RESPONSIVENESS = 5000; // 5 sec
 
+    public static Boolean DEBUG_WITHOUT_GEOFENCES = true;
+
     private static final Object lock = new Object();
     private static boolean inGeofenceArea;
     public static boolean isInGeofenceArea() {
         synchronized (lock) {
-            return inGeofenceArea;
+            if( Globals.DEBUG_WITHOUT_GEOFENCES )
+                return true;
+            else
+                return inGeofenceArea;
         }
     }
     public static void setInGeofenceArea(boolean value) {

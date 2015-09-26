@@ -15,14 +15,23 @@ import com.labs.okey.freeride.DriverRoleActivity;
 import com.labs.okey.freeride.MainActivity;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
+import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.faceapiUtils;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+
+import java.net.MalformedURLException;
+import java.util.concurrent.ExecutionException;
 
 
 /**
  * Created by Oleg Kleiman on 11-Apr-15.
  */
 public class GCMHandler extends  com.microsoft.windowsazure.notifications.NotificationsHandler{
+
+    private static final String LOG_TAG = "FR.GCMHandler";
 
     Context ctx;
     private static final int NOTIFICATION_ID = 1;
@@ -62,7 +71,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 //                    }
                 } catch (Exception e) {
                     String msg = e.getMessage();
-                    Log.e("Registration error: ", msg);
+                    Log.e(LOG_TAG, "Registration error: " + msg);
                 }
 
                 return null;
@@ -82,18 +91,61 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         String title = context.getResources().getString(R.string.app_label);
         boolean bSend = false;
 
-        String faceId  = bundle.getString("extras");
+        final String userId = bundle.getString("extras");
+        if( !Globals.isPassengerJoined(userId) ) {
 
-        // TODO: review this limitation for pictures
-        if( Globals.passengerFaces.size() <= 4 ) {
+            try {
 
-            PassengerFace pf = new PassengerFace(faceId);
+            final MobileServiceTable<User> usersTable =
+                    new MobileServiceClient(
+                            Globals.WAMS_URL,
+                            Globals.WAMS_API_KEY,
+                            ctx)
+                            .getTable("users", User.class);
 
-            int nIndex = Globals.passengerFaces.indexOf(pf);
-            Globals.passengerFaces.add(pf);
 
-            faceapiUtils.Analyze(ctx);
+            new AsyncTask<Void, Void, Void>() {
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+
+                    try {
+
+                        MobileServiceList<User> users =
+                                usersTable.where().field("registration_id").eq(userId).execute().get();
+                        if (users.size() > 0) {
+                            User passenger = users.get(0);
+                            Globals.addMyPassenger(passenger);
+                        }
+                    } catch(ExecutionException | InterruptedException ex ){
+                        Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+                    }
+
+                    return null;
+                }
+            }.execute();
+
+
+            } catch(MalformedURLException ex ) {
+                Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+            }
+
+
+        //User passenger =
+
         }
+//        String faceId  = bundle.getString("extras");
+//
+//        // TODO: review this limitation for pictures
+//        if( Globals.passengerFaces.size() <= 4 ) {
+//
+//            PassengerFace pf = new PassengerFace(faceId);
+//
+//            int nIndex = Globals.passengerFaces.indexOf(pf);
+//            Globals.passengerFaces.add(pf);
+//
+//            faceapiUtils.Analyze(ctx);
+//        }
 
         String message = bundle.getString("message");
         String[] tokens = message.split(";");

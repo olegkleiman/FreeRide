@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.labs.okey.freeride.adapters.MyRideTabAdapter;
 import com.labs.okey.freeride.model.Ride;
@@ -42,20 +44,70 @@ public class MyRidesActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_rides);
 
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        Globals.userID = sharedPrefs.getString(Globals.USERIDPREF, "");
+        if (Globals.userID == null ||
+                Globals.userID.isEmpty()) {
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            Globals.userID = sharedPrefs.getString(Globals.USERIDPREF, "");
+        }
 
         wamsInit(false);
         mRidesSyncTable = getMobileServiceClient().getSyncTable("rides", Ride.class);
 
+
+        setupUI(getString(R.string.subtitle_activity_my_rides), "");
+
+        titles = getResources().getStringArray(R.array.my_rides_titles);
+
+        mViewPager = (ViewPager) findViewById(R.id.viewpager);
+        slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
+
+
+        //TODO the array is empty, please implement with cache table
+        mRides = new ArrayList<Ride>();
+        mTabAdapter= new MyRideTabAdapter(getSupportFragmentManager(),
+                titles, mRides);
+        mViewPager.setAdapter(mTabAdapter);
+
+        slidingTabLayout.setViewPager(mViewPager);
+        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return Color.WHITE;
+            }
+        });
+        updateHistory();
+    }
+
+
+    public void updateHistory(){
+
+        // final ProgressBar gen_progress_refresh = (ProgressBar)findViewById(R.id.gen_fragment_progress_refresh);
+        // final ProgressBar rej_progress_refresh = (ProgressBar)findViewById(R.id.rej_fragment_progress_refresh);
+
+        final ProgressBar myRidesProgressRefresh =  (ProgressBar)findViewById(R.id.myrides_progress_refresh);
+
+
         new AsyncTask<Object, Void, Void>() {
+
+
 
             // Runs on UI thread
             @Override
             protected void onPostExecute(Void res) {
-                mTabAdapter.updateRides(mRides);
 
-                Globals.myrides_update_required = false;
+                if (myRidesProgressRefresh.getVisibility() == View.VISIBLE) {
+                    myRidesProgressRefresh.setVisibility(View.GONE);
+                }
+                mTabAdapter.updateRides(mRides);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+
+                if (myRidesProgressRefresh.getVisibility() == View.GONE) {
+                    myRidesProgressRefresh.setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
@@ -64,14 +116,18 @@ public class MyRidesActivity extends BaseActivity
                 try {
 
                     wamsUtils.sync(getMobileServiceClient(), "rides");
-                    String userID = Globals.userID;
+
 
                     Query pullQuery = getMobileServiceClient().getTable(Ride.class)
-                            .where().field("driverid").eq(userID);
+                            .where().field("driverid").eq(Globals.userID);
                     mRidesSyncTable.pull(pullQuery).get();
 
+
                     final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQuery).get();
+
                     mRides = ridesList;
+
+                    Globals.myrides_update_required = false;
 
                 } catch (Exception ex) {
                     Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
@@ -81,12 +137,6 @@ public class MyRidesActivity extends BaseActivity
             }
         }.execute();
 
-        setupUI(getString(R.string.subtitle_activity_my_rides), "");
-
-        titles = getResources().getStringArray(R.array.my_rides_titles);
-
-        mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
 
         // Read the rides from local cache
 //        new AsyncTask<Object, Void, Void>() {
@@ -119,18 +169,20 @@ public class MyRidesActivity extends BaseActivity
 
 
 
-        mRides = new ArrayList<Ride>();
-        mTabAdapter= new MyRideTabAdapter(getSupportFragmentManager(),
-                titles, mRides);
-        mViewPager.setAdapter(mTabAdapter);
+//                   mTabAdapter.notifyDataSetChanged();
 
-        slidingTabLayout.setViewPager(mViewPager);
-        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
-            @Override
-            public int getIndicatorColor(int position) {
-                return Color.WHITE;
-            }
-        });
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            //mRidesAdapter.clear();
+//
+//                            for(Ride _ride : ridesList) {
+//                                Log.d(LOG_TAG, _ride.getRideCode());
+//                                //mRidesAdapter.add(_ride);
+//                            }
+//                        }
+//                    });
+
     }
 
 
@@ -143,7 +195,17 @@ public class MyRidesActivity extends BaseActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+        if (id == R.id.action_refresh_history) {
+            onRefresh();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onRefresh() {
+        updateHistory();
     }
 
     @Override
@@ -172,3 +234,5 @@ public class MyRidesActivity extends BaseActivity
 //
 //    }
 }
+
+

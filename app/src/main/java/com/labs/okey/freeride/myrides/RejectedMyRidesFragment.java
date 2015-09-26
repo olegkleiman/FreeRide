@@ -27,22 +27,29 @@ import java.util.List;
 /**
  * Created by eli max on 18/06/2015.
  */
+/**
+ * Created by eli max on 18/06/2015.
+ */
 public class RejectedMyRidesFragment extends Fragment {
+
+
 
     List<Ride> mRides = new ArrayList<>();
     private static final String ARG_POSITION = "position";
     private static RejectedMyRidesFragment FragmentInstance;
-
     MyRidesAdapter adapter;
+
 
     public static RejectedMyRidesFragment getInstance() {
 
         if (FragmentInstance == null ) {
-          FragmentInstance = new RejectedMyRidesFragment();
+            FragmentInstance = new RejectedMyRidesFragment();
+//        Bundle b = new Bundle();
+//        b.putInt(ARG_POSITION, position);
+//        f.setArguments(b);
         }
         return FragmentInstance;
     }
-
     public void setRides(List<Ride> rides) {
 
         if (rides == null || rides.isEmpty())
@@ -55,12 +62,6 @@ public class RejectedMyRidesFragment extends Fragment {
     }
 
     public void updateRides(List<Ride> rides){
-
-        final ProgressBar progress_refresh = (ProgressBar)getView().findViewById(R.id.progress_refresh);
-
-        if (progress_refresh.getVisibility() == View.VISIBLE) {
-            progress_refresh.setVisibility(View.GONE);
-        }
 
         if (rides == null || rides.isEmpty())
             return;
@@ -82,10 +83,14 @@ public class RejectedMyRidesFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_myride_general, container, false);
 
+
         RecyclerView recycler = (RecyclerView)rootView.findViewById(R.id.recyclerMyRides);
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         recycler.setItemAnimator(new DefaultItemAnimator());
+
+
+
 
         adapter = new MyRidesAdapter(mRides);
         adapter.setOnClickListener(new IRecyclerClickListener() {
@@ -109,21 +114,21 @@ public class RejectedMyRidesFragment extends Fragment {
     }
 
     private  void FilteringApproveAndOtherDrivers(){
-
         List<Ride> tempList = new ArrayList<Ride>();
+        String userId = Globals.userID;
 
         for (Ride ride : mRides ){
 
-            if (ride.getApproved() != Globals.RIDE_STATUS.APPROVED.ordinal()
-                        && ride.getDriverName() == Globals.userID) {
+            if (ride.getApproved() == Globals.RIDE_STATUS.NOT_APPROVED.ordinal() &&
+                    ride.getDriverId().equals(userId)) {
                 tempList.add(ride);
             }
-
         }
-
         mRides.clear();
         mRides.addAll(tempList);
     }
+
+
 
     private void sort(){
 

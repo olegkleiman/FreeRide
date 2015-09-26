@@ -90,8 +90,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     WiFiPeersAdapter2 mDriversAdapter;
     public List<WifiP2pDeviceUser> drivers = new ArrayList<>();
 
-    CountDownTimer mAdvertiseTimer;
-
     private Handler handler = new Handler(this);
     public Handler getHandler() {
         return handler;
@@ -153,11 +151,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             // Start BLE advertising
             mBLEUtil = new BLEUtil(this);
 
-            RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.ripple_background_content);
-            ImageView imageView = (ImageView)findViewById(R.id.centerImage);
-            rippleBackground.startRippleAnimation();
+//            RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.ripple_background_content);
+//            ImageView imageView = (ImageView)findViewById(R.id.centerImage);
+//            rippleBackground.startRippleAnimation();
+//
+//            startAdvertise();
 
-            startAdvertise();
+            refresh();
         }
     }
 
@@ -179,7 +179,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         mDriversShown = false;
 
         mTxtMonitorStatus = (TextView)findViewById(R.id.status_monitor);
-        Globals.setMonitorStatus(getString(R.string.geofence_outside));
+        Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
     }
 
@@ -342,7 +342,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     //
-    // Implementation of IPeerClickListener
+    // Implementation of IRecyclerClickListener
     //
     @Override
     public void clicked(View view, int position) {
@@ -514,31 +514,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         mTxtMonitorStatus.setText(R.string.passenger_adv_description);
 
-        mAdvertiseTimer = new CountDownTimer(Globals.PASSENGER_ADVERTISING_PERIOD * 1000, 1000) {
-
-            @Override
-            public void onTick(long millisUntilFinished) {
-                int rest = (int) (millisUntilFinished / 1000);
-                Log.i(LOG_TAG, String.format("Left %d sec. for advertising", rest));
-            }
-
-            @Override
-            public void onFinish() {
-                stopAdvertise(null);
-            }
-        };
-        mAdvertiseTimer.start();
     }
 
-    public void stopAdvertise(View view){
-
-        mAdvertiseTimer.cancel();
-
-        mWiFiUtil.stopDiscovery();
-
-        switchLayouts();
-        refresh();
-    }
 
     private void switchLayouts() {
         findViewById(R.id.ripple_background_content).setVisibility(View.GONE);

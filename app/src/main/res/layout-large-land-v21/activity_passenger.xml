@@ -35,7 +35,7 @@
             android:layout_marginRight="@dimen/card_horizontal_margin"
             android:layout_marginTop="@dimen/negativeActionBarSize"
             android:layout_marginBottom="@dimen/card_horizontal_margin"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <FrameLayout
                 android:id="@+id/drivers_layout"
@@ -66,7 +66,7 @@
             app:rb_rippleAmount="4"
             app:rb_duration="3000"
             app:rb_scale="6"
-            android:visibility="visible"
+            android:visibility="gone"
             android:clickable="false">
             <ImageView
                 android:layout_width="64dp"

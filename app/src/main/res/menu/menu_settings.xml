@@ -10,4 +10,12 @@
         android:title="@string/action_refresh_classifiers"
         android:orderInCategory="200"
         app:showAsAction="never" />
+
+    <item android:id="@+id/action_debug_without_geofences"
+        android:title="Run without GeoFences"
+        android:orderInCategory="300"
+        android:checkable="true"
+        android:checked="true"
+        app:showAsAction="never" />
+
 </menu>

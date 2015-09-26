@@ -67,10 +67,10 @@
     <string name="ride_code_title">Введите код поездки</string>
     <string name="ride_code_hint">6 цифр без разделителя</string>
     <string name="registration_finish">Завершить регистрацию</string>
-    <string name="geofence_outside">Вы находитесь вне скоростной трассы</string>
+    <string name="geofence_outside">Напомнить при въезде на трассу?</string>
     <string name="geofence_positive_answer">Напомнить</string>
     <string name="geofence_negative_answer">Отменить</string>
-    <string name="geofence_outside_title">Напомнить при въезде на трассу?</string>
+    <string name="geofence_outside_title">Вы находитесь вне скоростной трассы</string>
     <string name="close">Закрыть</string>
     <string name="complete_registration">Завершение регистрации</string>
     <string name="registration_next">Следующий шаг</string>
@@ -104,4 +104,5 @@
     <string name="stop">Стоп</string>
     <string name="passenger_adv_description">Устройство будет передавать информацию о себе водителю в течение 30 сек.</string>
     <string name="discover_devices">Поиск пассажиров</string>
+    <string name="cancel">Отменить</string>
 </resources>
