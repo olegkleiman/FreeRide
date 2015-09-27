@@ -83,7 +83,7 @@
     <string name="registration_add_status_wait">נשאר רק כמה שניות</string>
     <string name="download_geofences">אתחול הגדרות המיקום</string>
     <string name="download_geofences_desc">מוריד הגדרות גיאוגרפיות</string>
-    <string name="new_version_conent">אנו ממליצים לך להתקין את הגרסה החדשה ביותר של התכנית. האם אתה רוצה לעשות זאת?</string>
+    <string name="new_version_conent">אנו ממליצים להתקין את הגרסה החדשה ביותר של התכנית. האם אתה רוצה לעשות זאת?</string>
     <string name="new_version_title">גרסה חדשה מוכנה להורדה</string>
     <string name="geofence_transition_dwell">אתה נוהג באזור פיקוח</string>
     <string name="action_camera">מצלמה</string>
@@ -105,4 +105,8 @@
     <string name="stop">עצור</string>
     <string name="discover_devices">מחפש התקני נוסעים</string>
     <string name="cancel">ביטול</string>
+    <string name="code_retry_action">נסה שוב</string>
+    <string name="download_data">מאתחל נתונים</string>
+    <string name="download_classifiers_desc">מוריד מסווגים</string>
+    <string name="generating_ride_code">מחולל קוד נסיעה...</string>
 </resources>

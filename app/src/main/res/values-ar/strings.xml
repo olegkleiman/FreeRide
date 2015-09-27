@@ -61,4 +61,6 @@
     <string name="geofence_negative_answer">لا، سأحاول لاحقا</string>
     <string name="geofence_transition_entered">كنت دخلت منطقة المراقبة</string>
     <string name="passenger_progress_dialog"></string>
+    <string name="code_retry_action">حاول مرة أخرى</string>
+    <string name="cancel">إلغاء</string>
 </resources>

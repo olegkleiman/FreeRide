@@ -79,6 +79,7 @@ public class Globals {
     public static void addMyPassengerId(String _id) {
         _passengersIds.add(_id);
     }
+    public static void clearMyPassengerIds() { _passengersIds.clear(); }
 
     private static Object lockPassengers = new Object();
     private static List<User> _passengers = new ArrayList<>();
@@ -87,18 +88,10 @@ public class Globals {
             return _passengers;
         }
     }
-//    public static boolean isPassengerJoined(String userId){
-//        for (User passenger: _passengers) {
-//            if( passenger.getRegistrationId().equals(userId))
-//                return true;
-//        };
-//
-//        return false;
-//    }
     public static void addMyPassenger(User passenger) {
         _passengers.add(passenger);
     }
-    public static void emptyMyPassengers() {
+    public static void clearMyPassengers() {
         _passengers.clear();
     }
 

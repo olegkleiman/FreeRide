@@ -72,6 +72,7 @@
     <string name="new_version_conent">We strongly recommend to install the newest version. Would you like to do so?</string>
 
     <string name="default_ride_code">000000</string>
+    <string name="generating_ride_code">Generating ride code...</string>
     <string name="ride_code_label">Ride Code:</string>
     <string name="ride_code_title">Type in Ride Code</string>
     <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>
@@ -184,7 +185,7 @@ limitations under the License.</string>
     <string name="action_camera_cv">Camera CV</string>
     <string name="passenger_tutorial_fragment">Passenger tutorial</string>
     <string name="driver_tutorial_fragment">Driver tutorial</string>
-    <string name="reclaim_tutorial_fragment">Reclamation tutorial</string>
+    <string name="reclaim_tutorial_fragment">Re-claim tutorial</string>
     <string name="intro_tutorial_fragment">Introduction tutorial</string>
 
     <!-- Transition type strings -->

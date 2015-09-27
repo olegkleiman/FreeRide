@@ -93,16 +93,24 @@
     <string name="detection_center_desc">Сохранять?</string>
     <string name="detection_center_caption">Проверка изображения</string>
     <string name="detection_freeze">Нажмите чтобы сделать снимок</string>
-    <string name="please_wait">Подождите, пожалуйста.</string>
+    <string name="please_wait">Пожалуйста, подождите</string>
     <string name="passenger_progress_dialog">Поиск водителя</string>
     <string name="action_refresh_settings">Обновление координат </string>
     <string name="fb_error_msg">Ошибка:</string>
     <string name="fb_error">Нет доступа к сети</string>
-    <string name="title_activity_register">Free Ride: Регистрация</string>
+    <string name="title_activity_register">Fast Ride: Регистрация</string>
     <string name="passenger_confirm">Вы подтверждаете поездку с </string>
     <string name="passenger_advertising">Устройство будет передает информацию о себе водителю</string>
     <string name="stop">Стоп</string>
     <string name="passenger_adv_description">Устройство будет передавать информацию о себе водителю в течение 30 сек.</string>
     <string name="discover_devices">Поиск пассажиров</string>
     <string name="cancel">Отменить</string>
+    <string name="code_retry_action">Повторить поиск</string>
+    <string name="download_classifiers_desc">Загрузка классификаторов</string>
+    <string name="download_data">Инициализация данных</string>
+    <string name="intro_tutorial_fragment">Первые шаги</string>
+    <string name="reclaim_tutorial_fragment">Как подать апелляцию</string>
+    <string name="ride_code_wrong">Ошибка в коде. Попробуйте еще раз.</string>
+    <string name="title_activity_ride_detail">Подробнее о поездке</string>
+    <string name="generating_ride_code">Генерируется код поездки...</string>
 </resources>

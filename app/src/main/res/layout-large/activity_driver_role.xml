@@ -28,7 +28,7 @@
         android:background="?attr/colorPrimary"
         android:layout_gravity="center_horizontal"
         android:gravity="center_horizontal">
-        <TextView android:text="@string/ride_code_label"
+        <TextView android:text="@string/generating_ride_code"
             android:id="@+id/code_label_caption"
             android:textColor="@color/white"
             android:textAppearance="?android:attr/textAppearanceLarge"
@@ -44,7 +44,8 @@
             android:text="@string/default_ride_code"
             android:layout_gravity="center"
             android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp" />
+            android:layout_marginLeft="8dp"
+            android:visibility="gone" />
         <ImageView
             android:id="@+id/img_transmit"
             android:layout_width="32dp"
@@ -54,7 +55,7 @@
             android:src="@drawable/animation1"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
-            android:visibility="invisible" />
+            android:visibility="gone" />
     </LinearLayout>
 
     <View

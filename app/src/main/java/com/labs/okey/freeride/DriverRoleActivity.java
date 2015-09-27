@@ -175,27 +175,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Exception mEx;
             Boolean mRequestSelfie;
 
-//            @Override
-//            protected void onPreExecute() {
-//
-////                mRequestSelfie =
-////                        ( passengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER) ?
-////                                true : false;
-//
-////                prepareLayoutForAdvertising();
-//
-////                RippleBackground rippleBackground = (RippleBackground)findViewById(R.id.ripple_background_content);
-////                ImageView imageView = (ImageView)findViewById(R.id.centerImage);
-////                rippleBackground.startRippleAnimation();
-//            }
 
             @Override
             protected void onPostExecute(Void result) {
 
                 if (mEx == null) {
+                    TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+                    txtRideCodeCaption.setText(R.string.ride_code_label);
                     TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+                    txtRideCode.setVisibility(View.VISIBLE);
+
                     String rideCode = mCurrentRide.getRideCode();
                     txtRideCode.setText(rideCode);
+
+                    findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
 
                     if (!mCurrentRide.isPictureRequired()) {
                         mImageTransmit.setVisibility(View.VISIBLE);
@@ -438,6 +431,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         mWiFiUtil.unregisterReceiver();
         mWiFiUtil.stopDiscovery();
+
+        Globals.clearMyPassengerIds();
+        Globals.clearMyPassengers();
 
         super.onPause();
     }
