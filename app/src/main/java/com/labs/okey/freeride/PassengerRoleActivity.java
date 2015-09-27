@@ -662,6 +662,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     //
     @Override
     public void add(final WifiP2pDeviceUser device) {
+
+        if( device.getRideCode() == null )
+            return;
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

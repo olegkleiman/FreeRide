@@ -212,7 +212,7 @@ limitations under the License.</string>
 
     <!-- Nearby Errors -->
     <string name="nearby_error_nowifi">Not connected to WiFi network</string>
-    <string name="mobile_phone_image_description">Mobile Phone Icon</string>
+    <string name="cabin_image_description">Car cabin</string>
 
     <string name="geofence_transition_notification_text">Click notification to submit your ride</string>
     <string name="geofences_added">Geofences added</string>

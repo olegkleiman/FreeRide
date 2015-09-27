@@ -118,7 +118,7 @@
                 android:layout_centerInParent="true"
                 android:id="@+id/centerImage"
                 android:contentDescription="@string/cabin_image_description"
-                android:src="@drawable/cabin_portrait"
+                android:src="@drawable/cabin_land"
                 android:scaleType="fitXY" />
 
             <android.support.design.widget.FloatingActionButton

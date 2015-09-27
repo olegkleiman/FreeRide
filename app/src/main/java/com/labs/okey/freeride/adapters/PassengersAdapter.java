@@ -128,6 +128,11 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
         return position == 0;
     }
 
+    public void add(User passenger){
+        if( !items.contains(passenger) )
+            items.add(passenger);
+    }
+
     private String getUserPictureURL(String userId){
         if( userId == null || userId.isEmpty() )
             return "";

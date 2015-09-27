@@ -62,7 +62,7 @@ public class WiFiUtil
     String mRideCode;
 
     public interface IPeersChangedListener {
-        public void add(WifiP2pDeviceUser device);
+        void add(WifiP2pDeviceUser device);
     }
 
     public WiFiUtil(Context context) {
@@ -304,7 +304,7 @@ public class WiFiUtil
             if (mPeersChangedListener != null) {
 
                 AdvertisedRide advRide = mBuddies.get(device.deviceName);
-                if( advRide != null ) {
+                if( advRide != null) {
 
                     WifiP2pDeviceUser deviceUser =
                             new WifiP2pDeviceUser(device);

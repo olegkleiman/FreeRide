@@ -97,7 +97,6 @@
                 android:layout_height="64dp"
                 android:layout_centerInParent="true"
                 android:id="@+id/centerImage"
-                android:contentDescription="@string/mobile_phone_image_description"
                 android:src="@drawable/ic_action_mobile_phone"/>
         </com.skyfishjy.library.RippleBackground>
 
@@ -117,7 +116,7 @@
                 android:layout_height="fill_parent"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/white"
-                android:text="@string/geofence_outside"
+                android:text="@string/geofence_outside_title"
                 android:layout_weight="8"
                 android:gravity="center_vertical|fill_vertical|start"
                 android:layout_marginStart="@dimen/monitored_text_start_margin"

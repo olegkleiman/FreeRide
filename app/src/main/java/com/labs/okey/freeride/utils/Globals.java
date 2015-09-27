@@ -64,6 +64,22 @@ public class Globals {
 
     public static int RIDE_CODE_INPUT_LENGTH = 6;
 
+    private static List<String> _passengersIds = new ArrayList<>();
+    public static boolean isPassengerIdJoined(String passengerId) {
+
+        for (String _id: _passengersIds) {
+
+            if( _id.equalsIgnoreCase(passengerId))
+                return true;
+
+        }
+
+        return false;
+    }
+    public static void addMyPassengerId(String _id) {
+        _passengersIds.add(_id);
+    }
+
     private static Object lockPassengers = new Object();
     private static List<User> _passengers = new ArrayList<>();
     public static List<User> getMyPassengers() {
@@ -71,16 +87,19 @@ public class Globals {
             return _passengers;
         }
     }
-    public static boolean isPassengerJoined(String userId){
-        for (User passenger: _passengers) {
-            if( passenger.getRegistrationId().equals(userId))
-                return true;
-        };
-
-        return false;
-    }
+//    public static boolean isPassengerJoined(String userId){
+//        for (User passenger: _passengers) {
+//            if( passenger.getRegistrationId().equals(userId))
+//                return true;
+//        };
+//
+//        return false;
+//    }
     public static void addMyPassenger(User passenger) {
         _passengers.add(passenger);
+    }
+    public static void emptyMyPassengers() {
+        _passengers.clear();
     }
 
     static final public int SERVER_PORT = 4545;

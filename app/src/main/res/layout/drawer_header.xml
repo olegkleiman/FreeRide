@@ -18,6 +18,7 @@
             android:id="@+id/name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
             android:layout_marginLeft="16dp"
             android:textColor="#ffffff"
             android:text="Oleg Kleiman"
@@ -29,6 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#ffffff"
+            android:layout_marginStart="16dp"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="5dp"
             android:text="oleg_kleyman@hotmail.com"
@@ -41,6 +43,7 @@
     <ImageView
         android:layout_width="70dp"
         android:layout_height="70dp"
+        android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="38dp"
         android:id="@+id/circleView" />

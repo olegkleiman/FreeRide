@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.freeride.DriverRoleActivity;
 import com.labs.okey.freeride.MainActivity;
 import com.labs.okey.freeride.R;
@@ -20,10 +21,15 @@ import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.faceapiUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
+import com.microsoft.windowsazure.mobileservices.notifications.Registration;
+import com.microsoft.windowsazure.mobileservices.notifications.RegistrationCallback;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.net.MalformedURLException;
+import java.util.Queue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.SynchronousQueue;
 
 
 /**
@@ -51,24 +57,25 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                 try {
                     String[] tags = {userID};
                     // Better use WAMS SDK v2 like:
-                    MainActivity.wamsClient.getPush().register(gcmRegistrationId, tags);
+//                    ListenableFuture<Registration> lf = MainActivity.wamsClient.getPush().register(gcmRegistrationId, tags);
+//                    Registration _reg = lf.get();
 
-//                    MobileServicePush push = MainActivity.wamsClient.getPush();
-//                    if( push != null ) {
+                    MobileServicePush push = MainActivity.wamsClient.getPush();
+                    if( push != null ) {
 //                        String[] tags = {userID};
-//                        push.register(gcmRegistrationId, tags,
-//                                new RegistrationCallback() {
-//
-//                                    @Override
-//                                    public void onRegister(Registration registration,
-//                                                           Exception ex) {
-//                                        if (ex != null) {
-//                                            String msg = ex.getMessage();
-//                                            Log.e("Registration error: ", msg);
-//                                        }
-//                                    }
-//                                });
-//                    }
+                        push.register(gcmRegistrationId, tags,
+                                new RegistrationCallback() {
+
+                                    @Override
+                                    public void onRegister(Registration registration,
+                                                           Exception ex) {
+                                        if (ex != null) {
+                                            String msg = ex.getMessage();
+                                            Log.e("Registration error: ", msg);
+                                        }
+                                    }
+                                });
+                    }
                 } catch (Exception e) {
                     String msg = e.getMessage();
                     Log.e(LOG_TAG, "Registration error: " + msg);
@@ -92,38 +99,40 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         boolean bSend = false;
 
         final String userId = bundle.getString("extras");
-        if( !Globals.isPassengerJoined(userId) ) {
+
+        if( !Globals.isPassengerIdJoined(userId) ) {
+
+            Globals.addMyPassengerId(userId);
 
             try {
 
-            final MobileServiceTable<User> usersTable =
-                    new MobileServiceClient(
-                            Globals.WAMS_URL,
-                            Globals.WAMS_API_KEY,
-                            ctx)
-                            .getTable("users", User.class);
+                final MobileServiceTable<User> usersTable =
+                        new MobileServiceClient(
+                                Globals.WAMS_URL,
+                                Globals.WAMS_API_KEY,
+                                ctx)
+                                .getTable("users", User.class);
 
+                new AsyncTask<Void, Void, Void>() {
 
-            new AsyncTask<Void, Void, Void>() {
+                    @Override
+                    protected Void doInBackground(Void... voids) {
 
-                @Override
-                protected Void doInBackground(Void... voids) {
+                        try {
 
-                    try {
-
-                        MobileServiceList<User> users =
-                                usersTable.where().field("registration_id").eq(userId).execute().get();
-                        if (users.size() > 0) {
-                            User passenger = users.get(0);
-                            Globals.addMyPassenger(passenger);
+                            MobileServiceList<User> users =
+                                    usersTable.where().field("registration_id").eq(userId).execute().get();
+                            if (users.size() > 0) {
+                                User passenger = users.get(0);
+                                Globals.addMyPassenger(passenger);
+                            }
+                        } catch(ExecutionException | InterruptedException ex ){
+                            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
                         }
-                    } catch(ExecutionException | InterruptedException ex ){
-                        Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-                    }
 
-                    return null;
-                }
-            }.execute();
+                        return null;
+                    }
+                }.execute();
 
 
             } catch(MalformedURLException ex ) {

@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.annotation.CallSuper;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,6 +25,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -92,7 +94,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     WiFiUtil mWiFiUtil;
 
-    TextView mTxtStatus;
     TextView mTxtMonitorStatus;
     RecyclerView mPeersRecyclerView;
 
@@ -108,7 +109,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Executors.newScheduledThreadPool(1);
     AsyncTask<Void, Void, Void> mAdvertiseTask;
 
-    final int WIFI_CONNECT_REQUEST = 1;// request code for starting WiFi connection
+    final int WIFI_CONNECT_REQUEST = 100;// request code for starting WiFi connection
     // handled  in onActivityResult
 
     private Handler handler = new Handler(this);
@@ -242,16 +243,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     mLastPassengersLength = passengers.size();
 
                     // Update UI on UI thread
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPassengers.clear();
-                        mPassengers.addAll(passengers);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mPassengers.clear();
+                            mPassengers.addAll(passengers);
 
-                        mPassengersAdapter.notifyDataSetChanged();
+                            mPassengersAdapter.notifyDataSetChanged();
 
-                    }
-                });
+                        }
+                    });
 
                 }
 
@@ -356,31 +357,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }.start();
     }
 
-    private void prepareLayoutForDiscovery() {
-        TextView txtCaption = (TextView)findViewById(R.id.code_label_caption);
-        txtCaption.setText(R.string.discover_devices);
-
-        findViewById(R.id.txtRideCode).setVisibility(View.GONE);
-        findViewById(R.id.img_transmit).setVisibility(View.GONE);
-        findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
-        findViewById(R.id.btnRefresh).setVisibility(View.GONE);
-
-        findViewById(R.id.btnRefresh).setVisibility(View.GONE);
-        findViewById(R.id.progress_refresh).setVisibility(View.VISIBLE);
-
+    private void prepareLayoutForDriverPictures() {
+//        TextView txtCaption = (TextView)findViewById(R.id.code_label_caption);
+//        txtCaption.setText(R.string.discover_devices);
+//
+        findViewById(R.id.drive_internal_layout).setVisibility(View.GONE);
+//        findViewById(R.id.img_transmit).setVisibility(View.GONE);
+//        findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
+//        findViewById(R.id.btnRefresh).setVisibility(View.GONE);
+//
+        findViewById(R.id.cabin_background_layout).setVisibility(View.VISIBLE);
+//        findViewById(R.id.progress_refresh).setVisibility(View.VISIBLE);
+//
     }
 
-    private void prepareLayoutForAdvertising(){
-        TextView txtCaption = (TextView)findViewById(R.id.code_label_caption);
-        txtCaption.setText(R.string.ride_code_label);
-
-        findViewById(R.id.txtRideCode).setVisibility(View.VISIBLE);
-        findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
-
-        findViewById(R.id.progress_refresh).setVisibility(View.GONE);
-        findViewById(R.id.btnRefresh).setVisibility(View.VISIBLE);
-
-    }
 
 //    private void discoverPassengers() {
 //
@@ -426,11 +416,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         // This will publish the service in DNS-SD and start serviceDiscovery()
         mWiFiUtil.startRegistrationAndDiscovery(this,
-                                                userID,
-                                                userName,
-                                                rideCode,
-                                                getHandler(),
-                                                500);
+                userID,
+                userName,
+                rideCode,
+                getHandler(),
+                500);
 
     }
 
@@ -459,7 +449,27 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         super.onStop();
     }
 
+    public void onButtonPassengerCamera(View v) {
+        Intent intent = new Intent(this,
+                CameraCVActivity.class);
+
+        try {
+            Object tag = v.getTag();
+            if (tag != null) {
+                int requestCode = Integer.valueOf((String) tag);
+                startActivityForResult(intent, requestCode);
+            }
+        } catch(Exception e) {
+          Log.e(LOG_TAG, e.getMessage());
+        }
+    }
+
     public void onButtonSubmitRide(View v) {
+
+        if( mPassengers.size() == 0 ) {
+            prepareLayoutForDriverPictures();
+            return;
+        }
 
         if (mCurrentRide == null)
             return;
@@ -515,7 +525,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         mImageTransmit = (ImageView) findViewById(R.id.img_transmit);
 
-        mTxtStatus = (TextView) findViewById(R.id.txtStatus);
         mPeersRecyclerView = (RecyclerView) findViewById(R.id.recyclerViewPeers);
         mPeersRecyclerView.setHasFixedSize(true);
         mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -630,12 +639,41 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == WIFI_CONNECT_REQUEST) {
-            // if( resultCode == RESULT_OK ) {
-            // How to distinguish between successful connection
-            // and just pressing back from there?
-            wamsInit(true);
-            //}
+
+        View rootView = findViewById(R.id.cabin_background_layout);
+        String tag = Integer.toString(requestCode);
+        FloatingActionButton passengerPicture = (FloatingActionButton)rootView.findViewWithTag(tag);
+
+        switch(requestCode ){
+            case WIFI_CONNECT_REQUEST: {
+
+                // if( resultCode == RESULT_OK ) {
+                // How to distinguish between successful connection
+                // and just pressing back from there?
+                wamsInit(true);
+            }
+            break;
+
+            case 1: { // picture from passenger 1
+
+            }
+            break;
+
+            case 2: { // picture from passenger 2
+
+            }
+            break;
+
+            case 3: { // picture from passenger 3
+
+            }
+            break;
+
+            case 4: { // picture from passenger 4
+
+            }
+            break;
+
         }
     }
 
@@ -675,7 +713,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo p2pInfo) {
-        TextView txtMe = (TextView) findViewById(R.id.txtMe);
         Thread handler = null;
 
         mWiFiUtil.requestPeers(this);
@@ -686,7 +723,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
          * ServerAsyncTask}
          */
         if (p2pInfo.isGroupOwner) {
-            txtMe.setText("ME: GroupOwner, Group Owner IP: " + p2pInfo.groupOwnerAddress.getHostAddress());
             //new WiFiUtil.ServerAsyncTask(this).execute();
             try {
                 handler = new GroupOwnerSocketHandler(getHandler());
@@ -696,7 +732,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 trace("Failed to create a server thread - " + e.getMessage());
             }
         } else {
-            txtMe.setText("ME: NOT GroupOwner, Group Owner IP: " + p2pInfo.groupOwnerAddress.getHostAddress());
+            // NOT GroupOwner, Group Owner IP: " + p2pInfo.groupOwnerAddress.getHostAddress());
             handler = new ClientSocketHandler(
                     this.getHandler(),
                     p2pInfo.groupOwnerAddress,
@@ -756,12 +792,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     public void onDebug(View view) {
-        LinearLayout layout = (LinearLayout) findViewById(R.id.debugLayout);
-        int visibility = layout.getVisibility();
-        if (visibility == View.VISIBLE)
-            layout.setVisibility(View.GONE);
-        else
-            layout.setVisibility(View.VISIBLE);
+//        LinearLayout layout = (LinearLayout) findViewById(R.id.debugLayout);
+//        int visibility = layout.getVisibility();
+//        if (visibility == View.VISIBLE)
+//            layout.setVisibility(View.GONE);
+//        else
+//            layout.setVisibility(View.VISIBLE);
     }
 
 }
