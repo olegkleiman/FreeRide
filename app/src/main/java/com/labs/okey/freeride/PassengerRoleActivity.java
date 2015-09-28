@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -30,6 +31,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -55,6 +57,8 @@ import com.labs.okey.freeride.utils.WiFiUtil;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.skyfishjy.library.RippleBackground;
+
+import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -370,6 +374,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 @Override
                 public void onClick(DialogInterface dialogInterface, int which) {
                     if (which == DialogInterface.BUTTON_POSITIVE) {
+
+                        findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
                         onSubmitCode(rideCode);
                     }
                 }
@@ -398,23 +404,35 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         new AsyncTask<Void, Void, Void>() {
 
             Exception mEx;
-            MaterialDialog progress;
+//            MaterialDialog progress;
+            LoadToast lt;
 
             @Override
             protected void onPreExecute() {
-                progress = new MaterialDialog.Builder(PassengerRoleActivity.this)
-                        .title(R.string.processing)
-                        .content(R.string.please_wait)
-                        .progress(true, 0)
-                        .show();
+
+                lt = new LoadToast(PassengerRoleActivity.this);
+                lt.setText(getString(R.string.processing));
+                Display display = getWindow().getWindowManager().getDefaultDisplay();
+                Point size = new Point();
+                display.getSize(size);
+                lt.setTranslationY(size.y / 2);
+                lt.show();
+
+//                progress = new MaterialDialog.Builder(PassengerRoleActivity.this)
+//                        .title(R.string.processing)
+//                        .content(R.string.please_wait)
+//                        .progress(true, 0)
+//                        .show();
             }
 
             @Override
             protected void onPostExecute(Void result){
 
-                progress.dismiss();
+                //progress.dismiss();
 
                 if( mEx != null ) {
+
+                    lt.error();
 
                     try{
                         MobileServiceException mse = (MobileServiceException)mEx.getCause();
@@ -454,6 +472,25 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     }
 
                 }
+                else {
+                    lt.success();
+
+                    // TODO: Pause here - to see the success effect!
+
+                    new MaterialDialog.Builder(PassengerRoleActivity.this)
+                            .title(R.string.thanks)
+                            .content(R.string.confirmation_accepted)
+                            .cancelable(false)
+                            .positiveText(R.string.ok)
+                            .callback(new MaterialDialog.ButtonCallback() {
+                                @Override
+                                public void onPositive(MaterialDialog dialog) {
+                                    finish();
+                                }
+                            })
+                            .show();
+                }
+
             }
 
             @Override

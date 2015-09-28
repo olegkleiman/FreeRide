@@ -109,4 +109,6 @@
     <string name="download_data">מאתחל נתונים</string>
     <string name="download_classifiers_desc">מוריד מסווגים</string>
     <string name="generating_ride_code">מחולל קוד נסיעה...</string>
+    <string name="thanks">תודה</string>
+    <string name="confirmation_accepted">אישור הנסיעה התקבל</string>
 </resources>

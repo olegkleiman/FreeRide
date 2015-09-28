@@ -134,6 +134,7 @@ dependencies {
     compile 'com.skyfishjy.ripplebackground:library:1.0.1'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:support-annotations:23.0.1'
+    compile 'net.steamcrafted:load-toast:1.0.8'
     compile project(':libraries:opencv')
     compile project(':libraries:faceapilibrary')
 }

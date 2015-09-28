@@ -113,4 +113,6 @@
     <string name="ride_code_wrong">Ошибка в коде. Попробуйте еще раз.</string>
     <string name="title_activity_ride_detail">Подробнее о поездке</string>
     <string name="generating_ride_code">Генерируется код поездки...</string>
+    <string name="thanks">Спасибо</string>
+    <string name="confirmation_accepted">Ваше подтверждение принято</string>
 </resources>

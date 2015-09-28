@@ -153,6 +153,8 @@
     <string name="ok">OK</string>
     <string name="close">Close</string>
     <string name="stop">Stop</string>
+    <string name="thanks">Thank you</string>
+    <string name="confirmation_accepted">Your confirmation was accepted</string>
     <string name="download_data">Initializing data</string>
     <string name="download_geofences_desc">Downloading geo-fences</string>
     <string name="download_classifiers_desc">Downloading classifiers</string>
