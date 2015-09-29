@@ -25,7 +25,8 @@
         android:orientation="horizontal"
         android:background="?attr/colorPrimary"
         android:layout_gravity="center_horizontal"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:visibility="visible">
         <TextView android:text="@string/generating_ride_code"
             android:id="@+id/code_label_caption"
             android:textColor="@color/white"
@@ -57,9 +58,11 @@
     </LinearLayout>
 
     <View
+        android:id="@+id/status_strip"
         android:layout_width="match_parent"
         android:layout_height="@dimen/card_backpanel_height"
-        android:background="?attr/colorPrimary" />
+        android:background="?attr/colorPrimary"
+        android:visibility="visible" />
 
     <RelativeLayout
         android:id="@+id/drive_internal_layout"
@@ -101,7 +104,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
 
             android:onClick="onButtonSubmitRide"
@@ -122,6 +125,7 @@
         android:id="@+id/cabin_background_layout"
         android:layout_weight="0.5"
         android:visibility="gone"
+        android:layoutDirection="ltr"
         android:clickable="false">
         <ImageView
             android:layout_width="match_parent"
@@ -145,15 +149,15 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
+            android:layout_marginTop="203dp"
             android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginRight="60dp"
-            android:layout_marginEnd="60dp"
-            android:layout_marginTop="58dp" />
+            android:layout_toRightOf="@+id/passenger3"
+            android:layout_toEndOf="@+id/passenger3"
+            android:layout_marginLeft="89dp"
+            android:layout_marginStart="89dp" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/passenger2"
@@ -168,13 +172,13 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
-            android:layout_marginBottom="152dp"
+            android:layout_marginBottom="151dp"
             android:layout_alignParentBottom="true"
-            android:layout_toLeftOf="@+id/passenger1"
-            android:layout_toStartOf="@+id/passenger1" />
+            android:layout_alignLeft="@+id/passenger1"
+            android:layout_alignStart="@+id/passenger1" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/passenger3"
@@ -189,7 +193,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_alignTop="@+id/passenger2"
@@ -208,7 +212,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_marginRight="86dp"

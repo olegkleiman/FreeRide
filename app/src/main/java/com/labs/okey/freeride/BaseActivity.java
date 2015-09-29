@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -67,6 +68,9 @@ public class BaseActivity extends AppCompatActivity
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
 
+    MediaPlayer beepSuccess;
+    MediaPlayer beepError;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -76,6 +80,10 @@ public class BaseActivity extends AppCompatActivity
         // Connect the Google API client.
         if( mGoogleApiClient != null )
             mGoogleApiClient.connect();
+
+
+        beepSuccess = MediaPlayer.create(this, R.raw.success);
+        beepError = MediaPlayer.create(this, R.raw.error);
     }
 
     @Override

@@ -111,4 +111,6 @@
     <string name="generating_ride_code">מחולל קוד נסיעה...</string>
     <string name="thanks">תודה</string>
     <string name="confirmation_accepted">אישור הנסיעה התקבל</string>
+    <string name="geofence_transition_exited">אתה יוצא מאזור הפיקוח</string>
+    <string name="connection_lost">החיבור אבד. אנא נסה שוב בעוד מספר שניות.</string>
 </resources>

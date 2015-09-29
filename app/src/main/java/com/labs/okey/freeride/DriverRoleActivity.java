@@ -355,6 +355,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //        txtCaption.setText(R.string.discover_devices);
 //
         findViewById(R.id.drive_internal_layout).setVisibility(View.GONE);
+        findViewById(R.id.driver_status_layout).setVisibility(View.GONE);
+        findViewById(R.id.status_strip).setVisibility(View.GONE);
 //        findViewById(R.id.img_transmit).setVisibility(View.GONE);
 //        findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
 //        findViewById(R.id.btnRefresh).setVisibility(View.GONE);

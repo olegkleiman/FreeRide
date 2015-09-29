@@ -27,7 +27,8 @@
         android:orientation="horizontal"
         android:background="?attr/colorPrimary"
         android:layout_gravity="center_horizontal"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:visibility="visible">
         <TextView android:text="@string/generating_ride_code"
             android:id="@+id/code_label_caption"
             android:textColor="@color/white"
@@ -61,7 +62,8 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="@dimen/card_backpanel_height"
-        android:background="?attr/colorPrimary" />
+        android:background="?attr/colorPrimary"
+        android:visibility="visible" />
 
     <RelativeLayout
         android:id="@+id/drive_internal_layout"
@@ -94,7 +96,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonSubmitRide"
             android:layout_alignParentBottom="true"
@@ -116,6 +118,7 @@
         android:id="@+id/cabin_background_layout"
         android:layout_weight="0.5"
         android:visibility="gone"
+        android:layoutDirection="ltr"
         android:clickable="false">
         <ImageView
             android:layout_width="match_parent"
@@ -139,7 +142,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_alignParentTop="true"
@@ -162,7 +165,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_alignParentBottom="true"
@@ -183,7 +186,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_alignTop="@+id/passenger2"
@@ -202,7 +205,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/ColorAccent"
+            app:backgroundTint="@color/red"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_alignTop="@+id/passenger3"

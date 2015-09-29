@@ -71,7 +71,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                                                            Exception ex) {
                                         if (ex != null) {
                                             String msg = ex.getMessage();
-                                            Log.e("Registration error: ", msg);
+                                            Log.e(LOG_TAG, "Registration error: " + msg);
                                         }
                                     }
                                 });

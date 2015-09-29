@@ -6,11 +6,14 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -98,6 +101,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public Handler getHandler() {
         return handler;
     }
+
+
 
     @Override
     @CallSuper
@@ -396,6 +401,24 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     }
 
+    private Runnable thanksRunnable = new Runnable() {
+        @Override
+        public void run() {
+            new MaterialDialog.Builder(PassengerRoleActivity.this)
+                    .title(R.string.thanks)
+                    .content(R.string.confirmation_accepted)
+                    .cancelable(false)
+                    .positiveText(R.string.ok)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            finish();
+                        }
+                    })
+                    .show();
+        }
+    };
+
     public void onSubmitCode(final String rideCode){
         final String android_id = Settings.Secure.getString(this.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
@@ -430,9 +453,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 //progress.dismiss();
 
+                // Prepare to play sound loud :)
+                AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 10, 0);
+
                 if( mEx != null ) {
 
                     lt.error();
+                    beepError.start();
 
                     try{
                         MobileServiceException mse = (MobileServiceException)mEx.getCause();
@@ -475,20 +503,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 else {
                     lt.success();
 
-                    // TODO: Pause here - to see the success effect!
+                    beepSuccess.start();
 
-                    new MaterialDialog.Builder(PassengerRoleActivity.this)
-                            .title(R.string.thanks)
-                            .content(R.string.confirmation_accepted)
-                            .cancelable(false)
-                            .positiveText(R.string.ok)
-                            .callback(new MaterialDialog.ButtonCallback() {
-                                @Override
-                                public void onPositive(MaterialDialog dialog) {
-                                    finish();
-                                }
-                            })
-                            .show();
+                    getHandler().postDelayed(thanksRunnable, 1500);
+
                 }
 
             }

@@ -77,7 +77,7 @@
     <string name="ride_code_title">Type in Ride Code</string>
     <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>
     <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
-    <string name="connection_lost">The connection lost. Please try again in few seconds</string>
+    <string name="connection_lost">The connection lost. Please try again in a few seconds</string>
     <string name="ride_code_hint">6 digits without dashes</string>
     <string name="passenger_confirm">Do you want to confirm the ride with </string>
     <string name="ride_code_refill"></string>
