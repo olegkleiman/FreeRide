@@ -5,6 +5,8 @@
       <root url="file://$PROJECT_DIR$/app/build/intermediates/exploded-aar/net.steamcrafted/load-toast/1.0.8/res" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.steamcrafted/load-toast/1.0.8/32e8f180a2bd3c05e4235f2637b6c3732b278b0a/load-toast-1.0.8-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

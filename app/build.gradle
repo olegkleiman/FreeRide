@@ -1,6 +1,43 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/repo' }
+    }
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
+
+
 apply plugin: 'com.android.model.application'
+//apply plugin: 'com.android.application'
+//apply plugin: 'io.fabric'
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
+
+//android {
+//        compileSdkVersion 'Google Inc.:Google APIs:22'
+//        buildToolsVersion "22.0.1"
+//
+//    defaultConfig {
+//        applicationId "com.labs.okey.freeride"
+//        minSdkVersion 16
+//        targetSdkVersion 22
+//        versionCode 4
+//        versionName "2.9"
+//    }
+//
+//    buildTypes {
+//
+//        release {
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//        }
+//    }
+//}
 
 model {
 
@@ -28,32 +65,29 @@ model {
 
         abiFilters += ["armeabi", "armeabi-v7a"]
 
-//        toolchain = "clang"
-//        toolchainVersion = "3.5"
-
         // Link with static OpenCV libraries: the order is important!
         // The following order taken from OpenCV.mk
         def opencv_modules = ["shape", "stitching", "objdetect", "superres", "videostab", "calib3d", "features2d", "highgui", "videoio", "imgcodecs", "video", "photo", "ml", "imgproc", "flann", "core", "hal", "tbb"]
 
-        ldLibs += ["log","stdc++","dl", "z", "jnigraphics"]
+        ldLibs += ["log", "stdc++", "dl", "z", "jnigraphics"]
 
         abiFilters.each { targetAbi ->
             println targetAbi
 
-            opencv_modules.each{ module ->
-                if( module.equals("tbb")) {
-                    ldLibs += file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi +"/lib" + module + ".a"
+            opencv_modules.each { module ->
+                if (module.equals("tbb")) {
+                    ldLibs += file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/lib" + module + ".a"
                 } else {
                     ldLibs += file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/libopencv_" + module + ".a"
                 }
             }
         }
 
-        cppFlags   += "-Werror"
-        cppFlags   += "--debug"
-        cppFlags   += "-frtti"
-        cppFlags   += "-fexceptions"
-        cppFlags   += "-D_DEBUG"
+        cppFlags += "-Werror"
+        cppFlags += "--debug"
+        cppFlags += "-frtti"
+        cppFlags += "-fexceptions"
+        cppFlags += "-D_DEBUG"
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             def opencvhome = System.getenv("OPENCV_HOME")
@@ -61,9 +95,7 @@ model {
         } else {
             cppFlags += "-I/Users/Oleg/Downloads/OpenCV-android-sdk/sdk/native/jni/include"
         }
-        cppFlags    += "-std=c++11" // for lambda-expressions
-
-        //CFlags      += "-D_DEBUG"
+        cppFlags += "-std=c++11" // for lambda-expressions
 
         stl = "gnustl_static"
 
@@ -73,69 +105,86 @@ model {
         release {
             minifyEnabled = true
             proguardFiles += file('proguard-rules.pro')
-            debuggable = false
-            ndk.with {
-                debuggable = false
-            }
+//            debuggable = false
+//            ndk.with {
+//                debuggable = false
+//            }
         }
 
-        debug {
-            debuggable = true
-            ndk.with {
-                debuggable = true
-            }
-        }
+//        debug {
+//            debuggable = true
+//            ndk.with {
+//                debuggable = true
+//            }
+//        }
     }
 
-    android.productFlavors {
-        create("arm") {
-            ndk.with {
+//    android.productFlavors {
+//        create("arm") {
+//            ndk.with {
+//
+//                abiFilters += "armeabi"
+//                println "*** building for arm"
+//            }
+//
+//        }
+//
+//        create("armv7") {
+//            ndk.with {
+//
+//                abiFilters += "armeabi-v7a"
+//                println "*** building for armv7"
+//            }
+//
+//        }
+//    }
 
-                abiFilters += "armeabi"
-                println "*** building for arm"
-            }
+}
 
-        }
 
-        create("armv7") {
-            ndk.with {
-
-                abiFilters += "armeabi-v7a"
-                println "*** building for armv7"
-            }
-
-        }
-    }
+repositories {
+    maven { url "https://jitpack.io" }
+    maven { url 'https://maven.fabric.io/public' }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     //compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
+
     compile 'com.android.support:support-v4:22.2.1'
     compile 'com.android.support:design:22.2.1'
     compile 'com.android.support:appcompat-v7:22.2.1'
     compile 'com.android.support:cardview-v7:22.2.1'
     compile 'com.android.support:recyclerview-v7:22.2.1'
-    compile files('libs/mobileservices-2.0.1-beta.jar')
     compile 'com.microsoft.azure.android:azure-storage-android:0.6.0@aar'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.google.guava:guava:18.0'
     compile 'com.facebook.android:facebook-android-sdk:3.21.1'
+    compile files('libs/mobileservices-2.0.1-beta.jar')
     //compile 'com.facebook.android:facebook-android-sdk:4.0.0'
     // See here: https://developers.google.com/android/guides/setup
     // for detailed discussion about setting up GMS
+
     compile 'com.google.android.gms:play-services-location:7.5.0'
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
     compile 'com.afollestad:material-dialogs:0.7.8.1'
-    // Uncomment if compiled for API v21
-//    compile('com.afollestad.material-dialogs:core:0.8.1.0@aar') {
-//        transitive = true
-//    }
+    // Uncomment if compiled for API v23
+    //    compile('com.afollestad.material-dialogs:core:0.8.1.0@aar') {
+    //        transitive = true
+    //    }
+
     compile 'com.skyfishjy.ripplebackground:library:1.0.1'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:support-annotations:23.0.1'
     compile 'net.steamcrafted:load-toast:1.0.8'
+
     compile project(':libraries:opencv')
     compile project(':libraries:faceapilibrary')
+
+    compile('com.crashlytics.sdk.android:crashlytics:2.5.2@aar') {
+        transitive = true
+    }
+
 }
+
 

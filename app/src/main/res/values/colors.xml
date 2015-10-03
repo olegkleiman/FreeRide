@@ -21,7 +21,8 @@
     <color name="ColorPrimary">@color/material_blue_500</color>
     <color name="ColorPrimaryDark">@color/material_blue_900</color>
     <!-- Orange palette. 900 -->
-    <color name="ColorAccent">@color/material_green_500</color>
+    <!--<color name="ColorAccent">@color/material_green_500</color>-->
+    <color name="ColorAccent">#ff4081</color>
     <color name="ColorBackground">#FFF</color>
 
 </resources>

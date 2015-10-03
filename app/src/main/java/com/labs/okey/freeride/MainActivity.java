@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
@@ -34,6 +35,8 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
+
+import io.fabric.sdk.android.Fabric;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -95,6 +98,8 @@ public class MainActivity extends BaseActivity
 //        faceapiUtils.dumpVerificationMatrix(mDepth);
 
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
+
         setContentView(R.layout.activity_main);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -137,6 +142,8 @@ public class MainActivity extends BaseActivity
             }
 
             setupUI(getString(R.string.title_activity_main), "");
+
+            //throw new RuntimeException("This is a test crash");
         }
     }
 

@@ -157,6 +157,9 @@
         <service android:enabled="true"
             android:name=".utils.wifip2p.SearchService" />
 
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="5a821723d3ab62d280f61d868532442da4670037" />
     </application>
 
     <supports-screens android:resizeable="true"
@@ -164,5 +167,6 @@
         android:normalScreens="true"
         android:largeScreens="true"
         android:anyDensity="true" />
+
 
 </manifest>

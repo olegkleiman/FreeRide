@@ -93,6 +93,8 @@ public class SettingsActivity extends BaseActivity {
         } else if( id == R.id.action_debug_without_geofences) {
             Globals.DEBUG_WITHOUT_GEOFENCES = !Globals.DEBUG_WITHOUT_GEOFENCES;
             item.setChecked(Globals.DEBUG_WITHOUT_GEOFENCES);
+        } else if ( id == R.id.action_crash_test) {
+            throw new RuntimeException("FastRide test crah");
         }
 
         return super.onOptionsItemSelected(item);
