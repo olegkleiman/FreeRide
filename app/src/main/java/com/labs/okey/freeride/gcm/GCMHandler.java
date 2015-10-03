@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.freeride.DriverRoleActivity;
 import com.labs.okey.freeride.MainActivity;
@@ -77,8 +78,12 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                                 });
                     }
                 } catch (Exception e) {
+
+                    Crashlytics.logException(e);
+
                     String msg = e.getMessage();
                     Log.e(LOG_TAG, "Registration error: " + msg);
+
                 }
 
                 return null;
@@ -127,6 +132,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                                 Globals.addMyPassenger(passenger);
                             }
                         } catch(ExecutionException | InterruptedException ex ){
+                            Crashlytics.logException(ex);
                             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
                         }
 
@@ -136,6 +142,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
 
             } catch(MalformedURLException ex ) {
+                Crashlytics.logException(ex);
                 Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
             }
 

@@ -98,7 +98,12 @@ public class MainActivity extends BaseActivity
 //        faceapiUtils.dumpVerificationMatrix(mDepth);
 
         super.onCreate(savedInstanceState);
-        Fabric.with(this, new Crashlytics());
+        try {
+            Fabric.with(this, new Crashlytics());
+            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
+        } catch(Exception e) {
+            Log.e(LOG_TAG, e.getMessage());
+        }
 
         setContentView(R.layout.activity_main);
 
@@ -137,7 +142,7 @@ public class MainActivity extends BaseActivity
                 }
 
             }catch(PackageManager.NameNotFoundException ex) {
-
+                Crashlytics.logException(ex);
                 Log.e(LOG_TAG, ex.getMessage());
             }
 
@@ -170,6 +175,7 @@ public class MainActivity extends BaseActivity
                     })
                     .show();
         } catch (Exception e) {
+            Crashlytics.logException(e);
             // better that catch the exception here would be use handle to send events the activity
             Log.e(LOG_TAG, e.getMessage());
         }
@@ -212,6 +218,7 @@ public class MainActivity extends BaseActivity
                 imageAvatar.setImageDrawable(drawable);
             }
         } catch (Exception e) {
+            Crashlytics.logException(e);
             Log.e(LOG_TAG, e.getMessage());
         }
 
@@ -298,6 +305,7 @@ public class MainActivity extends BaseActivity
                         saveUser(mobileServiceUser);
                     } catch(ExecutionException | InterruptedException ex ) {
                         mEx = ex;
+                        Crashlytics.logException(ex);
                         Log.e(LOG_TAG, ex.getMessage());
                     }
 
@@ -305,6 +313,7 @@ public class MainActivity extends BaseActivity
                 }
             }.execute();
         } catch(MalformedURLException ex ) {
+            Crashlytics.logException(ex);
             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
         }
     }

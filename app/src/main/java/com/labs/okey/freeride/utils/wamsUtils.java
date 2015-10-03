@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncContext;
@@ -75,6 +76,7 @@ public class wamsUtils {
             }
 
         } catch(MobileServiceLocalStoreException | InterruptedException | ExecutionException ex) {
+            Crashlytics.logException(ex);
             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
         }
     }

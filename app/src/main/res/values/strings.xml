@@ -246,4 +246,6 @@ limitations under the License.</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="geofence_outside">Remind you when getting inside?</string>
+
+    <string name="log_start">Application started</string>
 </resources>

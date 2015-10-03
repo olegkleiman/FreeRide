@@ -104,7 +104,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/red"
+            app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
 
             android:onClick="onButtonSubmitRide"
@@ -149,7 +149,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/red"
+            app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_marginTop="203dp"
@@ -172,7 +172,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/red"
+            app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_marginBottom="151dp"
@@ -193,7 +193,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/red"
+            app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_alignTop="@+id/passenger2"
@@ -212,7 +212,7 @@
             android:layout_gravity="end|bottom"
             app:fabSize="normal"
 
-            app:backgroundTint="@color/red"
+            app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
             android:onClick="onButtonPassengerCamera"
             android:layout_marginRight="86dp"
