@@ -105,18 +105,18 @@ model {
         release {
             minifyEnabled = true
             proguardFiles += file('proguard-rules.pro')
-//            debuggable = false
-//            ndk.with {
-//                debuggable = false
-//            }
+            debuggable = false
+            ndk.with {
+                debuggable = false
+            }
         }
 
-//        debug {
-//            debuggable = true
-//            ndk.with {
-//                debuggable = true
-//            }
-//        }
+        debug {
+            debuggable = true
+            ndk.with {
+                debuggable = true
+            }
+        }
     }
 
 //    android.productFlavors {
