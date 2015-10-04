@@ -494,7 +494,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public void onButtonSubmitRide(View v) {
 
-        if( mPassengers.size() == 0 ) {
+        if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER ) {
             prepareLayoutForDriverPictures();
             return;
         }
