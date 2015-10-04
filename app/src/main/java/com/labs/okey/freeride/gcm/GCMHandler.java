@@ -110,7 +110,8 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
         final String userId = bundle.getString("extras");
 
-        if( !Globals.isPassengerIdJoined(userId) ) {
+        if( userId != null
+            && !Globals.isPassengerIdJoined(userId) ) {
 
             Globals.addMyPassengerId(userId);
 
