@@ -117,4 +117,5 @@
     <string name="confirmation_accepted">Ваше подтверждение принято</string>
     <string name="geofence_transition_exited">Вы выехали из зоны контроля</string>
     <string name="connection_lost">Соединение потеряно. Пожалуйста, попробуйте еще раз через несколько секунд.</string>
+    <string name="nofee_request_accepted">Ваш запрос принят</string>
 </resources>

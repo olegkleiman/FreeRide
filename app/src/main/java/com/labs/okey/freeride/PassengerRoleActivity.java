@@ -455,7 +455,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 // Prepare to play sound loud :)
                 AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 10, 0);
+                int sb2value = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value/2, 0);
 
                 if( mEx != null ) {
 

@@ -76,7 +76,9 @@ public class wamsUtils {
             }
 
         } catch(MobileServiceLocalStoreException | InterruptedException | ExecutionException ex) {
-            Crashlytics.logException(ex);
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(ex);
+
             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
         }
     }

@@ -155,6 +155,7 @@
     <string name="stop">Stop</string>
     <string name="thanks">Thank you</string>
     <string name="confirmation_accepted">Your confirmation was accepted</string>
+    <string name="nofee_request_accepted">You request was accepted</string>
     <string name="download_data">Initializing data</string>
     <string name="download_geofences_desc">Downloading geo-fences</string>
     <string name="download_classifiers_desc">Downloading classifiers</string>

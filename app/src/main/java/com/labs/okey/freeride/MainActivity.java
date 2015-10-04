@@ -37,6 +37,7 @@ import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUse
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import io.fabric.sdk.android.Fabric;
+import io.fabric.sdk.android.services.common.Crash;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -142,7 +143,9 @@ public class MainActivity extends BaseActivity
                 }
 
             }catch(PackageManager.NameNotFoundException ex) {
-                Crashlytics.logException(ex);
+                if( Crashlytics.getInstance() != null)
+                    Crashlytics.logException(ex);
+
                 Log.e(LOG_TAG, ex.getMessage());
             }
 
@@ -175,7 +178,9 @@ public class MainActivity extends BaseActivity
                     })
                     .show();
         } catch (Exception e) {
-            Crashlytics.logException(e);
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(e);
+
             // better that catch the exception here would be use handle to send events the activity
             Log.e(LOG_TAG, e.getMessage());
         }
@@ -218,7 +223,9 @@ public class MainActivity extends BaseActivity
                 imageAvatar.setImageDrawable(drawable);
             }
         } catch (Exception e) {
-            Crashlytics.logException(e);
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(e);
+
             Log.e(LOG_TAG, e.getMessage());
         }
 
@@ -305,7 +312,8 @@ public class MainActivity extends BaseActivity
                         saveUser(mobileServiceUser);
                     } catch(ExecutionException | InterruptedException ex ) {
                         mEx = ex;
-                        Crashlytics.logException(ex);
+                        if( Crashlytics.getInstance() != null)
+                            Crashlytics.logException(ex);
                         Log.e(LOG_TAG, ex.getMessage());
                     }
 
@@ -313,7 +321,9 @@ public class MainActivity extends BaseActivity
                 }
             }.execute();
         } catch(MalformedURLException ex ) {
-            Crashlytics.logException(ex);
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(ex);
+
             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
         }
     }

@@ -32,6 +32,8 @@ import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.SynchronousQueue;
 
+import io.fabric.sdk.android.services.common.Crash;
+
 
 /**
  * Created by Oleg Kleiman on 11-Apr-15.
@@ -72,6 +74,8 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                                                            Exception ex) {
                                         if (ex != null) {
                                             String msg = ex.getMessage();
+                                            if( Crashlytics.getInstance() != null )
+                                                Crashlytics.logException(ex);
                                             Log.e(LOG_TAG, "Registration error: " + msg);
                                         }
                                     }
@@ -79,7 +83,8 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                     }
                 } catch (Exception e) {
 
-                    Crashlytics.logException(e);
+                    if( Crashlytics.getInstance() != null)
+                        Crashlytics.logException(e);
 
                     String msg = e.getMessage();
                     Log.e(LOG_TAG, "Registration error: " + msg);
@@ -132,7 +137,9 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                                 Globals.addMyPassenger(passenger);
                             }
                         } catch(ExecutionException | InterruptedException ex ){
-                            Crashlytics.logException(ex);
+                            if( Crashlytics.getInstance() != null)
+                                Crashlytics.logException(ex);
+
                             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
                         }
 
@@ -142,7 +149,9 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
 
             } catch(MalformedURLException ex ) {
-                Crashlytics.logException(ex);
+                if( Crashlytics.getInstance() != null)
+                    Crashlytics.logException(ex);
+
                 Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
             }
 

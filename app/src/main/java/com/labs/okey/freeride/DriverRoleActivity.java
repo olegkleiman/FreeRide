@@ -1,8 +1,10 @@
 package com.labs.okey.freeride;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -18,10 +20,12 @@ import android.preference.PreferenceManager;
 import android.support.annotation.CallSuper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -55,6 +59,8 @@ import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+
+import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -243,6 +249,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             mPassengers.addAll(passengers);
 
                             mPassengersAdapter.notifyDataSetChanged();
+
+                            if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
+                                FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
+                                Context ctx =  getApplicationContext();
+                                fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+                            }
 
                         }
                     });
@@ -462,6 +474,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    private Runnable thanksRunnable = new Runnable() {
+        @Override
+        public void run() {
+            new MaterialDialog.Builder(DriverRoleActivity.this)
+                    .title(R.string.thanks)
+                    .content(R.string.nofee_request_accepted)
+                    .cancelable(false)
+                    .positiveText(R.string.ok)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            finish();
+                        }
+                    })
+                    .show();
+        }
+    };
+
     public void onButtonSubmitRide(View v) {
 
         if( mPassengers.size() == 0 ) {
@@ -476,6 +506,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         new AsyncTask<Void, Void, Void>() {
 
+            Exception mEx;
+            LoadToast lt;
+
+            @Override
+            protected void onPreExecute() {
+                lt = new LoadToast(DriverRoleActivity.this);
+                lt.setText(getString(R.string.processing));
+                Display display = getWindow().getWindowManager().getDefaultDisplay();
+                Point size = new Point();
+                display.getSize(size);
+                lt.setTranslationY(size.y / 2);
+                lt.show();
+            }
+
             @Override
             protected Void doInBackground(Void... voids) {
 
@@ -485,6 +529,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Log.e(LOG_TAG, e.getMessage());
                 }
                 return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void result){
+                if( mEx != null ) {
+                    lt.error();
+                    beepError.start();
+                }
+                else {
+                    lt.success();
+
+                    beepSuccess.start();
+
+                    getHandler().postDelayed(thanksRunnable, 1500);
+
+                }
             }
         }.execute();
     }
