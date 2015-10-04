@@ -127,14 +127,6 @@ public class MainActivity extends BaseActivity
 
         } else {
 
-            String[] _tokens = userRegistrationId.split(":");
-            if( _tokens.length > 0 ) {
-
-                Answers.getInstance().logLogin(new LoginEvent()
-                        .putMethod(_tokens[0])
-                        .putSuccess(true));
-            }
-
             NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
                     GCMHandler.class);
 
