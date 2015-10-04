@@ -216,6 +216,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         if( mBLEUtil != null )
             mBLEUtil.unregisterReceiver();
+
+        Globals.clearMyPassengerIds();
+        Globals.clearMyPassengers();
     }
 
     @Override
