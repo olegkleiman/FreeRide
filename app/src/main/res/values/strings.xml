@@ -90,14 +90,12 @@
         <item>Settings</item>
         <item>Tutorial</item>
     </string-array>
-
     <string-array name="tutorial_titles">
         <item>Intro</item>
         <item>Driver</item>
         <item>Passenger</item>
         <item>Re-claim</item>
     </string-array>
-
     <string-array name="my_rides_titles">
         <item>General</item>
         <item>Rejected</item>
