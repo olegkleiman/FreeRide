@@ -111,35 +111,35 @@ public class CameraCVActivity extends Activity
 
                     System.loadLibrary("fastcvUtils");
 
-                    try {
+//                    try {
                         //InputStream is = getResources().openRawResource(R.raw.haarcascade_smile);
-                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
-                        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        File cascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
-
-                        FileOutputStream os = new FileOutputStream(cascadeFile);
-                        byte[] buffer = new byte[4096];
-                        int bytesRead;
-                        while( (bytesRead = is.read(buffer)) != -1) {
-                            os.write(buffer, 0, bytesRead);
-                        }
-
-                        os.close();
-                        is.close();
+//                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
+//                        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+//                        File cascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
+//
+//                        FileOutputStream os = new FileOutputStream(cascadeFile);
+//                        byte[] buffer = new byte[4096];
+//                        int bytesRead;
+//                        while( (bytesRead = is.read(buffer)) != -1) {
+//                            os.write(buffer, 0, bytesRead);
+//                        }
+//
+//                        os.close();
+//                        is.close();
 
                         //cascadeDir.delete();
 
                         String faceCascadeFilePath = createCascadeFile(R.raw.lbpcascade_frontalface,
                                                                     "lbpcascade_frontalface.xml");
                         String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_eye,
-                                                                        "haarcascade_eye.xml");
+                                                                     "haarcascade_eye.xml");
 
                         mCVWrapper = new FastCVWrapper(faceCascadeFilePath,
-                                                        eyesCascadeFilePath);
+                                                       eyesCascadeFilePath);
 
-                    } catch(IOException ex) {
-                        Log.e(LOG_TAG, ex.getMessage());
-                    }
+//                    } catch(IOException ex) {
+//                        Log.e(LOG_TAG, ex.getMessage());
+//                    }
 
                     if( mOpenCvCameraView != null) {
                         mOpenCvCameraView.enableView();
@@ -173,6 +173,7 @@ public class CameraCVActivity extends Activity
                 mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
         }
 
+        mCameraDirective = getString(R.string.camera_directive_1);
         mCameraDirective2 = getString(R.string.camera_directive_2);
     }
 
@@ -257,9 +258,7 @@ public class CameraCVActivity extends Activity
         try {
 
             if( !bTemplateFound ) {
-                bTemplateFound = mCVWrapper.FindTemplate(mGray.getNativeObjAddr(),
-                        mCVWrapper.pathToFaceCascade,
-                        mCVWrapper.pathToEyesCascade);
+                bTemplateFound = mCVWrapper.findTemplate(mGray.getNativeObjAddr());
             }
             else {
                 mCVWrapper.MatchTemplate(mGray.getNativeObjAddr());
@@ -278,21 +277,9 @@ public class CameraCVActivity extends Activity
         String msg = String.format("Executed for %d ms.", mExecutionTime / ++mFramesReceived);
         Log.d(LOG_TAG, msg);
 
-//        if( nFaces > 0 ) {
-//
-//            String _s = String.format(mCameraDirective2, nFaces);
-//
-//            Imgproc.putText(mGray, _s, new Point(100, 500),
-//                    3, 1, mCameraFontColor, 2);
-//
-//            runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    makeFrame(null);
-//                }
-//            });
-//
-//        }
+        Imgproc.putText(mGray, mCameraDirective, new Point(100, 100),
+                        3, 1, mCameraFontColor, 2);
+
 
         return mGray;
     }

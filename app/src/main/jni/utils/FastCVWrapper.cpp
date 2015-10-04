@@ -41,10 +41,57 @@ Mat roiTemplate;
 int nFoundTemplateCounter = 0;
 const int CONSECUTIVE_TEMPLATE_COUNTER = 3;
 
+struct CascadeAggregator {
+    Ptr<CascadeClassifier> FaceClassifier;
+    Ptr<CascadeClassifier> EyesClassifier;
+
+    CascadeAggregator(CascadeClassifier *faceClassifier,
+                      CascadeClassifier *eyesClassifier,
+                      const char *face_cascade_name,
+                      const char *eyes_cascade_name)
+            : FaceClassifier(faceClassifier), EyesClassifier(eyesClassifier) {
+        ifstream f(face_cascade_name);
+        if( !f.good() ) {
+            DPRINTF("Can not access face cascade file");
+        }
+        FaceClassifier->load(face_cascade_name);
+
+        ifstream e(eyes_cascade_name);
+        if( !e.good() ) {
+            DPRINTF("Can not access eyes cascade file");
+        }
+        EyesClassifier->load(eyes_cascade_name);
+    }
+};
+
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     DPRINTF("JNI_VERSION_1_4");
     return JNI_VERSION_1_4;
+}
+
+JNIEXPORT jlong JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_nativeCreateObject
+        (JNIEnv *env, jclass jc,
+         jstring faceCascadeFileName,
+         jstring eyesCascadeFileName)
+{
+    const char *face_cascade_file_name = env->GetStringUTFChars(faceCascadeFileName, NULL);
+    const char *eyes_cascade_file_name = env->GetStringUTFChars(eyesCascadeFileName, NULL);
+
+    CascadeClassifier *face_cascade_classifier = new CascadeClassifier();
+    CascadeClassifier *eyes_cascade_classifier = new CascadeClassifier();
+
+    CascadeAggregator *cAggregator =  new CascadeAggregator(face_cascade_classifier,
+                          eyes_cascade_classifier,
+                          face_cascade_file_name,
+                          eyes_cascade_file_name);
+
+
+    env->ReleaseStringUTFChars(faceCascadeFileName, face_cascade_file_name);
+    env->ReleaseStringUTFChars(eyesCascadeFileName, eyes_cascade_file_name);
+
+    return (jlong)cAggregator;
+
 }
 
 JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
@@ -82,47 +129,27 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemp
 }
 
 JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemplate
-        (JNIEnv *env, jclass jc, jlong addrGray,
-         jstring face_cascade_name,
-         jstring eye_cascade_name)
+        (JNIEnv *env, jclass jc,
+         jlong thiz,
+         jlong addrGray)
 {
     Mat &grayFrame = *(Mat *)addrGray;
 
     try {
         // Load face cascade
-        CascadeClassifier faceCascade;
-        const char *faceCascadeName = env->GetStringUTFChars(face_cascade_name, NULL);
-        ifstream f(faceCascadeName);
-        if( !f.good() ) {
-            DPRINTF("Can not access cascade file");
+        Ptr<CascadeClassifier> faceClassifier = ((CascadeAggregator *)thiz)->FaceClassifier;
+        if( faceClassifier == NULL )
             return false;
-        }
-
-        if( !faceCascade.load(faceCascadeName) ) {
-            DPRINTF("Can not face load cascade");
-            return false;
-        }
-        env->ReleaseStringUTFChars(face_cascade_name, faceCascadeName);
 
         // Load open eye cascade
-        CascadeClassifier eyeCascade;
-        const char *eyeCascadeName = env->GetStringUTFChars(eye_cascade_name, NULL);
-        ifstream ff(eyeCascadeName);
-        if( !ff.good() ) {
-            DPRINTF("Can not access cascade file");
+        Ptr<CascadeClassifier> eyesCascade = ((CascadeAggregator *)thiz)->EyesClassifier;
+        if( eyesCascade == NULL )
             return false;
-        }
-
-        if( !eyeCascade.load(eyeCascadeName) ) {
-            DPRINTF("Can not eye load cascade");
-            return false;
-        }
-        env->ReleaseStringUTFChars(eye_cascade_name, eyeCascadeName);
 
         // Detect face
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
         vector<Rect> faces;
-        faceCascade.detectMultiScale(grayFrame,
+        faceClassifier->detectMultiScale(grayFrame,
                                      faces,
                                      1.2, // How many different sizes of eye to look for
                                           // 1.1 is for good detection
@@ -147,7 +174,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 
             // Now detect open eyes
             vector<Rect> eyes;
-            eyeCascade.detectMultiScale(roiFace, eyes,
+            eyesCascade->detectMultiScale(roiFace, eyes,
                                         1.2, 2, flags,
                                         Size(20, 20));
             if( eyes.size() > 0 ) {
