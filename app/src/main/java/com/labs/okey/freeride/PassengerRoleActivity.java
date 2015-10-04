@@ -46,6 +46,8 @@ import android.widget.TextView;
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
@@ -459,7 +461,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 int sb2value = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value/2, 0);
 
+                CustomEvent confirmEvent = new CustomEvent("Passenger Confirmation");
+                confirmEvent.putCustomAttribute("User", getUser().getFullName());
+
                 if( mEx != null ) {
+
+                    confirmEvent.putCustomAttribute("Success", 0);
 
                     lt.error();
                     beepError.start();
@@ -506,13 +513,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 }
                 else {
-                    lt.success();
 
+                    confirmEvent.putCustomAttribute("Success", 1);
+
+                    lt.success();
                     beepSuccess.start();
 
                     getHandler().postDelayed(thanksRunnable, 1500);
 
                 }
+
+                Answers.getInstance().logCustom(confirmEvent);
 
             }
 

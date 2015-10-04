@@ -21,6 +21,10 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
+import com.crashlytics.android.answers.LoginEvent;
+import com.crashlytics.android.answers.SignUpEvent;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
@@ -102,6 +106,8 @@ public class MainActivity extends BaseActivity
         try {
             Fabric.with(this, new Crashlytics());
             Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
+
+
         } catch(Exception e) {
             Log.e(LOG_TAG, e.getMessage());
         }
@@ -109,14 +115,25 @@ public class MainActivity extends BaseActivity
         setContentView(R.layout.activity_main);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if( sharedPrefs.getString(Globals.USERIDPREF, "").isEmpty() ) {
+        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
+        if( userRegistrationId.isEmpty() ) {
 
             Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
             startActivityForResult(intent, REGISTER_USER_REQUEST);
 
+            Answers.getInstance().logCustom(new CustomEvent("Registration"));
+
             // To be continued on onActivityResult()
 
         } else {
+
+            String[] _tokens = userRegistrationId.split(":");
+            if( _tokens.length > 0 ) {
+
+                Answers.getInstance().logLogin(new LoginEvent()
+                        .putMethod(_tokens[0])
+                        .putSuccess(true));
+            }
 
             NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
                     GCMHandler.class);

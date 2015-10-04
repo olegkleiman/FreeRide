@@ -39,6 +39,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -533,18 +535,29 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             @Override
             protected void onPostExecute(Void result){
+
+                CustomEvent requestEvent = new CustomEvent("No-fee request");
+                requestEvent.putCustomAttribute("User", getUser().getFullName());
+
                 if( mEx != null ) {
+
+                    requestEvent.putCustomAttribute("Sent", 0);
+
                     lt.error();
                     beepError.start();
                 }
                 else {
-                    lt.success();
 
+                    requestEvent.putCustomAttribute("Sent", 1);
+
+                    lt.success();
                     beepSuccess.start();
 
                     getHandler().postDelayed(thanksRunnable, 1500);
 
                 }
+
+                Answers.getInstance().logCustom(requestEvent);
             }
         }.execute();
     }
