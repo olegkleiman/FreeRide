@@ -103,12 +103,16 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
     @Override
     public void onReceive(Context context, Bundle bundle) {
-        ctx = context;
 
-        String title = context.getResources().getString(R.string.app_label);
+        ctx = context;
         boolean bSend = false;
 
         final String userId = bundle.getString("extras");
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
+        if( userId != null
+                && userId.equalsIgnoreCase(userRegistrationId))
+            return;
 
         if( userId != null
             && !Globals.isPassengerIdJoined(userId) ) {
@@ -184,8 +188,10 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         }
 
         // TODO: DriverRoleActivity.mPassengersAdapter.add(message);
-        if( bSend )
+        if( bSend ) {
+            String title = context.getResources().getString(R.string.app_label);
             sendNotification(message, title);
+        }
     }
 
     private void sendNotification(String msg, String title) {
