@@ -54,7 +54,7 @@
     <string name="ride_code_label">קוד נסיעה</string>
     <string name="subtitle_activity_my_rides">הנסיעות שלי</string>
     <string name="geofence_transition_entered">אתה נכנס לאזור פיקוח</string>
-    <string name="add_car_button_add">הוספה</string>
+    <string name="add_car_button_add">הוסף</string>
     <string name="add_car_hint">מספר רכב</string>
     <string name="subtitle_activity_tutorial">הדרכות</string>
     <string name="ride_code_dialog_content">אפשר לראות את הקוד הזה על מסך המכשיר של הנהג</string>

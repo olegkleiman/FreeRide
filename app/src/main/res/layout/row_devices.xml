@@ -65,7 +65,10 @@
                     android:layout_width="match_parent"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/txt_peer_name"
-                    android:text="Driver Name"/>
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    android:text="Driver name"
+                    android:gravity="start" />
 
                 <LinearLayout
                     android:layout_height="match_parent"

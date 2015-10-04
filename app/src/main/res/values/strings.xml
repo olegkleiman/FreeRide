@@ -33,7 +33,7 @@
     <string name="error_field_required">This field is required</string>
     <string name="action_register">Register</string>
     <string name="registration_add_title">Performing registration</string>
-    <string name="registration_add_status">Adding your data</string>
+    <string name="registration_add_status">Processing your account</string>
     <string name="registration_add_status_wait">Just few seconds</string>
     <string name="default_value">no value</string>
 
