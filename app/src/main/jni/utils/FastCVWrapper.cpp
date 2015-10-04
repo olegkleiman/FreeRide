@@ -133,7 +133,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
          jlong thiz,
          jlong addrGray)
 {
-    Mat &grayFrame = *(Mat *)addrGray;
+    Mat &mGrayChannel = *(Mat *)addrGray;
 
     try {
         // Load face cascade
@@ -146,10 +146,13 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
         if( eyesCascade == NULL )
             return false;
 
+        flip(mGrayChannel, mGrayChannel, 1);
+        return false;
+
         // Detect face
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
         vector<Rect> faces;
-        faceClassifier->detectMultiScale(grayFrame,
+        faceClassifier->detectMultiScale(mGrayChannel,
                                      faces,
                                      1.2, // How many different sizes of eye to look for
                                           // 1.1 is for good detection
@@ -165,11 +168,11 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             Mat roiFace;
 
             Rect _rect = faces[0];
-            rectangle(grayFrame, _rect,
+            rectangle(mGrayChannel, _rect,
                       Scalar::all(255),
                       1, 8, 0);
 
-            grayFrame(_rect).copyTo(roiFace);
+            mGrayChannel(_rect).copyTo(roiFace);
             equalizeHist(roiFace, roiFace);
 
             // Now detect open eyes

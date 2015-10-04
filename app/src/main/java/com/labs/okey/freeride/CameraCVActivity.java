@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.crashlytics.android.Crashlytics;
 import com.labs.okey.freeride.fastcv.FastCVCameraView;
 import com.labs.okey.freeride.fastcv.FastCVWrapper;
 import com.labs.okey.freeride.utils.Globals;
@@ -95,6 +96,9 @@ public class CameraCVActivity extends Activity
             return cascadeFile.getAbsolutePath();
 
         } catch (IOException e) {
+            if(Crashlytics.getInstance() != null )
+                Crashlytics.logException(e);
+
             Log.e(LOG_TAG, e.getMessage());
 
             return "";
@@ -261,7 +265,7 @@ public class CameraCVActivity extends Activity
                 bTemplateFound = mCVWrapper.findTemplate(mGray.getNativeObjAddr());
             }
             else {
-                mCVWrapper.MatchTemplate(mGray.getNativeObjAddr());
+                mCVWrapper.matchTemplate(mGray.getNativeObjAddr());
             }
 
 //            nFaces = mCVWrapper.DetectFaces(mGray.getNativeObjAddr(),
