@@ -45,6 +45,7 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.crashlytics.android.Crashlytics;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
@@ -496,8 +497,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                                  Color.RED);
                                 break;
                         }
-                    } catch( Exception e) {
-                        Log.e(LOG_TAG, e.getMessage());
+                    } catch( Exception ex) {
+                        if( Crashlytics.getInstance() != null )
+                            Crashlytics.logException(ex);
+
+                        Log.e(LOG_TAG, ex.getMessage());
                     }
 
                 }
@@ -526,6 +530,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 } catch( ExecutionException | InterruptedException ex ) {
 
                     mEx = ex;
+                    if(Crashlytics.getInstance() != null)
+                        Crashlytics.logException(ex);
+
                     Log.e(LOG_TAG, ex.getMessage());
                 }
 
