@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -206,8 +207,16 @@ public class BaseActivityWithGeofences extends BaseActivity
     @Override
     protected void onDestroy() {
 
-        LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(),
-                this);
+        try {
+            LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(),
+                    this);
+        } catch(IllegalStateException ex) { // Nothing special here :
+                                            // it may happen if GoogleApiClient was not connected yet
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+
+            Log.e(LOG_TAG, ex.getMessage());
+        }
 
         Globals.setInGeofenceArea(false);
         Globals.setMonitorStatus("");

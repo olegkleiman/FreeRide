@@ -147,7 +147,6 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             return false;
 
         flip(mGrayChannel, mGrayChannel, 1);
-        return false;
 
         // Detect face
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
@@ -157,11 +156,12 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                                      1.2, // How many different sizes of eye to look for
                                           // 1.1 is for good detection
                                           // 1.2 for faster detection
-                                      2, // Neighbors : how sure the detector should be that has detected face.
+                                      4, // Neighbors : how sure the detector should be that has detected face.
                                          // Set to higher than 3 (default) if you want more reliable faces
                                          // even if many faces are not included
                                       flags,
-                                      Size(40, 40));
+                                      Size(200, 200));
+
 
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
@@ -172,29 +172,29 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                       Scalar::all(255),
                       1, 8, 0);
 
-            mGrayChannel(_rect).copyTo(roiFace);
-            equalizeHist(roiFace, roiFace);
-
-            // Now detect open eyes
-            vector<Rect> eyes;
-            eyesCascade->detectMultiScale(roiFace, eyes,
-                                        1.2, 2, flags,
-                                        Size(20, 20));
-            if( eyes.size() > 0 ) {
-
-                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
-
-                    Rect _eyeRect = eyes[0];
-                    roiFace(_eyeRect).copyTo(roiTemplate);
-
-                    //rectangle(roiFace, _eyeRect, Scalar::all(255), 1, 8, 0);
-
-                    return true;
-                }
-
-            } else { // we are looking for consecutive frames
-                nFoundTemplateCounter = 0;
-            }
+//            mGrayChannel(_rect).copyTo(roiFace);
+//            equalizeHist(roiFace, roiFace);
+//
+//            // Now detect open eyes
+//            vector<Rect> eyes;
+//            eyesCascade->detectMultiScale(roiFace, eyes,
+//                                        1.2, 2, flags,
+//                                        Size(20, 20));
+//            if( eyes.size() > 0 ) {
+//
+//                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
+//
+//                    Rect _eyeRect = eyes[0];
+//                    roiFace(_eyeRect).copyTo(roiTemplate);
+//
+//                    //rectangle(roiFace, _eyeRect, Scalar::all(255), 1, 8, 0);
+//
+//                    return true;
+//                }
+//
+//            } else { // we are looking for consecutive frames
+//                nFoundTemplateCounter = 0;
+//            }
 
         }
 

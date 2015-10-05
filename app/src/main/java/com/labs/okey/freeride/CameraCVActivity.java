@@ -75,6 +75,7 @@ public class CameraCVActivity extends Activity
     FastCVWrapper mCVWrapper;
 
     private FastCVCameraView mOpenCvCameraView;
+    private TextView mTxtCameraMonitor;
 
     private String createCascadeFile(int resourceId, String fileName) {
 
@@ -179,6 +180,8 @@ public class CameraCVActivity extends Activity
 
         mCameraDirective = getString(R.string.camera_directive_1);
         mCameraDirective2 = getString(R.string.camera_directive_2);
+
+        mTxtCameraMonitor = (TextView) findViewById(R.id.detection_monitor);
     }
 
     @Override
@@ -258,7 +261,6 @@ public class CameraCVActivity extends Activity
 
         long start = System.currentTimeMillis();
 
-        int nFaces = 0;
         try {
 
             if( !bTemplateFound ) {
@@ -281,8 +283,9 @@ public class CameraCVActivity extends Activity
         String msg = String.format("Executed for %d ms.", mExecutionTime / ++mFramesReceived);
         Log.d(LOG_TAG, msg);
 
-        Imgproc.putText(mGray, mCameraDirective, new Point(100, 100),
-                        3, 1, mCameraFontColor, 2);
+
+//        Imgproc.putText(mGray, mCameraDirective, new Point(100, 100),
+//                        3, 1, mCameraFontColor, 2);
 
 
         return mGray;
