@@ -33,6 +33,7 @@ using namespace std::chrono;
 #else
 #define DPRINTF(...)   //noop
 #endif
+
 #define IPRINTF(...)  __android_log_print(ANDROID_LOG_INFO,CVWRAPPER_LOG_TAG,__VA_ARGS__)
 #define EPRINTF(...)  __android_log_print(ANDROID_LOG_ERROR,CVWRAPPER_LOG_TAG,__VA_ARGS__)
 #define WPRINTF(...)  __android_log_print(ANDROID_LOG_WARN,CVWRAPPER_LOG_TAG,__VA_ARGS__)
@@ -50,6 +51,10 @@ struct CascadeAggregator {
                       const char *face_cascade_name,
                       const char *eyes_cascade_name)
             : FaceClassifier(faceClassifier), EyesClassifier(eyesClassifier) {
+
+        CV_DbgAssert(FaceClassifier);
+        CV_DbgAssert(EyesClassifier);
+
         ifstream f(face_cascade_name);
         if( !f.good() ) {
             DPRINTF("Can not access face cascade file");
@@ -98,26 +103,28 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemp
         (JNIEnv *env, jclass jc, jlong addrGray)
 {
 
-    Mat &frame = *(Mat *) addrGray;
+    Mat &mGrayChannel = *(Mat *) addrGray;
 
     try {
         Mat result;
-        int result_cols = frame.cols + roiTemplate.cols + 1;
-        int result_rows = frame.rows + roiTemplate.rows + 1;
+        int result_cols = mGrayChannel.cols + roiTemplate.cols + 1;
+        int result_rows = mGrayChannel.rows + roiTemplate.rows + 1;
         result.create(result_rows, result_cols, CV_32FC1);
 
-        matchTemplate(frame, roiTemplate, result, TM_CCOEFF_NORMED);
-        normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+        flip(mGrayChannel, mGrayChannel, 1);
 
-        double minValue, maxValue;
-        Point minLoc, maxLoc;
-        Point matchLoc;
-        minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
-        matchLoc = maxLoc; // because of TM_CCOEFF_NORMED
-
-        rectangle(frame, matchLoc,
-                  Point(matchLoc.x + roiTemplate.cols, matchLoc.y + roiTemplate.rows),
-                  Scalar::all(255), 2, 8, 0);
+//        matchTemplate(frame, roiTemplate, result, TM_CCOEFF_NORMED);
+//        normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+//
+//        double minValue, maxValue;
+//        Point minLoc, maxLoc;
+//        Point matchLoc;
+//        minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
+//        matchLoc = maxLoc; // because of TM_CCOEFF_NORMED
+//
+//        rectangle(frame, matchLoc,
+//                  Point(matchLoc.x + roiTemplate.cols, matchLoc.y + roiTemplate.rows),
+//                  Scalar::all(255), 2, 8, 0);
 
     } catch(Exception ex) {
         jclass je = env->FindClass("org/opencv/core/CvException");
@@ -131,9 +138,11 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemp
 JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemplate
         (JNIEnv *env, jclass jc,
          jlong thiz,
-         jlong addrGray)
+         jlong addrGray,
+         jlong addrTemplate)
 {
     Mat &mGrayChannel = *(Mat *)addrGray;
+    Mat &templateMat = *(Mat *)addrTemplate;
 
     try {
         // Load face cascade
@@ -154,13 +163,13 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
         // CASCADE_DO_ROUGH_SEARCH is used only with CASCADE_FIND_BIGGEST_OBJECT.
         // This flag is used to terminate the search at whatever scale the first candidate is found.
 
-//        // Now detect open eyes
+        // Now detect open eyes
 //        vector<Rect> eyes;
 //        eyesCascade->detectMultiScale(mGrayChannel, eyes,
 //                                      1.2, // How many different sizes of eye to look for
 //                                           // 1.1 is for good detection
 //                                           // 1.2 for faster detection
-//                                      3, // Neighbors : how sure the detector should be that has detected face.
+//                                      3, // Neighbors : how sure the detector should be that has detected eye.
 //                                         // Set to higher than 3 (default) if you want more reliable faces
 //                                         // even if many faces are not included
 //                                      flags,
@@ -178,7 +187,8 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 ////            } else { // we are looking for consecutive frames
 ////                nFoundTemplateCounter = 0;
 //            }
-
+//
+//        return false;
 
         // Detect face
         vector<Rect> faces;
@@ -199,6 +209,8 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             Mat roiFace;
 
             Rect _rect = faces[0];
+            //DPRINTF("Face region: x: %d y: %d height: %d width: %d",
+            //        _rect.x, _rect.y, _rect.height, _rect.width);
             rectangle(mGrayChannel, _rect,
                       Scalar::all(255),
                       1, 8, 0);
@@ -212,23 +224,31 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                                         1.2,
                                         3,
                                         flags,
-                                        Size(140, 140));
+                                        Size(120, 120));
             if( eyes.size() > 0 ) {
-//
-//                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
-//
-                    Rect _eyeRect = eyes[0];
-                    roiFace(_eyeRect).copyTo(roiTemplate);
 
-                    rectangle(roiFace, _eyeRect,
-                              Scalar::all(250),
+                DPRINTF("Eye(s) detected");
+
+                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
+
+                    Rect _eyeRect = eyes[0];
+                    //DPRINTF("Eye region: x: %d y: %d height: %d width: %d",
+                    //        _eyeRect.x, _eyeRect.y, _eyeRect.height, _eyeRect.width);
+                    roiFace(_eyeRect).copyTo(roiTemplate);
+                    roiFace(_eyeRect).copyTo(templateMat);
+
+                    rectangle(mGrayChannel,
+                              Point(_rect.x + _eyeRect.x, _rect.y + _eyeRect.y),
+                              Point(_rect.x + _eyeRect.x + _eyeRect.width,
+                                    _rect.y + _eyeRect.y + _eyeRect.height),
+                              Scalar::all(240),
                               1, 8, 0);
-//
-//                    return true;
-//                }
-//
-//            } else { // we are looking for consecutive frames
-//                nFoundTemplateCounter = 0;
+
+                    return true;
+               }
+
+            } else { // we are looking for consecutive frames
+                nFoundTemplateCounter = 0;
             }
 
         }

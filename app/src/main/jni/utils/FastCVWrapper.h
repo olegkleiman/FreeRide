@@ -18,7 +18,8 @@ JNIEXPORT jlong JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_nativeC
 JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemplate
         (JNIEnv *env, jclass jc,
          jlong thiz,
-         jlong addrGray);
+         jlong addrGray,
+         jlong addrTemplate);
 
 JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
         (JNIEnv *env, jclass jc,

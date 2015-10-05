@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +36,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -64,9 +66,8 @@ public class CameraCVActivity extends Activity
     private String mRideCode = "73373";
     private UUID mFaceID;
 
-    private Mat                    mRgba;
-    private Mat                    mIntermediateMat;
     private Mat                    mGray;
+    private Mat                    mMatTemplate;
 
     Scalar mCameraFontColor = new Scalar(255, 255, 255);
     String mCameraDirective;
@@ -136,8 +137,10 @@ public class CameraCVActivity extends Activity
 
                         String faceCascadeFilePath = createCascadeFile(R.raw.lbpcascade_frontalface,
                                                                     "lbpcascade_frontalface.xml");
-                        String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_eye,
-                                                                     "haarcascade_eye.xml");
+                        String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_righteye_2splits,
+                                                                        "haarcascade_righteye_2splits.xml");
+//                        String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_eye,
+//                                                                   "haarcascade_eye.xml");
 
                         mCVWrapper = new FastCVWrapper(faceCascadeFilePath,
                                                        eyesCascadeFilePath);
@@ -236,16 +239,15 @@ public class CameraCVActivity extends Activity
 
         @Override
     public void onCameraViewStarted(int width, int height) {
-        mRgba = new Mat(height, width, CvType.CV_8UC4);
-        mIntermediateMat = new Mat(height, width, CvType.CV_8UC4);
+        //mRgba = new Mat(height, width, CvType.CV_8UC4);
         mGray = new Mat(height, width, CvType.CV_8UC1);
+        mMatTemplate = new Mat(height, width, CvType.CV_8UC1);
     }
 
     @Override
     public void onCameraViewStopped() {
-        mRgba.release();
         mGray.release();
-        mIntermediateMat.release();
+        mMatTemplate.release();
     }
 
     long mExecutionTime = 0;
@@ -253,10 +255,11 @@ public class CameraCVActivity extends Activity
 
     boolean bTemplateFound = false;
 
+
+
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         // input frame has RGBA format
-        mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
         long start = System.currentTimeMillis();
@@ -264,7 +267,24 @@ public class CameraCVActivity extends Activity
         try {
 
             if( !bTemplateFound ) {
-                bTemplateFound = mCVWrapper.findTemplate(mGray.getNativeObjAddr());
+                bTemplateFound = mCVWrapper.findTemplate(mGray.getNativeObjAddr(),
+                                                         mMatTemplate.getNativeObjAddr());
+                if( bTemplateFound ) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Bitmap bmp = Bitmap.createBitmap(mMatTemplate.cols(),
+                                                            mMatTemplate.rows(),
+                                                            Bitmap.Config.ARGB_8888);
+                            Utils.matToBitmap(mMatTemplate, bmp);
+                            mTxtCameraMonitor.setText(mCameraDirective2);
+
+                            ImageView imgView = (ImageView)findViewById(R.id.imageViewTemplate);
+                            imgView.setImageBitmap(bmp);
+                        }
+                    });
+                }
+
             }
             else {
                 mCVWrapper.matchTemplate(mGray.getNativeObjAddr());
@@ -282,11 +302,6 @@ public class CameraCVActivity extends Activity
         mExecutionTime += (System.currentTimeMillis() - start);
         String msg = String.format("Executed for %d ms.", mExecutionTime / ++mFramesReceived);
         Log.d(LOG_TAG, msg);
-
-
-//        Imgproc.putText(mGray, mCameraDirective, new Point(100, 100),
-//                        3, 1, mCameraFontColor, 2);
-
 
         return mGray;
     }
