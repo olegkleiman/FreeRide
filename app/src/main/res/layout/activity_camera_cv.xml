@@ -9,6 +9,7 @@
     <com.labs.okey.freeride.fastcv.FastCVCameraView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        opencv:show_fps="true"
         android:id="@+id/java_surface_view"/>
 
     <LinearLayout

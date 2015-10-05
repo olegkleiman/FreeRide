@@ -148,8 +148,39 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 
         flip(mGrayChannel, mGrayChannel, 1);
 
-        // Detect face
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
+        // CASCADE_FIND_BIGGEST_OBJECT tells OpenCV to return only the largest object found
+        // Hence the number of objects returned will be either one ore none.
+        // CASCADE_DO_ROUGH_SEARCH is used only with CASCADE_FIND_BIGGEST_OBJECT.
+        // This flag is used to terminate the search at whatever scale the first candidate is found.
+
+//        // Now detect open eyes
+//        vector<Rect> eyes;
+//        eyesCascade->detectMultiScale(mGrayChannel, eyes,
+//                                      1.2, // How many different sizes of eye to look for
+//                                           // 1.1 is for good detection
+//                                           // 1.2 for faster detection
+//                                      3, // Neighbors : how sure the detector should be that has detected face.
+//                                         // Set to higher than 3 (default) if you want more reliable faces
+//                                         // even if many faces are not included
+//                                      flags,
+//                                      Size(140, 140));
+//            if( eyes.size() > 0 ) {
+////
+////                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
+////
+//                Rect _eyeRect = eyes[0];
+//                rectangle(mGrayChannel, _eyeRect, Scalar::all(255), 1, 8, 0);
+////
+////                    return true;
+////                }
+////
+////            } else { // we are looking for consecutive frames
+////                nFoundTemplateCounter = 0;
+//            }
+
+
+        // Detect face
         vector<Rect> faces;
         faceClassifier->detectMultiScale(mGrayChannel,
                                      faces,
@@ -157,7 +188,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                                           // 1.1 is for good detection
                                           // 1.2 for faster detection
                                       3, // Neighbors : how sure the detector should be that has detected face.
-                                         // Set to higher than 3 (default) if you want more reliable faces
+                                         // Set to higher than 3 (default) if you want more reliable eyes
                                          // even if many faces are not included
                                       flags,
                                       Size(200, 200));
@@ -176,25 +207,29 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             equalizeHist(roiFace, roiFace);
 
             // Now detect open eyes
-//            vector<Rect> eyes;
-//            eyesCascade->detectMultiScale(roiFace, eyes,
-//                                        1.2, 2, flags,
-//                                        Size(40, 40));
-//            if( eyes.size() > 0 ) {
+            vector<Rect> eyes;
+            eyesCascade->detectMultiScale(roiFace, eyes,
+                                        1.2,
+                                        3,
+                                        flags,
+                                        Size(140, 140));
+            if( eyes.size() > 0 ) {
 //
 //                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
 //
-//                    Rect _eyeRect = eyes[0];
-//                    roiFace(_eyeRect).copyTo(roiTemplate);
-//
-//                    rectangle(roiFace, _eyeRect, Scalar::all(255), 1, 8, 0);
+                    Rect _eyeRect = eyes[0];
+                    roiFace(_eyeRect).copyTo(roiTemplate);
+
+                    rectangle(roiFace, _eyeRect,
+                              Scalar::all(250),
+                              1, 8, 0);
 //
 //                    return true;
 //                }
 //
 //            } else { // we are looking for consecutive frames
 //                nFoundTemplateCounter = 0;
-//            }
+            }
 
         }
 
