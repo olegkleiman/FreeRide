@@ -39,6 +39,7 @@ using namespace std::chrono;
 #define WPRINTF(...)  __android_log_print(ANDROID_LOG_WARN,CVWRAPPER_LOG_TAG,__VA_ARGS__)
 
 Mat roiTemplate;
+Mat roiFace;
 int nFoundTemplateCounter = 0;
 const int CONSECUTIVE_TEMPLATE_COUNTER = 3;
 
@@ -113,18 +114,18 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemp
 
         flip(mGrayChannel, mGrayChannel, 1);
 
-//        matchTemplate(frame, roiTemplate, result, TM_CCOEFF_NORMED);
-//        normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
-//
-//        double minValue, maxValue;
-//        Point minLoc, maxLoc;
-//        Point matchLoc;
-//        minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
-//        matchLoc = maxLoc; // because of TM_CCOEFF_NORMED
-//
-//        rectangle(frame, matchLoc,
-//                  Point(matchLoc.x + roiTemplate.cols, matchLoc.y + roiTemplate.rows),
-//                  Scalar::all(255), 2, 8, 0);
+        matchTemplate(roiFace, roiTemplate, result, TM_CCOEFF_NORMED);
+        normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+
+        double minValue, maxValue;
+        Point minLoc, maxLoc;
+        Point matchLoc;
+        minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
+        matchLoc = maxLoc; // because of TM_CCOEFF_NORMED
+
+        rectangle(mGrayChannel, matchLoc,
+                  Point(matchLoc.x + roiTemplate.cols, matchLoc.y + roiTemplate.rows),
+                  Scalar::all(255), 2, 8, 0);
 
     } catch(Exception ex) {
         jclass je = env->FindClass("org/opencv/core/CvException");
@@ -206,7 +207,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
-            Mat roiFace;
+
 
             Rect _rect = faces[0];
             //DPRINTF("Face region: x: %d y: %d height: %d width: %d",
