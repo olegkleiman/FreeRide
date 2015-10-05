@@ -301,6 +301,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     ).show();
         } catch( Exception ex) {
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+
             Log.e(LOG_TAG, ex.getMessage());
         }
     }
