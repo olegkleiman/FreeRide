@@ -112,6 +112,6 @@
     <string name="geofence_transition_exited">אתה יוצא מאזור הפיקוח</string>
     <string name="connection_lost">החיבור אבד. אנא נסה שוב בעוד מספר שניות.</string>
     <string name="nofee_request_accepted">בקשתך התקבלה</string>
-    <string name="camera_directive_1">תסתכל על המצלמה</string>
+    <string name="camera_directive_1">נא להתאים את המרחק כדי לקבל סימן יציב סביב הפנים</string>
 
 </resources>

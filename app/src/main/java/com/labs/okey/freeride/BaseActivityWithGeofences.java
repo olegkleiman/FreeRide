@@ -6,6 +6,7 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -210,26 +211,27 @@ public class BaseActivityWithGeofences extends BaseActivity
         try {
             LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(),
                     this);
+
+            Globals.setInGeofenceArea(false);
+            Globals.setMonitorStatus("");
+
+            LocationServices.GeofencingApi.removeGeofences(
+                    getGoogleApiClient(),
+                    // This is the same pending intent that was used in addGeofences().
+                    getGeofencePendingIntent()
+            ).setResultCallback(this); // Result processed in onResult().
+
         } catch(IllegalStateException ex) { // Nothing special here :
-                                            // it may happen if GoogleApiClient was not connected yet
+            // it may happen if GoogleApiClient was not connected yet
             if( Crashlytics.getInstance() != null )
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());
         }
-
-        Globals.setInGeofenceArea(false);
-        Globals.setMonitorStatus("");
-
-        LocationServices.GeofencingApi.removeGeofences(
-                getGoogleApiClient(),
-                // This is the same pending intent that was used in addGeofences().
-                getGeofencePendingIntent()
-        ).setResultCallback(this); // Result processed in onResult().
-
         super.onDestroy();
     }
 
+    @Nullable
     private GeofencingRequest getGeofencingRequest() {
 
         try {
@@ -246,6 +248,10 @@ public class BaseActivityWithGeofences extends BaseActivity
             // Return a GeofencingRequest.
             return builder.build();
         } catch (Exception ex) {
+            if( Crashlytics.getInstance() != null ) {
+                Crashlytics.logException(ex);
+            }
+
             Log.e(LOG_TAG, ex.getMessage());
             return null;
         }

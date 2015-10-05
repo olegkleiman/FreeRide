@@ -156,7 +156,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                                      1.2, // How many different sizes of eye to look for
                                           // 1.1 is for good detection
                                           // 1.2 for faster detection
-                                      4, // Neighbors : how sure the detector should be that has detected face.
+                                      3, // Neighbors : how sure the detector should be that has detected face.
                                          // Set to higher than 3 (default) if you want more reliable faces
                                          // even if many faces are not included
                                       flags,
@@ -172,14 +172,14 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                       Scalar::all(255),
                       1, 8, 0);
 
-//            mGrayChannel(_rect).copyTo(roiFace);
-//            equalizeHist(roiFace, roiFace);
-//
-//            // Now detect open eyes
+            mGrayChannel(_rect).copyTo(roiFace);
+            equalizeHist(roiFace, roiFace);
+
+            // Now detect open eyes
 //            vector<Rect> eyes;
 //            eyesCascade->detectMultiScale(roiFace, eyes,
 //                                        1.2, 2, flags,
-//                                        Size(20, 20));
+//                                        Size(40, 40));
 //            if( eyes.size() > 0 ) {
 //
 //                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
@@ -187,7 +187,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 //                    Rect _eyeRect = eyes[0];
 //                    roiFace(_eyeRect).copyTo(roiTemplate);
 //
-//                    //rectangle(roiFace, _eyeRect, Scalar::all(255), 1, 8, 0);
+//                    rectangle(roiFace, _eyeRect, Scalar::all(255), 1, 8, 0);
 //
 //                    return true;
 //                }

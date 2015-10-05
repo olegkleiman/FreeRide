@@ -120,6 +120,6 @@
     <string name="nofee_request_accepted">Ваш запрос принят</string>
 
     <!-- OpenCV -->
-    <string name="camera_directive_1">Смотрите прямо в камеру</string>
+    <string name="camera_directive_1">Подберите расстояние так, чтобы белый контур был постоянно виден вокруг вашего лица</string>
 
 </resources>
