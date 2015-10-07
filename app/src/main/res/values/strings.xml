@@ -109,6 +109,8 @@
 
     <string name="edit_car_button_title">Edit</string>
     <string name="edit_car_button_title2">Specify</string>
+    <string name="offline">You are offline</string>
+    <string name="offline_prompt">Connect your device to the network</string>
     <string name="edit_car_dialog_caption1">Choose a riding car</string>
     <string name="edit_car_dialog_caption2">Specify your car(s)</string>
     <string name="edit_car_dialog_text">You have not yet specified the car(s) belongs to you.</string>
@@ -228,11 +230,11 @@ limitations under the License.</string>
     <string name="menu_next_detection_filter">Detection</string>
 
     <!-- OpenCV -->
-    <string name="camera_directive_2">Found %d faces</string>
+    <string name="camera_directive_2">Tracking...</string>
     <string name="detection_results">Verification results</string>
     <string name="save_error">Failed to save the picture</string>
     <string name="detection_no_results">No face was verified</string>
-    <string name="try_again">Please try again.</string>
+    <string name="try_again">Try again</string>
     <string name="detection_save">Verified %d faces. Save this picture?</string>
     <string name="detection_center_caption">Detect with central authority</string>
     <string name="detection_center_desc">Upload and verify?</string>
@@ -245,5 +247,5 @@ limitations under the License.</string>
     <string name="geofence_outside">Remind you when getting inside?</string>
 
     <string name="log_start">Application started</string>
-    <string name="camera_directive_1">Adjust the distance to get stable region around your face</string>
+    <string name="camera_directive_1">Look straight into camera</string>
 </resources>

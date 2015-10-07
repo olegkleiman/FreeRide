@@ -121,5 +121,7 @@
 
     <!-- OpenCV -->
     <string name="camera_directive_1">Подберите расстояние так, чтобы белый контур был постоянно виден вокруг вашего лица</string>
+    <string name="offline">Нет соединения с сетью</string>
+    <string name="offline_prompt">Подключите сеть</string>
 
 </resources>
