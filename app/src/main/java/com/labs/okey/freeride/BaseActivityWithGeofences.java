@@ -90,6 +90,8 @@ public class BaseActivityWithGeofences extends BaseActivity
     }
 
     protected void initGeofences() {
+        if( !isWamsInitialized() )
+            return;
 
         final ResultCallback<Status> resultCallback = this;
 
