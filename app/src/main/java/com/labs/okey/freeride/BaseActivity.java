@@ -61,6 +61,7 @@ public class BaseActivity extends AppCompatActivity
     public GoogleApiClient getGoogleApiClient() { return mGoogleApiClient; }
 
     private MobileServiceClient wamsClient;
+    public Boolean isWamsInitialized() { return wamsClient != null; }
     public MobileServiceClient getMobileServiceClient() { return wamsClient; }
 
     private WAMSVersionTable wamsVersionTable;
