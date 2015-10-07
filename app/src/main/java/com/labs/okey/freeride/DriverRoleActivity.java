@@ -522,6 +522,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                      @Override
                                                      public void run() {
 
+                                                         Log.d(LOG_TAG, "Passengers checker timer");
+
                                                          final List<User> passengers = Globals.getMyPassengers();
 
                                                          if( mLastPassengersLength != passengers.size() ) {
