@@ -44,6 +44,9 @@ Rect _faceRect;
 int nFoundTemplateCounter = 0;
 const int CONSECUTIVE_TEMPLATE_COUNTER = 3;
 
+int nFoundMatchCounter = 0;
+const int CONSECUTIVE_MATCH_COUNTER = 10;
+
 struct CascadeAggregator {
     Ptr<CascadeClassifier> FaceClassifier;
     Ptr<CascadeClassifier> EyesClassifier;
@@ -126,17 +129,18 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
         faceClassifier->detectMultiScale(mGrayChannel,
                                          faces,
                                          1.2, // How many different sizes of eye to look for
-                // 1.1 is for good detection
-                // 1.2 for faster detection
+                                        // 1.1 is for good detection
+                                        // 1.2 for faster detection
                                          3, // Neighbors : how sure the detector should be that has detected face.
-                // Set to higher than 3 (default) if you want more reliable eyes
-                // even if many faces are not included
+                                        // Set to higher than 3 (default) if you want more reliable eyes
+                                        // even if many faces are not included
                                          flags,
                                          Size(200, 200));
 
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
             Rect faceRect = faces[0];
+            faceRect.width = faceRect.width / 2;
             Mat lRoiFace;
             mGrayChannel(faceRect).copyTo(lRoiFace);
 
@@ -149,25 +153,31 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
             int result_rows = mGrayChannel.rows + roiTemplate.rows + 1;
             result.create(result_rows, result_cols, CV_32FC1);
 
-            int match_method = TM_SQDIFF; // TM_CCOEFF_NORMED
+            int compare_method = TM_CCOEFF_NORMED; //TM_SQDIFF;
 
-            matchTemplate(lRoiFace, roiTemplate, result, match_method);
+            matchTemplate(lRoiFace, roiTemplate, result, compare_method);
             normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
 
-            DPRINTF("Templated match");
+            //DPRINTF("Templated match");
 
             double minValue, maxValue;
             Point minLoc, maxLoc;
             Point matchLoc;
             minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
-            if( match_method == TM_SQDIFF || match_method == TM_SQDIFF_NORMED)
+            if( compare_method == TM_SQDIFF || compare_method == TM_SQDIFF_NORMED)
                 matchLoc = minLoc;
             else // e.g. TM_CCOEFF_NORMED
                 matchLoc = maxLoc;
 
-            rectangle(mGrayChannel, matchLoc,
-                      Point(matchLoc.x + roiTemplate.cols, matchLoc.y + roiTemplate.rows),
+            rectangle(mGrayChannel,
+                      Point(matchLoc.x + faceRect.x,
+                            matchLoc.y + faceRect.y ),
+                      Point(matchLoc.x + roiTemplate.cols + faceRect.x,
+                            matchLoc.y + roiTemplate.rows + faceRect.y),
                       Scalar::all(255), 2, 8, 0);
+
+            if( ++nFoundMatchCounter > CONSECUTIVE_MATCH_COUNTER )
+                return true;
 
         }
 
