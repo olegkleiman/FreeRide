@@ -262,10 +262,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         if( requestCode == MAKE_PICTURE_REQUEST) {
             if( resultCode == RESULT_OK ) {
-            // How to distinguish between successful connection
-            // and just pressing back from there?
-            //wamsInit(true);
-                onSubmitCode();
+                finish();
+            } else {    // Distinguish between successful connection
+                        // and just pressing back from there?
+                refresh();
             }
         }
     }
@@ -418,7 +418,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .show();
         } else {
 
-            final String rideCode = driverDevice.getRideCode();
+            mRideCode = driverDevice.getRideCode();
 
             DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 
@@ -473,7 +473,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         new AsyncTask<Void, Void, Void>() {
 
             Exception mEx;
-//            MaterialDialog progress;
             LoadToast lt;
 
             @Override
@@ -487,17 +486,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 lt.setTranslationY(size.y / 2);
                 lt.show();
 
-//                progress = new MaterialDialog.Builder(PassengerRoleActivity.this)
-//                        .title(R.string.processing)
-//                        .content(R.string.please_wait)
-//                        .progress(true, 0)
-//                        .show();
             }
 
             @Override
             protected void onPostExecute(Void result){
-
-                //progress.dismiss();
 
                 // Prepare to play sound loud :)
                 AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -510,7 +502,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 if( mEx != null ) {
 
                     confirmEvent.putCustomAttribute("Success", 0);
-
 
                     try{
                         MobileServiceException mse = (MobileServiceException)mEx.getCause();
@@ -529,7 +520,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 // Ride code was successfully validated,
                                 // but selfie is required
 
+                                lt.success();
+
                                 onCameraCV(null);
+
                                 break;
 
                             case 404: // HTTP 'Not found' means 'no such ride code'
