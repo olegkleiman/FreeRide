@@ -62,7 +62,6 @@ import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
-import com.skyfishjy.library.RippleBackground;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
@@ -164,12 +163,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             // Start BLE advertising
             mBLEUtil = new BLEUtil(this);
 
-//            RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.ripple_background_content);
-//            ImageView imageView = (ImageView)findViewById(R.id.centerImage);
-//            rippleBackground.startRippleAnimation();
-//
-//            startAdvertise();
-
             refresh();
         }
     }
@@ -234,29 +227,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         super.onStop();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        //getMenuInflater().inflate(R.menu.menu_passenger_role, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        } else if ( id == R.id.action_camera_cv) {
-            onCameraCV(null);
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -612,11 +582,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     }
 
-
-    private void switchLayouts() {
-        findViewById(R.id.ripple_background_content).setVisibility(View.GONE);
-        findViewById(R.id.passenger_internal_layout).setVisibility(View.VISIBLE);
-    }
 
     //
     // Implementation of IRefreshable
