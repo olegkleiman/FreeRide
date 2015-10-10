@@ -23,6 +23,7 @@
     <dimen name="adjustedActionBarSize">54dp</dimen>
     <dimen name="card_icon_size">24dp</dimen>
     <dimen name="card_backpanel_height">64dp</dimen>
+    <dimen name="card_backpanel_height_landscape">32dp</dimen>
     <dimen name="card_horizontal_margin">16dp</dimen>
     <dimen name="negativeActionBarSize">-56dp</dimen>
     <dimen name="snackbar_height">64dp</dimen>
