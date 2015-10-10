@@ -77,29 +77,6 @@
 
         </RelativeLayout>
 
-        <com.skyfishjy.library.RippleBackground
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="@color/ColorBackground"
-            android:id="@+id/ripple_background_content"
-            android:layout_weight="0.5"
-            app:rb_color="#0099CC"
-            app:rb_radius="18dp"
-            app:rb_rippleAmount="4"
-            app:rb_duration="3000"
-            app:rb_scale="6"
-            android:visibility="gone"
-            android:clickable="false">
-            <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_centerInParent="true"
-                android:id="@+id/centerImage"
-                android:src="@drawable/ic_action_mobile_phone"/>
-        </com.skyfishjy.library.RippleBackground>
-
         <LinearLayout
             android:id="@+id/passenger_snackbar"
             android:layout_width="fill_parent"
