@@ -27,7 +27,7 @@
         android:layout_gravity="center_horizontal"
         android:gravity="center_horizontal"
         android:visibility="visible">
-        <TextView android:text="@string/generating_ride_code"
+        <TextView
             android:id="@+id/code_label_caption"
             android:textColor="@color/white"
             android:textAppearance="?android:attr/textAppearanceLarge"

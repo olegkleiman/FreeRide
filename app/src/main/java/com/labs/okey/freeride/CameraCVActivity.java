@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
+import android.support.annotation.CallSuper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -55,13 +56,16 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class CameraCVActivity extends Activity
         implements CameraBridgeViewBase.CvCameraViewListener2,
                     Camera.PictureCallback,
                     IPictureURLUpdater{
 
-    private static final String LOG_TAG = "FR.CVCameraActivity";
+    private static final String LOG_TAG = "FR.CV";
 
     private String mRideCode = "73373";
     private UUID mFaceID;
@@ -210,13 +214,26 @@ public class CameraCVActivity extends Activity
     }
 
     @Override
+    @CallSuper
+    public void onStop(){
+
+        if( isCheckerMatchTimerRunning() )
+            mCheckMatchResultTimer.shutdown();
+
+        super.onStop();
+    }
+
+    @Override
+    @CallSuper
     public void onPause() {
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
     }
 
+
     @Override
+    @CallSuper
     public void onResume() {
         super.onResume();
 
@@ -237,7 +254,7 @@ public class CameraCVActivity extends Activity
         }
     }
 
-        @Override
+    @Override
     public void onCameraViewStarted(int width, int height) {
         //mRgba = new Mat(height, width, CvType.CV_8UC4);
         mGray = new Mat(height, width, CvType.CV_8UC1);
@@ -254,8 +271,14 @@ public class CameraCVActivity extends Activity
     long mFramesReceived = 0;
 
     boolean bTemplateFound = false;
+    boolean bMatchFound = false;
 
-
+    ScheduledExecutorService mCheckMatchResultTimer =
+            Executors.newScheduledThreadPool(1);
+    private Boolean checkMatchRunning = false;
+    boolean isCheckerMatchTimerRunning() {
+        return checkMatchRunning;
+    }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
@@ -287,7 +310,29 @@ public class CameraCVActivity extends Activity
 
             }
             else {
-                mCVWrapper.matchTemplate(mGray.getNativeObjAddr());
+                bMatchFound = mCVWrapper.matchTemplate(mGray.getNativeObjAddr());
+                if (!isCheckerMatchTimerRunning()) {
+                    mCheckMatchResultTimer.scheduleAtFixedRate(
+                            new Runnable() {
+                                               @Override
+                                               public void run() {
+                                                   Log.d(LOG_TAG, "Match checker");
+                                                   if (bMatchFound) {
+                                                       Log.d(LOG_TAG, "MATCH!!!");
+
+                                                       mCheckMatchResultTimer.shutdown();
+
+                                                       mOpenCvCameraView.stopPreview();
+                                                       sendToDetect(null);
+                                                   }
+                                               }
+                                            },
+                            0, // no delay
+                            1, // 1 sec period between successive executions
+                            TimeUnit.SECONDS);
+
+                    checkMatchRunning = true;
+                }
             }
 
 //            nFaces = mCVWrapper.DetectFaces(mGray.getNativeObjAddr(),
@@ -327,7 +372,7 @@ public class CameraCVActivity extends Activity
 //        txtStatus.setText(getString(R.string.detection_freeze));
 //
 //        // Will be continued in onPictureTaken() callback
-//        mOpenCvCameraView.takePicture(CameraCVActivity.this);
+       mOpenCvCameraView.takePicture(CameraCVActivity.this);
     }
 
     public void restoreFromSendToDetect(View view){
@@ -430,44 +475,56 @@ public class CameraCVActivity extends Activity
                         mFaceID = _face.faceId;
 
                         new MaterialDialog.Builder(CameraCVActivity.this)
-                                .title(getString(R.string.detection_results))
-                                .content(msg)
-                                .positiveText(R.string.yes)
-                                .negativeText(R.string.no)
+                                .title(getString(R.string.detection_success))
+                                .positiveText(R.string.ok)
                                 .callback(new MaterialDialog.ButtonCallback() {
-                                    @Override
-                                    public void onPositive(MaterialDialog dialog) {
-
-                                        try {
-                                            File outputDir = getApplicationContext().getCacheDir();
-                                            String photoFileName = getTempFileName();
-
-                                            File photoFile = File.createTempFile(photoFileName, ".jpg", outputDir);
-                                            FileOutputStream fos = new FileOutputStream(photoFile);
-                                            sampleBitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
-
-                                            fos.flush();
-                                            fos.close();
-
-                                            MediaStore.Images.Media.insertImage(getContentResolver(),
-                                                    photoFile.getAbsolutePath(),
-                                                    photoFile.getName(),
-                                                    photoFile.getName());
-
-                                            new wamsBlobUpload(CameraCVActivity.this).execute(photoFile);
-
-                                        } catch (IOException ex) {
-                                            Log.e(LOG_TAG, ex.getMessage());
+                                        @Override
+                                        public void onPositive(MaterialDialog dialog) {
+                                        setResult(RESULT_OK);
+                                        finish();
                                         }
-
-                                    }
-
-                                    @Override
-                                    public void onNegative(MaterialDialog dialog) {
-                                        mOpenCvCameraView.startPreview();
-                                    }
                                 })
                                 .show();
+
+//                        new MaterialDialog.Builder(CameraCVActivity.this)
+//                                .title(getString(R.string.detection_results))
+//                                .content(msg)
+//                                .positiveText(R.string.yes)
+//                                .negativeText(R.string.no)
+//                                .callback(new MaterialDialog.ButtonCallback() {
+//                                    @Override
+//                                    public void onPositive(MaterialDialog dialog) {
+//
+//                                        try {
+//                                            File outputDir = getApplicationContext().getCacheDir();
+//                                            String photoFileName = getTempFileName();
+//
+//                                            File photoFile = File.createTempFile(photoFileName, ".jpg", outputDir);
+//                                            FileOutputStream fos = new FileOutputStream(photoFile);
+//                                            sampleBitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+//
+//                                            fos.flush();
+//                                            fos.close();
+//
+//                                            MediaStore.Images.Media.insertImage(getContentResolver(),
+//                                                    photoFile.getAbsolutePath(),
+//                                                    photoFile.getName(),
+//                                                    photoFile.getName());
+//
+//                                            new wamsBlobUpload(CameraCVActivity.this).execute(photoFile);
+//
+//                                        } catch (IOException ex) {
+//                                            Log.e(LOG_TAG, ex.getMessage());
+//                                        }
+//
+//                                    }
+//
+//                                    @Override
+//                                    public void onNegative(MaterialDialog dialog) {
+//                                        mOpenCvCameraView.startPreview();
+//                                    }
+//                                })
+//                                .show();
                     }
 
 

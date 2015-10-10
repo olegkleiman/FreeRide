@@ -26,7 +26,7 @@ using namespace std;
 using namespace cv;
 using namespace std::chrono;
 
-#define CVWRAPPER_LOG_TAG    "fastcvWrapper"
+#define CVWRAPPER_LOG_TAG    "FR.CV"
 #ifdef _DEBUG
 
 #define DPRINTF(...)  __android_log_print(ANDROID_LOG_DEBUG,CVWRAPPER_LOG_TAG,__VA_ARGS__)
@@ -40,8 +40,12 @@ using namespace std::chrono;
 
 Mat roiTemplate;
 Mat roiFace;
+Rect _faceRect;
 int nFoundTemplateCounter = 0;
 const int CONSECUTIVE_TEMPLATE_COUNTER = 3;
+
+int nFoundMatchCounter = 0;
+const int CONSECUTIVE_MATCH_COUNTER = 10;
 
 struct CascadeAggregator {
     Ptr<CascadeClassifier> FaceClassifier;
@@ -100,32 +104,84 @@ JNIEXPORT jlong JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_nativeC
 
 }
 
-JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
-        (JNIEnv *env, jclass jc, jlong addrGray)
+JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
+        (JNIEnv *env, jclass jc,
+         jlong thiz,
+         jlong addrGray)
 {
 
     Mat &mGrayChannel = *(Mat *) addrGray;
 
     try {
-        Mat result;
-        int result_cols = mGrayChannel.cols + roiTemplate.cols + 1;
-        int result_rows = mGrayChannel.rows + roiTemplate.rows + 1;
-        result.create(result_rows, result_cols, CV_32FC1);
+
+        // Load face cascade
+        Ptr<CascadeClassifier> faceClassifier = ((CascadeAggregator *)thiz)->FaceClassifier;
+        if( faceClassifier == NULL )
+            return false;
 
         flip(mGrayChannel, mGrayChannel, 1);
 
-        matchTemplate(roiFace, roiTemplate, result, TM_CCOEFF_NORMED);
-        normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+        // Detect face
+        int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH; // See more these values
+                                                                           // in FindTemplate
 
-        double minValue, maxValue;
-        Point minLoc, maxLoc;
-        Point matchLoc;
-        minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
-        matchLoc = maxLoc; // because of TM_CCOEFF_NORMED
+        vector<Rect> faces;
+        faceClassifier->detectMultiScale(mGrayChannel,
+                                         faces,
+                                         1.2, // How many different sizes of eye to look for
+                                        // 1.1 is for good detection
+                                        // 1.2 for faster detection
+                                         3, // Neighbors : how sure the detector should be that has detected face.
+                                        // Set to higher than 3 (default) if you want more reliable eyes
+                                        // even if many faces are not included
+                                         flags,
+                                         Size(200, 200));
 
-        rectangle(mGrayChannel, matchLoc,
-                  Point(matchLoc.x + roiTemplate.cols, matchLoc.y + roiTemplate.rows),
-                  Scalar::all(255), 2, 8, 0);
+        if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
+
+            Rect faceRect = faces[0];
+            faceRect.width = faceRect.width / 2;
+            Mat lRoiFace;
+            mGrayChannel(faceRect).copyTo(lRoiFace);
+
+            rectangle(mGrayChannel, faceRect,
+                      Scalar::all(255),
+                      1, 8, 0);
+
+            Mat result;
+            int result_cols = mGrayChannel.cols + roiTemplate.cols + 1;
+            int result_rows = mGrayChannel.rows + roiTemplate.rows + 1;
+            result.create(result_rows, result_cols, CV_32FC1);
+
+            int compare_method = TM_CCOEFF_NORMED; //TM_SQDIFF;
+
+            matchTemplate(lRoiFace, roiTemplate, result, compare_method);
+            normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+
+            //DPRINTF("Templated match");
+
+            double minValue, maxValue;
+            Point minLoc, maxLoc;
+            Point matchLoc;
+            minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
+            if( compare_method == TM_SQDIFF || compare_method == TM_SQDIFF_NORMED)
+                matchLoc = minLoc;
+            else // e.g. TM_CCOEFF_NORMED
+                matchLoc = maxLoc;
+
+            rectangle(mGrayChannel,
+                      Point(matchLoc.x + faceRect.x,
+                            matchLoc.y + faceRect.y ),
+                      Point(matchLoc.x + roiTemplate.cols + faceRect.x,
+                            matchLoc.y + roiTemplate.rows + faceRect.y),
+                      Scalar::all(255), 2, 8, 0);
+
+            if( ++nFoundMatchCounter > CONSECUTIVE_MATCH_COUNTER )
+                return true;
+
+        }
+
+        return false;
 
     } catch(Exception ex) {
         jclass je = env->FindClass("org/opencv/core/CvException");
@@ -133,6 +189,8 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemp
         if (!je)
             je = env->FindClass("java/lang/Exception");
         env->ThrowNew(je, ex.what());
+
+        return false;
     }
 }
 
@@ -207,16 +265,14 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
-
-
-            Rect _rect = faces[0];
+            _faceRect = faces[0];
             //DPRINTF("Face region: x: %d y: %d height: %d width: %d",
             //        _rect.x, _rect.y, _rect.height, _rect.width);
-            rectangle(mGrayChannel, _rect,
+            rectangle(mGrayChannel, _faceRect,
                       Scalar::all(255),
                       1, 8, 0);
 
-            mGrayChannel(_rect).copyTo(roiFace);
+            mGrayChannel(_faceRect).copyTo(roiFace);
             equalizeHist(roiFace, roiFace);
 
             // Now detect open eyes
@@ -239,9 +295,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                     roiFace(_eyeRect).copyTo(templateMat);
 
                     rectangle(mGrayChannel,
-                              Point(_rect.x + _eyeRect.x, _rect.y + _eyeRect.y),
-                              Point(_rect.x + _eyeRect.x + _eyeRect.width,
-                                    _rect.y + _eyeRect.y + _eyeRect.height),
+                              Point(_faceRect.x + _eyeRect.x, _faceRect.y + _eyeRect.y),
+                              Point(_faceRect.x + _eyeRect.x + _eyeRect.width,
+                                    _faceRect .y + _eyeRect.y + _eyeRect.height),
                               Scalar::all(240),
                               1, 8, 0);
 

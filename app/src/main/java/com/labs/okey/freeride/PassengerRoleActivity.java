@@ -105,6 +105,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
+    private String mRideCode;
 
 
     @Override
@@ -154,8 +155,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
         }.start();
 
-        if( Globals.getRideCode() == null
-            || Globals.getRideCode().isEmpty() ) {
+        if( mRideCode == null
+            || mRideCode.isEmpty() ) {
             // Start WiFi-Direct serviceDiscovery
             // for (hopefully) already published service
             mWiFiUtil = new WiFiUtil(this);
@@ -228,7 +229,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.removeGroup();
 
         // Ride Code will be re-newed on next activity's launch
-        Globals.setRideCode("");
+        mRideCode =  "";
 
         super.onStop();
     }
@@ -261,9 +262,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         if( requestCode == MAKE_PICTURE_REQUEST) {
             if( resultCode == RESULT_OK ) {
-            // How to distinguish between successful connection
-            // and just pressing back from there?
-            //wamsInit(true);
+                finish();
+            } else {    // Distinguish between successful connection
+                        // and just pressing back from there?
+                refresh();
             }
         }
     }
@@ -294,8 +296,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             new MaterialDialog.InputCallback() {
                                 @Override
                                 public void onInput(MaterialDialog dialog, CharSequence input) {
-                                    String rideCode = input.toString();
-                                    onSubmitCode(rideCode);
+                                    mRideCode = input.toString();
+                                    onSubmitCode();
                                 }
                             }
 
@@ -310,11 +312,46 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     public void onCameraCV(View view) {
 
-        //String rideCode = ((TextView)findViewById(R.id.txtRideCode)).getText().toString();
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean bShowSelfieDescription = sharedPrefs.getBoolean(Globals.SHOW_SELFIE_DESC, true);
 
-        Intent intent = new Intent(this, CameraCVActivity.class);
-        //intent.putExtra("rideCode", rideCode);
-        startActivityForResult(intent, MAKE_PICTURE_REQUEST);
+        if( bShowSelfieDescription ) {
+
+            new MaterialDialog.Builder(this)
+                    .title(getString(R.string.selfie))
+                    .content(getString(R.string.selfie_content))
+                    .positiveText(R.string.ok)
+                    .negativeText(R.string.selfie_desc_not_show_again)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+
+                            Intent intent = new Intent(PassengerRoleActivity.this,
+                                                        CameraCVActivity.class);
+                            //intent.putExtra("RIDE_CODE", Globals.getRideCode());
+                            startActivityForResult(intent, MAKE_PICTURE_REQUEST);
+                        }
+
+                        @Override
+                        public void onNegative(MaterialDialog dialog) {
+
+                            SharedPreferences.Editor editor = sharedPrefs.edit();
+                            editor.putBoolean(Globals.SHOW_SELFIE_DESC, false);
+                            editor.apply();
+
+                            Intent intent = new Intent(PassengerRoleActivity.this,
+                                                        CameraCVActivity.class);
+                            startActivityForResult(intent, MAKE_PICTURE_REQUEST);
+                        }
+                    })
+                    .show();
+        } else {
+            Intent intent = new Intent(this, CameraCVActivity.class);
+            startActivityForResult(intent, MAKE_PICTURE_REQUEST);
+
+        }
+
+
     }
 
     //
@@ -381,7 +418,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .show();
         } else {
 
-            final String rideCode = driverDevice.getRideCode();
+            mRideCode = driverDevice.getRideCode();
 
             DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 
@@ -390,7 +427,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     if (which == DialogInterface.BUTTON_POSITIVE) {
 
                         findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
-                        onSubmitCode(rideCode);
+                        onSubmitCode();
                     }
                 }
             };
@@ -428,7 +465,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
     };
 
-    public void onSubmitCode(final String rideCode){
+    public void onSubmitCode(){
         final String android_id = Settings.Secure.getString(this.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         final View v = findViewById(R.id.passenger_internal_layout);
@@ -436,7 +473,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         new AsyncTask<Void, Void, Void>() {
 
             Exception mEx;
-//            MaterialDialog progress;
             LoadToast lt;
 
             @Override
@@ -450,17 +486,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 lt.setTranslationY(size.y / 2);
                 lt.show();
 
-//                progress = new MaterialDialog.Builder(PassengerRoleActivity.this)
-//                        .title(R.string.processing)
-//                        .content(R.string.please_wait)
-//                        .progress(true, 0)
-//                        .show();
             }
 
             @Override
             protected void onPostExecute(Void result){
-
-                //progress.dismiss();
 
                 // Prepare to play sound loud :)
                 AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -473,9 +502,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 if( mEx != null ) {
 
                     confirmEvent.putCustomAttribute("Success", 0);
-
-                    lt.error();
-                    beepError.start();
 
                     try{
                         MobileServiceException mse = (MobileServiceException)mEx.getCause();
@@ -491,10 +517,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         switch( responseCode ) {
                             case 409: // HTTP 'Conflict'
                                       // picture required
-                                // However, ride code was successfully validated,
-                                // so remember it for the future pictures
-                                Globals.setRideCode(rideCode);
+                                // Ride code was successfully validated,
+                                // but selfie is required
+
+                                lt.success();
+
                                 onCameraCV(null);
+
                                 break;
 
                             case 404: // HTTP 'Not found' means 'no such ride code'
@@ -502,12 +531,18 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 // try again with appropriate message
                                 showRideCodePane(R.string.ride_code_wrong,
                                                  Color.RED);
+                                lt.error();
+                                beepError.start();
+
                                 break;
 
                             case 503: // HTTP 'Service Unavailable' interpreted as 'Connection Lost'
                                 // Try again
                                 showRideCodePane(R.string.connection_lost,
                                                  Color.RED);
+                                lt.error();
+                                beepError.start();
+
                                 break;
                         }
                     } catch( Exception ex) {
@@ -539,7 +574,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 try{
                     Join _join  = new Join();
                     _join.setWhenJoined(new Date());
-                    _join.setRideCode(rideCode);
+                    _join.setRideCode(mRideCode);
                     _join.setDeviceId(android_id);
 
                     joinsTable.insert(_join).get();
@@ -556,25 +591,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 return null;
             }
         }.execute();
-    }
-
-    private void showSubmitCodeDialog() {
-        new MaterialDialog.Builder(this)
-                .title(R.string.ride_code_title)
-                .content(R.string.ride_code_dialog_content)
-                .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
-                .inputMaxLength(5)
-                .input(R.string.ride_code_hint,
-                        R.string.ride_code_refill,
-                        new MaterialDialog.InputCallback() {
-                            @Override
-                            public void onInput(MaterialDialog dialog, CharSequence input) {
-                                String rideCode = input.toString();
-                                onSubmitCode(rideCode);
-                            }
-                        }
-
-                ).show();
     }
 
     private void startAdvertise() {
@@ -649,6 +665,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             final MaterialDialog dialog = new MaterialDialog.Builder(this)
                     .title(R.string.passenger_progress_dialog)
                     .content(R.string.please_wait)
+                    .cancelable(false)
                     .autoDismiss(false)
                     .progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, showMinMax)
                     .show();

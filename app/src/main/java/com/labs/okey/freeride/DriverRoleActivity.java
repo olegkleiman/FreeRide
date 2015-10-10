@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
@@ -126,242 +127,48 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
+    MaterialDialog offlineDialog;
+
     @Override
     @CallSuper
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_role);
 
-        setupUI(getString(R.string.title_activity_driver_role), "");
-        wamsInit(true);
-
-        // Keep device awake when advertising fow Wi-Fi Direct
+        // Keep device awake when advertising for Wi-Fi Direct
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        settingsTable = getMobileServiceClient().getTable("globalsettings", GlobalSettings.class);
-//        new AsyncTask<Void, Void, Void>(){
-//
-//            Exception mEx;
-//            boolean mAppMode;
-//
-//            @Override
-//            protected void onPostExecute(Void result) {
-////                if( !mAppMode ) { // picture is not required by server
-////
-////                    prepareLayoutForDiscovery();
-////                    discoverPassengers();
-////
-////                } else {
-////                    mAdvertiseTask.execute();
-////                }
-//
-//            }
-//
-//            @Override
-//            protected Void doInBackground(Void... voids) {
-//
-//                try {
-//                    MobileServiceList<GlobalSettings> settings =
-//                            settingsTable.where().field("s_name").eq("app_mode").execute().get();
-//
-//                    if( settings.size() > 0 ) {
-//                        GlobalSettings _settings = settings.get(0);
-//
-//                        mAppMode = Boolean.parseBoolean(_settings.getValue());
-//                    }
-//                } catch(Exception ex) {
-//                    mEx = ex;
-//                }
-//
-//                return null;
-//            }
-//        }.execute();
+        offlineDialog = new MaterialDialog.Builder(this)
+                .title(R.string.offline)
+                .content(R.string.offline_prompt)
+                .autoDismiss(true)
+                .cancelable(false)
+                .positiveText(getString(R.string.try_again))
+                .callback(new MaterialDialog.ButtonCallback() {
+                    @Override
+                    public void onPositive(MaterialDialog dialog) {
 
-        ridesTable = getMobileServiceClient().getTable("rides", Ride.class);
-        mAdvertiseTask = new AsyncTask<Void, Void, Void>() {
-
-            Exception mEx;
-            Boolean mRequestSelfie;
-
-
-            @Override
-            protected void onPostExecute(Void result) {
-
-                if (mEx == null) {
-                    TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
-                    txtRideCodeCaption.setText(R.string.ride_code_label);
-                    TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
-                    txtRideCode.setVisibility(View.VISIBLE);
-
-                    String rideCode = mCurrentRide.getRideCode();
-                    txtRideCode.setText(rideCode);
-
-                    findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
-
-                    if (!mCurrentRide.isPictureRequired()) {
-                        mImageTransmit.setVisibility(View.VISIBLE);
-                        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
-                        animationDrawable.start();
-
-                        startAdvertise(getUser().getRegistrationId(),
-                                       getUser().getFullName(),
-                                       rideCode);
+                        if (!isConnectedToNetwork()) {
+                            getHandler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    offlineDialog.show();
+                                }
+                            }, 200);
+                        } else {
+                            setupNetwork();
+                        }
                     }
-                } else {
-                    Toast.makeText(DriverRoleActivity.this,
-                            mEx.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-                try {
-
-                    Ride ride = new Ride();
-                    ride.setCreated(new Date());
-                    ride.setCarNumber(mCarNumber);
-                    ride.setPictureRequiredByDriver(mRequestSelfie);
-                    mCurrentRide = ridesTable.insert(ride).get();
-
-                } catch (ExecutionException | InterruptedException ex) {
-                    mEx = ex;
-                    Log.e(LOG_TAG, ex.getMessage());
-                }
-
-                return null;
-            }
-        }.execute();
-
-        mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-
-                final List<User> passengers = Globals.getMyPassengers();
-
-                if( mLastPassengersLength != passengers.size() ) {
-
-                    mLastPassengersLength = passengers.size();
-
-                    // Update UI on UI thread
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mPassengers.clear();
-                            mPassengers.addAll(passengers);
-
-                            mPassengersAdapter.notifyDataSetChanged();
-
-                            if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
-                                FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
-                                Context ctx =  getApplicationContext();
-                                fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
-                            }
-
-                        }
-                    });
-
-                }
-
-            }
-        },
-        1, // 1-sec delay
-        2, // period between successive executions
-        TimeUnit.SECONDS);
-
-        List<String> _cars = new ArrayList<>();
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        Set<String> carsSet = sharedPrefs.getStringSet(Globals.CARS_PREF, new HashSet<String>());
-        if (carsSet != null) {
-            Iterator<String> iterator = carsSet.iterator();
-            while (iterator.hasNext()) {
-                String carNumber = iterator.next();
-                _cars.add(carNumber);
-            }
-        }
-
-        String[] cars = new String[_cars.size()];
-        cars = _cars.toArray(cars);
-
-        if (cars.length == 0) {
-            new MaterialDialog.Builder(this)
-                    .title(R.string.edit_car_dialog_caption2)
-                    .content(R.string.edit_car_dialog_text)
-                    .autoDismiss(true)
-                    .cancelable(false)
-                    .positiveText(getString(R.string.edit_car_button_title2))
-                    .callback(new MaterialDialog.ButtonCallback() {
-                        @Override
-                        public void onPositive(MaterialDialog dialog) {
-                            Intent intent = new Intent(getApplicationContext(),
-                                    SettingsActivity.class);
-                            startActivity(intent);
-                        }
-                    })
-                    .show();
-        } else if (cars.length > 1) {
-
-            new MaterialDialog.Builder(this)
-                    .title(R.string.edit_car_dialog_caption1)
-                    .autoDismiss(true)
-                    .cancelable(false)
-                    .items(cars)
-                    .positiveText(getString(R.string.edit_car_button_title))
-                    .itemsCallback(new MaterialDialog.ListCallback() {
-                        @Override
-                        public void onSelection(MaterialDialog dialog,
-                                                View view,
-                                                int which,
-                                                CharSequence text) {
-                            mCarNumber = text.toString();
-                        }
-                    })
-                    .callback(new MaterialDialog.ButtonCallback() {
-                        @Override
-                        public void onPositive(MaterialDialog dialog) {
-                            Intent intent = new Intent(getApplicationContext(),
-                                    SettingsActivity.class);
-                            startActivity(intent);
-                        }
-                    })
-                    .show();
-        } else {
-            mCarNumber = cars[0];
-        }
+                }).build();
 
         mWiFiUtil = new WiFiUtil(this);
         mWiFiUtil.deletePersistentGroups();
 
-        new Thread() {
-            @Override
-            public void run() {
+        setupUI(getString(R.string.title_activity_driver_role), "");
 
-                try {
-
-                    while (true) {
-
-                        runOnUiThread(new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                String message = Globals.isInGeofenceArea() ?
-                                        Globals.getMonitorStatus() :
-                                        getString(R.string.geofence_outside);
-
-                                mTxtMonitorStatus.setText(message);
-
-                            }
-                        });
-
-                        Thread.sleep(1000);
-                    }
-                } catch (InterruptedException ex) {
-                    Log.e(LOG_TAG, ex.getMessage());
-                }
-
-            }
-        }.start();
+        if( isConnectedToNetwork() ) {
+            setupNetwork();
+        }
     }
 
     private void prepareLayoutForDriverPictures() {
@@ -438,15 +245,30 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
-        mWiFiUtil.registerReceiver(this);
+        if( !isConnectedToNetwork() ) {
+            TextView txtRideCodeLabel =  (TextView)findViewById(R.id.code_label_caption);
+            txtRideCodeLabel.setText("");
+            offlineDialog.show();
+        }
+        else {
+            if( offlineDialog.isShowing() ) {
+                offlineDialog.dismiss();
+                setupNetwork();
+            }
+        }
+
+        if( mWiFiUtil != null )
+            mWiFiUtil.registerReceiver(this);
     }
 
     @Override
     @CallSuper
     public void onPause() {
 
-        mWiFiUtil.unregisterReceiver();
-        mWiFiUtil.stopDiscovery();
+        if( mWiFiUtil != null) {
+            mWiFiUtil.unregisterReceiver();
+            mWiFiUtil.stopDiscovery();
+        }
 
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
@@ -457,7 +279,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     protected void onStop() {
-        mWiFiUtil.removeGroup();
+        if( mWiFiUtil != null )
+            mWiFiUtil.removeGroup();
+
         super.onStop();
     }
 
@@ -588,6 +412,242 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     public void onConnected(Bundle bundle) {
         super.onConnected(bundle);
+    }
+
+    private void setupNetwork() {
+
+        wamsInit(true);
+
+        settingsTable = getMobileServiceClient().getTable("globalsettings", GlobalSettings.class);
+//        new AsyncTask<Void, Void, Void>(){
+//
+//            Exception mEx;
+//            boolean mAppMode;
+//
+//            @Override
+//            protected void onPostExecute(Void result) {
+////                if( !mAppMode ) { // picture is not required by server
+////
+////                    prepareLayoutForDiscovery();
+////                    discoverPassengers();
+////
+////                } else {
+////                    mAdvertiseTask.execute();
+////                }
+//
+//            }
+//
+//            @Override
+//            protected Void doInBackground(Void... voids) {
+//
+//                try {
+//                    MobileServiceList<GlobalSettings> settings =
+//                            settingsTable.where().field("s_name").eq("app_mode").execute().get();
+//
+//                    if( settings.size() > 0 ) {
+//                        GlobalSettings _settings = settings.get(0);
+//
+//                        mAppMode = Boolean.parseBoolean(_settings.getValue());
+//                    }
+//                } catch(Exception ex) {
+//                    mEx = ex;
+//                }
+//
+//                return null;
+//            }
+//        }.execute();
+
+        ridesTable = getMobileServiceClient().getTable("rides", Ride.class);
+        mAdvertiseTask = new AsyncTask<Void, Void, Void>() {
+
+            Exception mEx;
+            Boolean mRequestSelfie;
+
+            @Override
+            protected void onPreExecute() {
+                TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+                txtRideCodeCaption.setText(R.string.generating_ride_code);
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+
+                if (mEx == null) {
+                    TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+                    txtRideCodeCaption.setText(R.string.ride_code_label);
+                    TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+                    txtRideCode.setVisibility(View.VISIBLE);
+
+                    String rideCode = mCurrentRide.getRideCode();
+                    txtRideCode.setText(rideCode);
+
+                    findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
+
+                    if (!mCurrentRide.isPictureRequired()) {
+                        mImageTransmit.setVisibility(View.VISIBLE);
+                        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+                        animationDrawable.start();
+
+                        startAdvertise(getUser().getRegistrationId(),
+                                getUser().getFullName(),
+                                rideCode);
+                    }
+                } else {
+                    Toast.makeText(DriverRoleActivity.this,
+                            mEx.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+
+                    Ride ride = new Ride();
+                    ride.setCreated(new Date());
+                    ride.setCarNumber(mCarNumber);
+                    ride.setPictureRequiredByDriver(mRequestSelfie);
+                    mCurrentRide = ridesTable.insert(ride).get();
+
+                } catch (ExecutionException | InterruptedException ex) {
+                    mEx = ex;
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
+
+                return null;
+            }
+        }.execute();
+
+        mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
+                                                     @Override
+                                                     public void run() {
+
+                                                         Log.d(LOG_TAG, "Passengers checker timer");
+
+                                                         final List<User> passengers = Globals.getMyPassengers();
+
+                                                         if( mLastPassengersLength != passengers.size() ) {
+
+                                                             mLastPassengersLength = passengers.size();
+
+                                                             // Update UI on UI thread
+                                                             runOnUiThread(new Runnable() {
+                                                                 @Override
+                                                                 public void run() {
+                                                                     mPassengers.clear();
+                                                                     mPassengers.addAll(passengers);
+
+                                                                     mPassengersAdapter.notifyDataSetChanged();
+
+                                                                     if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
+                                                                         FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
+                                                                         Context ctx =  getApplicationContext();
+                                                                         fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+                                                                     }
+
+                                                                 }
+                                                             });
+
+                                                         }
+
+                                                     }
+                                                 },
+                1, // 1-sec delay
+                2, // period between successive executions
+                TimeUnit.SECONDS);
+
+        List<String> _cars = new ArrayList<>();
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        Set<String> carsSet = sharedPrefs.getStringSet(Globals.CARS_PREF, new HashSet<String>());
+        if (carsSet != null) {
+            Iterator<String> iterator = carsSet.iterator();
+            while (iterator.hasNext()) {
+                String carNumber = iterator.next();
+                _cars.add(carNumber);
+            }
+        }
+
+        String[] cars = new String[_cars.size()];
+        cars = _cars.toArray(cars);
+
+        if (cars.length == 0) {
+            new MaterialDialog.Builder(this)
+                    .title(R.string.edit_car_dialog_caption2)
+                    .content(R.string.edit_car_dialog_text)
+                    .autoDismiss(true)
+                    .cancelable(false)
+                    .positiveText(getString(R.string.edit_car_button_title2))
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            Intent intent = new Intent(getApplicationContext(),
+                                    SettingsActivity.class);
+                            startActivity(intent);
+                        }
+                    })
+                    .show();
+        } else if (cars.length > 1) {
+
+            new MaterialDialog.Builder(this)
+                    .title(R.string.edit_car_dialog_caption1)
+                    .autoDismiss(true)
+                    .cancelable(false)
+                    .items(cars)
+                    .positiveText(getString(R.string.edit_car_button_title))
+                    .itemsCallback(new MaterialDialog.ListCallback() {
+                        @Override
+                        public void onSelection(MaterialDialog dialog,
+                                                View view,
+                                                int which,
+                                                CharSequence text) {
+                            mCarNumber = text.toString();
+                        }
+                    })
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            Intent intent = new Intent(getApplicationContext(),
+                                    SettingsActivity.class);
+                            startActivity(intent);
+                        }
+                    })
+                    .show();
+        } else {
+            mCarNumber = cars[0];
+        }
+
+
+        new Thread() {
+            @Override
+            public void run() {
+
+                try {
+
+                    while (true) {
+
+                        runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                String message = Globals.isInGeofenceArea() ?
+                                        Globals.getMonitorStatus() :
+                                        getString(R.string.geofence_outside);
+
+                                mTxtMonitorStatus.setText(message);
+
+                            }
+                        });
+
+                        Thread.sleep(1000);
+                    }
+                } catch (InterruptedException ex) {
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
+
+            }
+        }.start();
+
     }
 
     @Override

@@ -132,10 +132,12 @@ public class Globals {
     // https://console.developers.google.com/project/third-apex-91200/settings
     public static final String SENDER_ID = "1041824085053";
 
+    // Names of shared preferences
     public static final String USERIDPREF = "userid";
     public static final String CARS_PREF = "cars";
     public static final String TOKENPREF = "accessToken";
     public static final String WAMSTOKENPREF = "wamsToken";
+    public static final String SHOW_SELFIE_DESC = "selfieDesc";
 
     private static Object lock2 = new Object();
     private static String MONITOR_STATUS;
@@ -233,7 +235,4 @@ public class Globals {
     public static int PASSENGER_ADVERTISING_PERIOD = 40;
     public static int DRIVER_DISCOVERY_PERIOD = 20;
 
-    private static String rideCode;
-    public static String getRideCode() { return rideCode; }
-    public static void setRideCode(String value) { rideCode = value; }
 }

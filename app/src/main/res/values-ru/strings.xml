@@ -120,6 +120,10 @@
     <string name="nofee_request_accepted">Ваш запрос принят</string>
 
     <!-- OpenCV -->
-    <string name="camera_directive_1">Подберите расстояние так, чтобы белый контур был постоянно виден вокруг вашего лица</string>
+    <string name="camera_directive_1">Смотрите на тот край телефона, где находится линза видеокамеры</string>
+    <string name="offline">Нет соединения с сетью</string>
+    <string name="offline_prompt">Подключите сеть</string>
+    <string name="detection_success">Проверка завершена успешно. Спасибо.</string>
+    <string name="selfie_desc_not_show_again">Я понял. Не показывать это сообщение снова.</string>
 
 </resources>
