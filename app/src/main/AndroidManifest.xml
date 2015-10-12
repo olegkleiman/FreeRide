@@ -84,7 +84,7 @@
             android:parentActivityName=".DriverRoleActivity"
             android:screenOrientation="landscape"
             android:configChanges="keyboardHidden|orientation"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         </activity>
 
         <activity
