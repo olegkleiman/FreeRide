@@ -3,10 +3,13 @@ package com.labs.okey.freeride;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
@@ -15,6 +18,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.OrientationEventListener;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
@@ -38,6 +42,7 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -70,8 +75,8 @@ public class CameraCVActivity extends Activity
     private String mRideCode = "73373";
     private UUID mFaceID;
 
-    private Mat                    mGray;
-    private Mat                    mMatTemplate;
+    private Mat     mGray;
+    private Mat     mMatTemplate;
 
     Scalar mCameraFontColor = new Scalar(255, 255, 255);
     String mCameraDirective;
@@ -81,6 +86,9 @@ public class CameraCVActivity extends Activity
 
     private FastCVCameraView mOpenCvCameraView;
     private TextView mTxtCameraMonitor;
+
+    OrientationEventListener mOrientationEventListener;
+    private int              mCurrentOrientation;
 
     private String createCascadeFile(int resourceId, String fileName) {
 
@@ -183,6 +191,22 @@ public class CameraCVActivity extends Activity
                 mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
             else
                 mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
+
+            mCurrentOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
+            mOrientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
+                @Override
+                public void onOrientationChanged(int degrees) {
+                    if( (degrees >= 45 && degrees <= 135)
+                            || (degrees >= 225 && degrees <= 315) )
+                        mCurrentOrientation = Configuration.ORIENTATION_LANDSCAPE;
+                    else
+                        mCurrentOrientation = Configuration.ORIENTATION_PORTRAIT;
+
+                }
+            };
+            if( mOrientationEventListener.canDetectOrientation() ) {
+                mOrientationEventListener.enable();
+            }
         }
 
         mCameraDirective = getString(R.string.camera_directive_1);
@@ -246,12 +270,22 @@ public class CameraCVActivity extends Activity
             Log.d(LOG_TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
 
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0,
-                    this,
-                    mLoaderCallback);
+                                    this,
+                                    mLoaderCallback);
         } else {
             Log.d(LOG_TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
+
+        if( mOrientationEventListener != null )
+            mOrientationEventListener.disable();
     }
 
     @Override
@@ -282,6 +316,7 @@ public class CameraCVActivity extends Activity
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+
         // input frame has RGBA format
         mGray = inputFrame.gray();
 
@@ -347,6 +382,8 @@ public class CameraCVActivity extends Activity
         mExecutionTime += (System.currentTimeMillis() - start);
         String msg = String.format("Executed for %d ms.", mExecutionTime / ++mFramesReceived);
         Log.d(LOG_TAG, msg);
+
+        System.gc();
 
         return mGray;
     }
