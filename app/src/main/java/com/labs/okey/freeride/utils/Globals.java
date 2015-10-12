@@ -7,9 +7,12 @@ import android.renderscript.Matrix4f;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
+import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
+import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
 
@@ -20,6 +23,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by Oleg Kleiman on 22-Aug-15.
@@ -58,6 +63,31 @@ public class Globals {
         }
     }
     public static final DrawMan drawMan = DManClassFactory.getDrawMan();
+
+    private static Boolean _monitorInitialized = false;
+    private static Boolean isMonitorInitialized() {
+        return _monitorInitialized;
+    }
+    public static void initializeMonitor(Context ctx){
+
+        if( isMonitorInitialized() )
+            return;
+
+        try {
+
+            Fabric.with(ctx, new Crashlytics());
+
+            User user = User.load(ctx);
+            Crashlytics.setUserIdentifier(user.getRegistrationId());
+            Crashlytics.setUserName(user.getFullName());
+            Crashlytics.setUserEmail(user.getEmail());
+
+            _monitorInitialized = true;
+
+        } catch(Exception e) {
+            Log.e("FR", e.getMessage());
+        }
+    }
 
     public static float PICTURE_CORNER_RADIUS = 20;
     public static float PICTURE_BORDER_WIDTH = 4;

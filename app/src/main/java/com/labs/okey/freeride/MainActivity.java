@@ -103,14 +103,6 @@ public class MainActivity extends BaseActivity
 //        faceapiUtils.dumpVerificationMatrix(mDepth);
 
         super.onCreate(savedInstanceState);
-        try {
-            Fabric.with(this, new Crashlytics());
-            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
-
-
-        } catch(Exception e) {
-            Log.e(LOG_TAG, e.getMessage());
-        }
 
         setContentView(R.layout.activity_main);
 
@@ -159,6 +151,10 @@ public class MainActivity extends BaseActivity
             }
 
             setupUI(getString(R.string.title_activity_main), "");
+
+            // Setup up Crashlytics as app monitor
+            Globals.initializeMonitor(this);
+            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
 
             //throw new RuntimeException("This is a test crash");
         }
