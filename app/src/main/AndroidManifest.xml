@@ -83,7 +83,6 @@
             android:label="@string/title_activity_camera_cv"
             android:parentActivityName=".DriverRoleActivity"
             android:screenOrientation="landscape"
-            android:configChanges="keyboardHidden|orientation"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         </activity>
 
