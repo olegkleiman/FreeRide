@@ -11,6 +11,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/objdetect.hpp>
+//#include <opencv2/gpu/gpu.hpp>
 #include <vector>
 
 #include "FastCVWrapper.h"
@@ -24,12 +25,14 @@
 
 using namespace std;
 using namespace cv;
+//using namespace cv::gpu;
 using namespace std::chrono;
 
 #define CVWRAPPER_LOG_TAG    "FR.CV"
 #ifdef _DEBUG
 
 #define DPRINTF(...)  __android_log_print(ANDROID_LOG_DEBUG,CVWRAPPER_LOG_TAG,__VA_ARGS__)
+
 #else
 #define DPRINTF(...)   //noop
 #endif
@@ -125,6 +128,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH; // See more these values
                                                                            // in FindTemplate
 
+        int height = mGrayChannel.rows;
+        int facesSize = cvRound(height * 0.4f);
+
         vector<Rect> faces;
         faceClassifier->detectMultiScale(mGrayChannel,
                                          faces,
@@ -135,7 +141,8 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
                                         // Set to higher than 3 (default) if you want more reliable eyes
                                         // even if many faces are not included
                                          flags,
-                                         Size(200, 200));
+                                         //Size(200, 200));
+                                         Size(facesSize, facesSize));
 
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
@@ -198,23 +205,49 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
         (JNIEnv *env, jclass jc,
          jlong thiz,
          jlong addrGray,
-         jlong addrTemplate)
+         jlong addrTemplate,
+         jint rotation)
 {
     Mat &mGrayChannel = *(Mat *)addrGray;
     Mat &templateMat = *(Mat *)addrTemplate;
 
+    int rows = mGrayChannel.rows;
+    int cols = mGrayChannel.cols;
+
+    DPRINTF("FindTemplate called. Rotation: %d", rotation);
+
     try {
         // Load face cascade
         Ptr<CascadeClassifier> faceClassifier = ((CascadeAggregator *)thiz)->FaceClassifier;
-        if( faceClassifier == NULL )
+        if( faceClassifier == NULL ) {
+            EPRINTF("Can not load face cascade");
             return false;
+        }
 
         // Load open eye cascade
         Ptr<CascadeClassifier> eyesCascade = ((CascadeAggregator *)thiz)->EyesClassifier;
-        if( eyesCascade == NULL )
+        if( eyesCascade == NULL ) {
+            EPRINTF("Can not load eye cascade");
             return false;
+        }
 
-        flip(mGrayChannel, mGrayChannel, 1);
+        flip(mGrayChannel, mGrayChannel, 1); // flip around y-axis: mirror
+        Mat tmpMat = mGrayChannel.clone();
+
+        // Rotation is a composition of a transpose and flip
+        //
+        // R(90) = F(x) * T
+        // R(-90) = F(y) * T
+        //
+        if( rotation == 1)  { // Configuration.ORIENTATION_PORTRAIT
+            // In portrait mode, matrix comes inverted relative to top-left corner.
+            // So we need to transpose the already flipped mat.
+            transpose(mGrayChannel, tmpMat);
+            //flip(tmpMat, tmpMat, -1); //transpose+flip(-1)=180
+        } else {
+            // In landscape mode, matrix comes just flipped.
+            // No additional processing is needed because it was flipped already
+         }
 
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
         // CASCADE_FIND_BIGGEST_OBJECT tells OpenCV to return only the largest object found
@@ -251,7 +284,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 
         // Detect face
         vector<Rect> faces;
-        faceClassifier->detectMultiScale(mGrayChannel,
+        int faceSize = (int)round(rows * 0.3f);
+
+        faceClassifier->detectMultiScale(tmpMat,
                                      faces,
                                      1.2, // How many different sizes of eye to look for
                                           // 1.1 is for good detection
@@ -260,17 +295,36 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                                          // Set to higher than 3 (default) if you want more reliable eyes
                                          // even if many faces are not included
                                       flags,
-                                      Size(200, 200));
-
+                                      Size(faceSize, faceSize));
 
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
             _faceRect = faces[0];
-            //DPRINTF("Face region: x: %d y: %d height: %d width: %d",
-            //        _rect.x, _rect.y, _rect.height, _rect.width);
-            rectangle(mGrayChannel, _faceRect,
-                      Scalar::all(255),
-                      1, 8, 0);
+            DPRINTF("Face region: x: %d y: %d height: %d width: %d",
+                    _faceRect.x, _faceRect.y, _faceRect.height, _faceRect.width);
+
+            Point tl;
+            Point br;
+
+            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
+                // Reverse transpose & flip
+                tl.x = _faceRect.tl().y; // y --> x
+                tl.y = _faceRect.tl().x; // x --> y
+
+                br.x = _faceRect.br().y; // y --> x
+                br.y = _faceRect.br().x; // x --> y
+            } else {
+                tl = _faceRect.tl();
+                br = _faceRect.br();
+            }
+
+            rectangle(mGrayChannel,
+                      tl, br,
+                      Scalar::all(255), 2);
+//            rectangle(mGrayChannel, _faceRect,
+//                      Scalar::all(255),
+//                      1, 8, 0);
+
 
             mGrayChannel(_faceRect).copyTo(roiFace);
             equalizeHist(roiFace, roiFace);
@@ -309,6 +363,8 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             }
 
         }
+
+        tmpMat.release();
 
     } catch(Exception ex) {
         jclass je = env->FindClass("org/opencv/core/CvException");

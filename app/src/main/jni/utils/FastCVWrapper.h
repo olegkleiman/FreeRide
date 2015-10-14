@@ -19,7 +19,8 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
         (JNIEnv *env, jclass jc,
          jlong thiz,
          jlong addrGray,
-         jlong addrTemplate);
+         jlong addrTemplate,
+         jint rotation);
 
 JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
         (JNIEnv *env, jclass jc,
