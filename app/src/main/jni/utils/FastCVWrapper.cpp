@@ -204,10 +204,12 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
 JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemplate
         (JNIEnv *env, jclass jc,
          jlong thiz,
+         jlong addrRgba,
          jlong addrGray,
          jlong addrTemplate,
          jint rotation)
 {
+    Mat &mRgbaChannel = *(Mat *)addrRgba;
     Mat &mGrayChannel = *(Mat *)addrGray;
     Mat &templateMat = *(Mat *)addrTemplate;
 
@@ -231,7 +233,13 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             return false;
         }
 
-        flip(mGrayChannel, mGrayChannel, 1); // flip around y-axis: mirror
+        // RGB matrix is used only for drawing found features' rectangles: faces, eyes
+        // Gray matrix is used for processing: it is transposed initially, if needed,
+        // and passed to cascade classifiers as input parameter.
+
+        flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
+        flip(mGrayChannel, mGrayChannel, 1);
+        equalizeHist(mGrayChannel, mGrayChannel);
         Mat tmpMat = mGrayChannel.clone();
 
         // Rotation is a composition of a transpose and flip
@@ -318,13 +326,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                 br = _faceRect.br();
             }
 
-            rectangle(mGrayChannel,
+            rectangle(mRgbaChannel,
                       tl, br,
                       Scalar::all(255), 2);
-//            rectangle(mGrayChannel, _faceRect,
-//                      Scalar::all(255),
-//                      1, 8, 0);
-
 
             mGrayChannel(_faceRect).copyTo(roiFace);
             equalizeHist(roiFace, roiFace);
