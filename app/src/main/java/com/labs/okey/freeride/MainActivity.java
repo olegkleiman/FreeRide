@@ -106,6 +106,9 @@ public class MainActivity extends BaseActivity
 
         setContentView(R.layout.activity_main);
 
+        // Setup up Crashlytics as app monitor
+        Globals.initializeMonitor(this);
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
         if( userRegistrationId.isEmpty() ) {
@@ -152,8 +155,6 @@ public class MainActivity extends BaseActivity
 
             setupUI(getString(R.string.title_activity_main), "");
 
-            // Setup up Crashlytics as app monitor
-            Globals.initializeMonitor(this);
             Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
 
             //throw new RuntimeException("This is a test crash");
