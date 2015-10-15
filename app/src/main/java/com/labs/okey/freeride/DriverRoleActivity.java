@@ -17,12 +17,14 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.annotation.CallSuper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -98,7 +100,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     Ride mCurrentRide;
 
     PassengersAdapter mPassengersAdapter;
-    private List<User> mPassengers = new ArrayList<>();
+    private ArrayList<User> mPassengers = new ArrayList<>();
     private int mLastPassengersLength;
 
     WiFiUtil mWiFiUtil;
@@ -110,8 +112,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     ImageView mImageTransmit;
 
-    private MobileServiceTable<Ride> ridesTable;
-    private MobileServiceTable<GlobalSettings> settingsTable;
+    private MobileServiceTable<Ride> mRidesTable;
+    private MobileServiceTable<GlobalSettings> mSettingsTable;
 
     CountDownTimer mDiscoveryTimer;
     ScheduledExecutorService mCheckPasengersTimer =
@@ -127,7 +129,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
-    MaterialDialog offlineDialog;
+    MaterialDialog mOfflineDialog;
 
     @Override
     @CallSuper
@@ -135,10 +137,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_role);
 
-        // Keep device awake when advertising for Wi-Fi Direct
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        offlineDialog = new MaterialDialog.Builder(this)
+        mOfflineDialog = new MaterialDialog.Builder(this)
                 .title(R.string.offline)
                 .content(R.string.offline_prompt)
                 .autoDismiss(true)
@@ -152,7 +151,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             getHandler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    offlineDialog.show();
+                                    mOfflineDialog.show();
                                 }
                             }, 200);
                         } else {
@@ -161,30 +160,89 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     }
                 }).build();
 
-        mWiFiUtil = new WiFiUtil(this);
-        mWiFiUtil.deletePersistentGroups();
+        // Keep device awake when advertising for Wi-Fi Direct
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
-        if( isConnectedToNetwork() ) {
-            setupNetwork();
+        if( savedInstanceState != null ) {
+
+            wamsInit();
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
+                String rideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+
+                TextView txtRideCode = (TextView)findViewById(R.id.txtRideCode);
+                txtRideCode.setVisibility(View.VISIBLE);
+                txtRideCode.setText(rideCode);
+
+                TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+                txtRideCodeCaption.setText(R.string.ride_code_label);
+
+                ImageView imageTransmit = (ImageView)findViewById(R.id.img_transmit);
+                imageTransmit.setVisibility(View.VISIBLE);
+                AnimationDrawable animationDrawable = (AnimationDrawable) imageTransmit.getDrawable();
+                animationDrawable.start();
+            }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_CURRENT_RIDE) ) {
+                mCurrentRide = savedInstanceState.getParcelable(Globals.PARCELABLE_CURRENT_RIDE);
+            }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS) ) {
+                ArrayList<User> passengers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
+                if( passengers != null ) {
+
+                    mPassengers.addAll(passengers);
+                    mPassengersAdapter.notifyDataSetChanged();
+
+                    for (User passenger : passengers) {
+                        Globals.addMyPassenger(passenger);
+                    }
+
+                    if (passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
+                        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+                        Context ctx = getApplicationContext();
+                        fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+                    }
+
+                }
+
+            }
+        } else {
+            if( isConnectedToNetwork() ) {
+                wamsInit();
+                setupNetwork();
+            }
         }
+
+        if( mWiFiUtil == null ) {
+            mWiFiUtil = new WiFiUtil(this);
+            mWiFiUtil.deletePersistentGroups();
+        }
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+        String rideCode = txtRideCode.getText().toString();
+
+        outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, rideCode);
+        outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
+
+        outState.putParcelable(Globals.PARCELABLE_CURRENT_RIDE, mCurrentRide);
+
+        super.onSaveInstanceState(outState);
     }
 
     private void prepareLayoutForDriverPictures() {
-//        TextView txtCaption = (TextView)findViewById(R.id.code_label_caption);
-//        txtCaption.setText(R.string.discover_devices);
-//
+
         findViewById(R.id.drive_internal_layout).setVisibility(View.GONE);
         findViewById(R.id.driver_status_layout).setVisibility(View.GONE);
         findViewById(R.id.status_strip).setVisibility(View.GONE);
-//        findViewById(R.id.img_transmit).setVisibility(View.GONE);
-//        findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
-//        findViewById(R.id.btnRefresh).setVisibility(View.GONE);
-//
+
         findViewById(R.id.cabin_background_layout).setVisibility(View.VISIBLE);
-//        findViewById(R.id.progress_refresh).setVisibility(View.VISIBLE);
-//
     }
 
 
@@ -248,11 +306,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( !isConnectedToNetwork() ) {
             TextView txtRideCodeLabel =  (TextView)findViewById(R.id.code_label_caption);
             txtRideCodeLabel.setText("");
-            offlineDialog.show();
+            mOfflineDialog.show();
         }
         else {
-            if( offlineDialog.isShowing() ) {
-                offlineDialog.dismiss();
+            if( mOfflineDialog.isShowing() ) {
+                mOfflineDialog.dismiss();
                 setupNetwork();
             }
         }
@@ -281,6 +339,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     protected void onStop() {
         if( mWiFiUtil != null )
             mWiFiUtil.removeGroup();
+
+        mOfflineDialog = null;
 
         super.onStop();
     }
@@ -350,7 +410,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             protected Void doInBackground(Void... voids) {
 
                 try {
-                    ridesTable.update(mCurrentRide).get();
+                    mRidesTable.update(mCurrentRide).get();
                 } catch (InterruptedException | ExecutionException e) {
                     Log.e(LOG_TAG, e.getMessage());
                 }
@@ -414,11 +474,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         super.onConnected(bundle);
     }
 
-    private void setupNetwork() {
+    private void wamsInit() {
 
         wamsInit(true);
 
-        settingsTable = getMobileServiceClient().getTable("globalsettings", GlobalSettings.class);
+        mSettingsTable = getMobileServiceClient().getTable("globalsettings", GlobalSettings.class);
+        mRidesTable = getMobileServiceClient().getTable("rides", Ride.class);
+    }
+
+    private void setupNetwork() {
+
 //        new AsyncTask<Void, Void, Void>(){
 //
 //            Exception mEx;
@@ -457,7 +522,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //            }
 //        }.execute();
 
-        ridesTable = getMobileServiceClient().getTable("rides", Ride.class);
+
         mAdvertiseTask = new AsyncTask<Void, Void, Void>() {
 
             Exception mEx;
@@ -507,7 +572,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     ride.setCreated(new Date());
                     ride.setCarNumber(mCarNumber);
                     ride.setPictureRequiredByDriver(mRequestSelfie);
-                    mCurrentRide = ridesTable.insert(ride).get();
+                    mCurrentRide = mRidesTable.insert(ride).get();
 
                 } catch (ExecutionException | InterruptedException ex) {
                     mEx = ex;
@@ -658,10 +723,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         mPeersRecyclerView = (RecyclerView) findViewById(R.id.recyclerViewPeers);
         mPeersRecyclerView.setHasFixedSize(true);
-        mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        Globals.LayoutManagerType passengerLayoutManagerType;
+
+        if( getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ) {
+            mPeersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            passengerLayoutManagerType = Globals.LayoutManagerType.LINEAR_LAYOUT_MANAGER;
+        }
+        else {
+            mPeersRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+            passengerLayoutManagerType = Globals.LayoutManagerType.GRID_LAYOUT_MANAGER;
+        }
+
         mPeersRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         mPassengersAdapter = new PassengersAdapter(this,
+                                            passengerLayoutManagerType,
                                             R.layout.peers_header,
                                             R.layout.row_passenger,
                                             mPassengers);

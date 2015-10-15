@@ -76,6 +76,7 @@ public class CameraCVActivity extends Activity
     private UUID mFaceID;
 
     private Mat     mGray;
+    private Mat     mRgba;
     private Mat     mMatTemplate;
 
     Scalar mCameraFontColor = new Scalar(255, 255, 255);
@@ -85,7 +86,6 @@ public class CameraCVActivity extends Activity
     FastCVWrapper mCVWrapper;
 
     private FastCVCameraView mOpenCvCameraView;
-    private TextView mTxtCameraMonitor;
 
     OrientationEventListener mOrientationEventListener;
     private int              mCurrentOrientation;
@@ -212,7 +212,6 @@ public class CameraCVActivity extends Activity
         mCameraDirective = getString(R.string.camera_directive_1);
         mCameraDirective2 = getString(R.string.camera_directive_2);
 
-        mTxtCameraMonitor = (TextView) findViewById(R.id.detection_monitor);
     }
 
     @Override
@@ -290,13 +289,14 @@ public class CameraCVActivity extends Activity
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        //mRgba = new Mat(height, width, CvType.CV_8UC4);
+        mRgba = new Mat(height, width, CvType.CV_8UC4);
         mGray = new Mat(height, width, CvType.CV_8UC1);
         mMatTemplate = new Mat(height, width, CvType.CV_8UC1);
     }
 
     @Override
     public void onCameraViewStopped() {
+        mRgba.release();
         mGray.release();
         mMatTemplate.release();
     }
@@ -318,15 +318,21 @@ public class CameraCVActivity extends Activity
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
         // input frame has RGBA format
+        mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
+        //Log.d(LOG_TAG, String.format("Channel rows: %d cols: %d", mGray.rows(), mGray.cols()));
 
         long start = System.currentTimeMillis();
 
         try {
 
             if( !bTemplateFound ) {
-                bTemplateFound = mCVWrapper.findTemplate(mGray.getNativeObjAddr(),
-                                                         mMatTemplate.getNativeObjAddr());
+                bTemplateFound = mCVWrapper.findTemplate(mRgba.getNativeObjAddr(),
+                                                         mGray.getNativeObjAddr(),
+                                                         mMatTemplate.getNativeObjAddr(),
+                                                         mCurrentOrientation);
+                // TODO: For tests only! Remove it from here.
+                bTemplateFound = false;
                 if( bTemplateFound ) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -335,7 +341,6 @@ public class CameraCVActivity extends Activity
                                                             mMatTemplate.rows(),
                                                             Bitmap.Config.ARGB_8888);
                             Utils.matToBitmap(mMatTemplate, bmp);
-                            mTxtCameraMonitor.setText(mCameraDirective2);
 
                             ImageView imgView = (ImageView)findViewById(R.id.imageViewTemplate);
                             imgView.setImageBitmap(bmp);
@@ -383,9 +388,10 @@ public class CameraCVActivity extends Activity
         String msg = String.format("Executed for %d ms.", mExecutionTime / ++mFramesReceived);
         Log.d(LOG_TAG, msg);
 
-        System.gc();
+        //tmpMat.release();
 
-        return mGray;
+        System.gc();
+        return mRgba;
     }
 
     public void makeFrame(View view){
