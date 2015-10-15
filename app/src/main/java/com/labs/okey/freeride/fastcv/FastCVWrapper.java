@@ -14,8 +14,8 @@ public class FastCVWrapper {
         mNativeObj = nativeCreateObject(faceCascadeFilePath, eyesCascadeFilePath);
     }
 
-    public boolean findTemplate(long matAddrGray, long matAddrTemplate) {
-        return FindTemplate(mNativeObj, matAddrGray, matAddrTemplate);
+    public boolean findTemplate(long matAddrRgba, long matAddrGray, long matAddrTemplate, int rotation) {
+        return FindTemplate(mNativeObj, matAddrRgba, matAddrGray, matAddrTemplate, rotation);
     }
     public boolean matchTemplate(long matAddrRgba) {
         return MatchTemplate(mNativeObj, matAddrRgba);
@@ -24,7 +24,7 @@ public class FastCVWrapper {
     // Internal native methods
 
     private native long nativeCreateObject(String faceCascadeFileName, String eyesCascadeFileName);
-    private native boolean FindTemplate(long thiz, long matAddrGrey, long matAddrTemplate);
+    private native boolean FindTemplate(long thiz, long matAddrRgba, long matAddrGrey, long matAddrTemplate, int rotation);
     private native boolean MatchTemplate(long thiz, long matAddrRgba);
     private native int DetectFaces(long matAddrRgba, String face_cascade_name);
 
