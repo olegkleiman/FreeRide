@@ -29,6 +29,11 @@ repositories {
 //        versionCode 4
 //        versionName "2.9"
 //    }
+//    sourceSets {
+//        main {
+//            jni.srcDirs = []
+//        }
+//    }
 //
 //    buildTypes {
 //

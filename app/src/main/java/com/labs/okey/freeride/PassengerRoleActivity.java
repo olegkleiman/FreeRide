@@ -50,6 +50,7 @@ import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.Join;
+import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.BLEUtil;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
@@ -95,9 +96,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     MobileServiceTable<Join> joinsTable;
 
     WiFiUtil mWiFiUtil;
-    BLEUtil mBLEUtil;
     WiFiPeersAdapter2 mDriversAdapter;
-    public List<WifiP2pDeviceUser> drivers = new ArrayList<>();
+    public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
 
     private Handler handler = new Handler(this);
     public Handler getHandler() {
@@ -114,8 +114,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         setContentView(R.layout.activity_passenger);
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
-        wamsInit(false); // without auto-update for this acivity
 
+        wamsInit(false); // without auto-update for this activity
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -154,17 +154,40 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
         }.start();
 
-        if( mRideCode == null
-            || mRideCode.isEmpty() ) {
-            // Start WiFi-Direct serviceDiscovery
-            // for (hopefully) already published service
-            mWiFiUtil = new WiFiUtil(this);
+        mWiFiUtil = new WiFiUtil(this);
 
-            // Start BLE advertising
-            mBLEUtil = new BLEUtil(this);
+        if( savedInstanceState != null ) {
 
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
+                mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+            }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVERS) ) {
+                ArrayList<WifiP2pDeviceUser> drivers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS);
+                if( drivers != null ) {
+
+                    mDrivers.addAll(drivers);
+                    mDriversAdapter.notifyDataSetChanged();
+                }
+            }
+        } else {
             refresh();
         }
+
+//        if( mRideCode == null
+//            || mRideCode.isEmpty() ) {
+//            // Start WiFi-Direct serviceDiscovery
+//            // for (hopefully) already published service
+//            mWiFiUtil = new WiFiUtil(this);
+//
+//            refresh();
+//        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, mRideCode);
+        outState.putParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS, mDrivers);
     }
 
     @UiThread
@@ -179,7 +202,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         mDriversAdapter = new WiFiPeersAdapter2(this,
                                     R.layout.drivers_header,
                                     R.layout.row_devices,
-                                    drivers);
+                                    mDrivers);
         driversRecycler.setAdapter(mDriversAdapter);
 
         mDriversShown = false;
@@ -207,9 +230,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.unregisterReceiver();
             mWiFiUtil.stopDiscovery();
         }
-
-        if( mBLEUtil != null )
-            mBLEUtil.unregisterReceiver();
 
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
@@ -371,7 +391,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     //
     @Override
     public void clicked(View view, int position) {
-        WifiP2pDeviceUser driverDevice = drivers.get(position);
+        WifiP2pDeviceUser driverDevice = mDrivers.get(position);
 
         if( !Globals.isInGeofenceArea() ) {
             new MaterialDialog.Builder(this)
@@ -589,7 +609,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     @UiThread
     public void refresh() {
-        drivers.clear();
+        mDrivers.clear();
         mDriversAdapter.notifyDataSetChanged();
 
         final ImageButton btnRefresh = (ImageButton)findViewById(R.id.btnRefresh);
@@ -641,10 +661,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     Log.d(LOG_TAG,
                             String.format("CountDown tick. Remains %d Drivers size: %d",
-                                        millisUntilFinished, drivers.size()));
+                                        millisUntilFinished, mDrivers.size()));
 
 
-                    if (drivers.size() == 0)
+                    if (mDrivers.size() == 0)
                         dialog.incrementProgress(1);
                     else {
                         this.cancel();
@@ -654,7 +674,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 }
 
                 public void onFinish() {
-                    if (drivers.size() == 0)
+                    if (mDrivers.size() == 0)
                         showRideCodePane(R.string.ride_code_dialog_content,
                                 Color.BLACK);
 

@@ -277,5 +277,9 @@ public class Globals {
     // Parcels
     public static String PARCELABLE_KEY_RIDE_CODE = "ride_code_key";
     public static String PARCELABLE_KEY_PASSENGERS = "passengers_key";
+    public static String PARCELABLE_KEY_DRIVERS = "drivers_key";
     public static String PARCELABLE_CURRENT_RIDE = "current_ride";
+
+    public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
+    public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";
 }
