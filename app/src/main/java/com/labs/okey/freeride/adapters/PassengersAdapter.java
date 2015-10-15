@@ -35,14 +35,17 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
 
     private List<User> items;
     private Context mContext;
+    private Globals.LayoutManagerType mManagerType;
     private int mHeaderLayoutId;
     private int mRowLayoutId;
 
     public PassengersAdapter(Context context,
+                             Globals.LayoutManagerType managerType,
                              int headerLayoutId,
                              int rowLayoutId,
                              List<User> objects){
         mContext = context;
+        mManagerType = managerType;
         mHeaderLayoutId = headerLayoutId;
         mRowLayoutId = rowLayoutId;
         items = objects;
@@ -52,11 +55,18 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v;
 
-        if (viewType == TYPE_HEADER) { // Inflate header layout
-            v = LayoutInflater.
-                    from(parent.getContext()).
-                    inflate(mHeaderLayoutId, parent, false);
-        } else { // Inflate row layout
+        if( mManagerType == Globals.LayoutManagerType.LINEAR_LAYOUT_MANAGER ) {
+
+            if (viewType == TYPE_HEADER) { // Inflate header layout
+                v = LayoutInflater.
+                        from(parent.getContext()).
+                        inflate(mHeaderLayoutId, parent, false);
+            } else { // Inflate row layout
+                v = LayoutInflater.
+                        from(parent.getContext()).
+                        inflate(mRowLayoutId, parent, false);
+            }
+        } else {
             v = LayoutInflater.
                     from(parent.getContext()).
                     inflate(mRowLayoutId, parent, false);
@@ -76,7 +86,11 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
     public void onBindViewHolder(ViewHolder holder, int position) {
         if (holder.holderId == TYPE_ITEM) {
 
-            User passenger = items.get(position - 1);
+            int nPosition = ( mManagerType == Globals.LayoutManagerType.LINEAR_LAYOUT_MANAGER) ?
+                                position - 1 :
+                                position;
+
+            User passenger = items.get(nPosition);
 
             holder.txtDriverName.setText(passenger.getFullName());
 
@@ -88,7 +102,7 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
                 drawable = (Globals.drawMan.userDrawable(mContext,
                         userId,
                         pictureURL)).get(); // May be null because of pictureURL
-                // but handled in catch block
+                                            // but handled in catch block
                 if( drawable != null ) {
 
                     drawable = RoundedDrawable.fromDrawable(drawable);
@@ -111,7 +125,9 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
 
     @Override
     public int getItemCount() {
-        return items.size() + 1;  // +1 for header view
+        return ( mManagerType == Globals.LayoutManagerType.LINEAR_LAYOUT_MANAGER) ?
+                items.size() + 1 :  // +1 for header view
+                items.size();
     }
 
     // With the following method we check what type of view is being passed
@@ -121,7 +137,10 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
     @Override
     public int getItemViewType(int position) {
 
-        return( isPositionHeader(position) ) ? TYPE_HEADER : TYPE_ITEM;
+        if( mManagerType == Globals.LayoutManagerType.LINEAR_LAYOUT_MANAGER )
+            return( isPositionHeader(position) ) ? TYPE_HEADER : TYPE_ITEM;
+        else
+            return TYPE_ITEM;
     }
 
     private boolean isPositionHeader(int position) {
