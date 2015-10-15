@@ -2,6 +2,8 @@ package com.labs.okey.freeride.model;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 
 import com.labs.okey.freeride.utils.Globals;
@@ -10,7 +12,7 @@ import com.labs.okey.freeride.utils.Globals;
 /**
  * Created by Oleg Kleiman on 11-Apr-15.
  */
-public class User {
+public class User implements Parcelable {
 
     @com.google.gson.annotations.SerializedName("id")
     public String Id;
@@ -70,6 +72,10 @@ public class User {
     public String getDeviceId() { return deviceId; }
     public void setDeviceId(String value) { this.deviceId = value; }
 
+    public User() {
+
+    }
+
     public static User load(Context context) {
 
         User _user = new User();
@@ -106,4 +112,36 @@ public class User {
 
         editor.apply();
     }
+
+    //
+    // Implementation of Parcelable
+    //
+
+    private User(Parcel in) {
+        setFirstName( in.readString() );
+        setLastName(  in.readString() );
+        setRegistrationId( in.readString() );
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(getFirstName());
+        parcel.writeString(getLastName());
+        parcel.writeString(getRegistrationId());
+    }
+
+    public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {
+        public User createFromParcel(Parcel in) {
+            return new User(in);
+        }
+
+        public User[] newArray(int size) {
+            return new User[size];
+        }
+    };
 }

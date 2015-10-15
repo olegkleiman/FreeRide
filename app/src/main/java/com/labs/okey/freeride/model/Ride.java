@@ -1,17 +1,22 @@
 package com.labs.okey.freeride.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.Expose;
 import com.labs.okey.freeride.utils.Globals;
 
 import org.opencv.ml.Boost;
 
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Created by Oleg Kleiman on 13-Apr-15.
  */
-public class Ride implements Serializable  {
+public class Ride implements Serializable, Parcelable {
 
     public Ride(){
         driverName = "";
@@ -78,4 +83,58 @@ public class Ride implements Serializable  {
         isPictureRequiredByDriver = value;
     }
 
+    //
+    // Implementation of Parcelable
+    //
+
+    private Ride(Parcel in) {
+
+        Id = in.readString();
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        String _dt = in.readString();
+        try {
+            setCreated(formatter.parse(_dt));
+        } catch(ParseException ex) {
+        }
+
+        setDriverId(in.readString());
+        setDriverName( in.readString() );
+        setCarNumber( in.readString() );
+        setRideCode( in.readString() );
+        setApproved(in.readInt());
+        isPictureRequired  = in.readByte() != 0;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+
+        parcel.writeString(Id);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        String created = formatter.format(getCreated());
+        parcel.writeString(created);
+
+        parcel.writeString(getDriverId());
+        parcel.writeString(getDriverName());
+        parcel.writeString(getCarNumber());
+        parcel.writeString(getRideCode());
+        parcel.writeInt(getApproved());
+        parcel.writeByte((byte) (isPictureRequired() ? 1: 0) );
+    }
+
+    public static final Parcelable.Creator<Ride> CREATOR = new Parcelable.Creator<Ride>() {
+        public Ride createFromParcel(Parcel in) {
+            return new Ride(in);
+        }
+
+        public Ride[] newArray(int size) {
+            return new Ride[size];
+        }
+    };
 }

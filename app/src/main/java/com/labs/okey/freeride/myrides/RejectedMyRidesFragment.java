@@ -18,6 +18,7 @@ import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -102,8 +103,7 @@ public class RejectedMyRidesFragment extends Fragment {
                 Ride currentRide = mRides.get(position);
                 Intent intent = new Intent(getActivity(), RideDetailsActivity.class);
 
-
-                intent.putExtra("ride",  currentRide);
+                intent.putExtra("ride", (Serializable)currentRide);
                 startActivity(intent);
             }
         });
