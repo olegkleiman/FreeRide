@@ -239,7 +239,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 
         flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
         flip(mGrayChannel, mGrayChannel, 1);
-        equalizeHist(mGrayChannel, mGrayChannel);
+        //equalizeHist(mGrayChannel, mGrayChannel);
         Mat tmpMat = mGrayChannel.clone();
 
         // Rotation is a composition of a transpose and flip
@@ -264,31 +264,52 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
         // This flag is used to terminate the search at whatever scale the first candidate is found.
 
         // Now detect open eyes
-//        vector<Rect> eyes;
-//        eyesCascade->detectMultiScale(mGrayChannel, eyes,
-//                                      1.2, // How many different sizes of eye to look for
-//                                           // 1.1 is for good detection
-//                                           // 1.2 for faster detection
-//                                      3, // Neighbors : how sure the detector should be that has detected eye.
-//                                         // Set to higher than 3 (default) if you want more reliable faces
-//                                         // even if many faces are not included
-//                                      flags,
-//                                      Size(140, 140));
-//            if( eyes.size() > 0 ) {
-////
-////                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
-////
-//                Rect _eyeRect = eyes[0];
-//                rectangle(mGrayChannel, _eyeRect, Scalar::all(255), 1, 8, 0);
-////
-////                    return true;
-////                }
-////
-////            } else { // we are looking for consecutive frames
-////                nFoundTemplateCounter = 0;
-//            }
+        vector<Rect> eyes;
+        eyesCascade->detectMultiScale(tmpMat, eyes,
+                                      1.2, // How many different sizes of eye to look for
+                                           // 1.1 is for good detection
+                                           // 1.2 for faster detection
+                                      3, // Neighbors : how sure the detector should be that has detected eye.
+                                         // Set to higher than 3 (default) if you want more reliable faces
+                                         // even if many faces are not included
+                                      flags,
+                                      Size(140, 140));
+            if( eyes.size() > 0 ) {
+                DPRINTF("Eye(s) detected");
 //
-//        return false;
+//                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
+//
+                Rect _eyeRect = eyes[0];
+
+                Point tl;
+                Point br;
+
+                if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
+                    // Reverse transpose & flip
+                    tl.x = _eyeRect.tl().y; // y --> x
+                    tl.y = _eyeRect.tl().x; // x --> y
+
+                    br.x = _eyeRect.br().y; // y --> x
+                    br.y = _eyeRect.br().x; // x --> y
+                } else {
+                    tl = _eyeRect.tl();
+                    br = _eyeRect.br();
+                }
+
+                //rectangle(mRgbaChannel, _eyeRect, Scalar::all(255), 1, 8, 0);
+                rectangle(mRgbaChannel, tl, br,
+                          //Scalar::all(255),
+                          Scalar(0, 255, 0),
+                          2);
+//
+//                    return true;
+//                }
+//
+//            } else { // we are looking for consecutive frames
+//                nFoundTemplateCounter = 0;
+            }
+
+        return false;
 
         // Detect face
         vector<Rect> faces;
