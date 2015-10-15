@@ -51,6 +51,11 @@ public class Globals {
         WAITING
     }; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
 
+    public enum LayoutManagerType {
+        GRID_LAYOUT_MANAGER,
+        LINEAR_LAYOUT_MANAGER
+    }
+
     private static class DManClassFactory {
 
         static DrawMan drawMan;
@@ -119,10 +124,14 @@ public class Globals {
         }
     }
     public static void addMyPassenger(User passenger) {
-        _passengers.add(passenger);
+        synchronized (lockPassengers) {
+            _passengers.add(passenger);
+        }
     }
     public static void clearMyPassengers() {
-        _passengers.clear();
+        synchronized (lockPassengers) {
+            _passengers.clear();
+        }
     }
 
     static final public int SERVER_PORT = 4545;
@@ -265,4 +274,8 @@ public class Globals {
     public static int PASSENGER_ADVERTISING_PERIOD = 40;
     public static int DRIVER_DISCOVERY_PERIOD = 20;
 
+    // Parcels
+    public static String PARCELABLE_KEY_RIDE_CODE = "ride_code_key";
+    public static String PARCELABLE_KEY_PASSENGERS = "passengers_key";
+    public static String PARCELABLE_CURRENT_RIDE = "current_ride";
 }
