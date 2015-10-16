@@ -253,4 +253,7 @@ limitations under the License.</string>
     <string name="selfie">Selfie</string>
     <string name="selfie_content">You are about to make a self-picture. During a capturing, please look at camera lens while your face is shown on the screen and it is bounded by the rectangle</string>
     <string name="selfie_desc_not_show_again">I understood. Don\'t show again.</string>
+
+    <string name="appeal">appeal</string>
+    <string name="title_activity_camera_appeal">Appeal Activity</string>
 </resources>
