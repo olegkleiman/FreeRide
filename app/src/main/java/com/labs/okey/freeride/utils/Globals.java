@@ -90,7 +90,10 @@ public class Globals {
             _monitorInitialized = true;
 
         } catch(Exception e) {
-            Log.e("FR", e.getMessage());
+            String msg = e.getMessage();
+            if( msg == null )
+                msg = "Could not instantiate Crashlytics";
+            Log.e("FR", msg);
         }
     }
 
