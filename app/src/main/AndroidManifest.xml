@@ -118,7 +118,9 @@
             android:name=".RideDetailsActivity"
             android:label="@string/title_activity_ride_details" >
         </activity>
-
+        <activity android:name=".AppealCameraActivity"
+            android:label="@string/title_activity_camera_appeal" >
+        </activity>
         <receiver
             android:name="com.microsoft.windowsazure.notifications.NotificationsBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
