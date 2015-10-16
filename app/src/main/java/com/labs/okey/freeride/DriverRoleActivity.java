@@ -164,20 +164,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
+        boolean bInitializedBeforeRotation = false;
         if( savedInstanceState != null ) {
 
             wamsInit();
 
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_APPEAL_SHOWN) ) {
-
-                mAppealShown = savedInstanceState.getBoolean(Globals.PARCELABLE_APPEAL_SHOWN);
-                if( mAppealShown )
-                    findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
-                else
-                    findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
-            }
-
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
+                bInitializedBeforeRotation = true;
+
                 String rideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
 
                 TextView txtRideCode = (TextView)findViewById(R.id.txtRideCode);
@@ -194,10 +188,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_CURRENT_RIDE) ) {
+                bInitializedBeforeRotation = true;
                 mCurrentRide = savedInstanceState.getParcelable(Globals.PARCELABLE_CURRENT_RIDE);
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS) ) {
+                bInitializedBeforeRotation = true;
                 ArrayList<User> passengers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
                 if( passengers != null ) {
 
@@ -217,6 +213,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 }
 
             }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_APPEAL_SHOWN) ) {
+                bInitializedBeforeRotation = true;
+
+                mAppealShown = savedInstanceState.getBoolean(Globals.PARCELABLE_APPEAL_SHOWN);
+                if( mAppealShown )
+                    findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
+                else
+                    findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
+            }
+
+            if( !bInitializedBeforeRotation )
+                setupNetwork();
+
         } else {
             if( isConnectedToNetwork() ) {
                 wamsInit();
@@ -235,13 +245,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onSaveInstanceState(Bundle outState) {
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
         String rideCode = txtRideCode.getText().toString();
+        if( !rideCode.isEmpty() ) {
 
-        outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, rideCode);
-        outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
+            outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, rideCode);
+            outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
 
-        outState.putParcelable(Globals.PARCELABLE_CURRENT_RIDE, mCurrentRide);
+            outState.putParcelable(Globals.PARCELABLE_CURRENT_RIDE, mCurrentRide);
 
-        outState.putBoolean(Globals.PARCELABLE_APPEAL_SHOWN, mAppealShown);
+            outState.putBoolean(Globals.PARCELABLE_APPEAL_SHOWN, mAppealShown);
+        }
 
         super.onSaveInstanceState(outState);
     }

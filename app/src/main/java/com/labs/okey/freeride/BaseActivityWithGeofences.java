@@ -212,17 +212,21 @@ public class BaseActivityWithGeofences extends BaseActivity
     protected void onDestroy() {
 
         try {
-            LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(),
-                    this);
 
-            Globals.setInGeofenceArea(false);
-            Globals.setMonitorStatus("");
+            if( getGoogleApiClient().isConnected() ) {
 
-            LocationServices.GeofencingApi.removeGeofences(
-                    getGoogleApiClient(),
-                    // This is the same pending intent that was used in addGeofences().
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
+                LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(),
+                        this);
+
+                Globals.setInGeofenceArea(false);
+                Globals.setMonitorStatus("");
+
+                LocationServices.GeofencingApi.removeGeofences(
+                        getGoogleApiClient(),
+                        // This is the same pending intent that was used in addGeofences().
+                        getGeofencePendingIntent()
+                ).setResultCallback(this); // Result processed in onResult().
+            }
 
         } catch(IllegalStateException ex) { // Nothing special here :
             // it may happen if GoogleApiClient was not connected yet
