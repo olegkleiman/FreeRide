@@ -46,7 +46,8 @@ public class BaseActivityWithGeofences extends BaseActivity
     private MobileServiceSyncTable<GFence> mGFencesSyncTable;
 
     LocationRequest mLocationRequest;
-    Location mCurrentLocation;
+    private Location mCurrentLocation;
+    public Location getCurrentLocation() { return mCurrentLocation; }
     String mLastUpdateTime;
 
     @Override

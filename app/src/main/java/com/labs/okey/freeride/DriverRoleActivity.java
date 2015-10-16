@@ -4,11 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -17,8 +15,8 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -29,14 +27,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,7 +45,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.labs.okey.freeride.adapters.PassengersAdapter;
-import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.GlobalSettings;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
@@ -62,23 +58,22 @@ import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
-import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class DriverRoleActivity extends BaseActivityWithGeofences
@@ -97,6 +92,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private static final String LOG_TAG = "FR.Driver";
 
+    Uri uriPhotoAppeal;
     Ride mCurrentRide;
 
     PassengersAdapter mPassengersAdapter;
@@ -121,6 +117,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     AsyncTask<Void, Void, Void> mAdvertiseTask;
 
     final int WIFI_CONNECT_REQUEST = 100;// request code for starting WiFi connection
+    final int REQUEST_IMAGE_CAPTURE = 1000;
     // handled  in onActivityResult
 
     private Handler handler = new Handler(this);
@@ -130,6 +127,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     MaterialDialog mOfflineDialog;
+
+    private Boolean mAppealShown = false;
 
     @Override
     @CallSuper
@@ -168,6 +167,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( savedInstanceState != null ) {
 
             wamsInit();
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_APPEAL_SHOWN) ) {
+
+                mAppealShown = savedInstanceState.getBoolean(Globals.PARCELABLE_APPEAL_SHOWN);
+                if( mAppealShown )
+                    findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
+                else
+                    findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
+            }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
                 String rideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
@@ -232,6 +240,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
 
         outState.putParcelable(Globals.PARCELABLE_CURRENT_RIDE, mCurrentRide);
+
+        outState.putBoolean(Globals.PARCELABLE_APPEAL_SHOWN, mAppealShown);
 
         super.onSaveInstanceState(outState);
     }
@@ -309,8 +319,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mOfflineDialog.show();
         }
         else {
+
             if( mOfflineDialog.isShowing() ) {
                 mOfflineDialog.dismiss();
+
                 setupNetwork();
             }
         }
@@ -340,7 +352,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( mWiFiUtil != null )
             mWiFiUtil.removeGroup();
 
-        mOfflineDialog = null;
+        //mOfflineDialog = null;
 
         super.onStop();
     }
@@ -466,6 +478,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        if( id == R.id.action_appeal_camera )
+            onAppealCamera();
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -556,6 +571,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         startAdvertise(getUser().getRegistrationId(),
                                 getUser().getFullName(),
                                 rideCode);
+
+                        getHandler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+                                fab.setVisibility(View.VISIBLE);
+
+                                mAppealShown = true;
+
+                            }
+                        }, 5 * 1000);
                     }
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
@@ -572,7 +598,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     ride.setCreated(new Date());
                     ride.setCarNumber(mCarNumber);
                     ride.setPictureRequiredByDriver(mRequestSelfie);
-                    mCurrentRide = mRidesTable.insert(ride).get();
+                    if( mRidesTable != null ) {
+                        mCurrentRide = mRidesTable.insert(ride).get();
+                    } else {
+                        mEx = new Exception("No network");
+                    }
 
                 } catch (ExecutionException | InterruptedException ex) {
                     mEx = ex;
@@ -842,7 +872,80 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     //
     public void clicked(View view, int position) {
 
+    }
 
+    public void AppealCamera(){
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+
+            File photoFile = null;
+
+            try {
+                photoFile = createImageFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (photoFile != null) {
+
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+
+                startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+
+    public void onAppealCamera(){
+//        MaterialDialog.Builder builder = new MaterialDialog.Builder(getApplicationContext());
+//
+//        try {
+//
+//            builder.title(R.string.appeal)
+//                    .iconRes(R.drawable.ic_picture)
+//                    .positiveText(R.string.appeal_ok)
+//                    .negativeText(R.string.appeal_cancel)
+//                    .title(R.string.appeal);
+//
+//            LayoutInflater inflater = getLayoutInflater();
+//            builder.customView(inflater.inflate(R.layout.dialog_appeal, null),false);
+//
+//            builder.callback(new MaterialDialog.ButtonCallback() {
+//                @Override
+//                public void onPositive(MaterialDialog dialog) {
+//                    AppealCamera();
+//                }
+//            });
+//
+//            //TODO update from server the Globals.EMOJI_INDICATOR
+//            ImageView emoji = (ImageView) findViewById(R.id.appeal_emoji);
+//            String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
+//            int imageResource = getResources().getIdentifier(uri, null, null);
+//            emoji.setImageResource(imageResource);
+//
+//            builder.show();
+//        } catch (MaterialDialog.DialogException e) {
+//            // better that catch the exception here would be use handle to send events the activity
+//        }
+    }
+
+    private File createImageFile() throws IOException {
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String photoFileName = "AppealJPEG_" + timeStamp + "_";
+
+
+        File storageDir = getExternalFilesDir(null);
+
+        File photoFile = File.createTempFile(
+                photoFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        //mCurrentPhotoPath = "file:" + photoFile.getAbsolutePath();
+        uriPhotoAppeal = Uri.fromFile(photoFile);
+        return photoFile;
     }
 
     @Override
@@ -853,6 +956,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         FloatingActionButton passengerPicture = (FloatingActionButton)rootView.findViewWithTag(tag);
 
         switch(requestCode ){
+
+            case REQUEST_IMAGE_CAPTURE: {
+                if( resultCode == RESULT_OK) {
+//            ImageView imageViewAppeal = (ImageView) findViewById(R.id.imageViewAppeal);
+//            imageViewAppeal.setImageURI(uriPhoto);
+//
+////            Bundle extras = data.getExtras();
+////            Bitmap imageBitmap = (Bitmap) extras.get("data");
+////            imageViewAppeal.setImageBitmap(imageBitmap);
+                }
+            }
+            break;
+
             case WIFI_CONNECT_REQUEST: {
 
                 // if( resultCode == RESULT_OK ) {

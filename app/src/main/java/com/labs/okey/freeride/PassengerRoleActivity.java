@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -566,6 +567,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     _join.setWhenJoined(new Date());
                     _join.setRideCode(mRideCode);
                     _join.setDeviceId(android_id);
+
+                    try {
+                        Location loc = getCurrentLocation();
+                        if (loc != null) {
+                            _join.setLat((float) loc.getLatitude());
+                            _join.setLon((float) loc.getLongitude());
+                        }
+                    } catch (Exception e) {
+                        Log.e(LOG_TAG, e.getMessage());
+                    }
+                    // The rest of params are set within WAMS insert script
 
                     joinsTable.insert(_join).get();
 
