@@ -1,5 +1,7 @@
 package com.labs.okey.freeride.model;
 
+import com.google.gson.annotations.Expose;
+
 import java.util.Date;
 
 /**
@@ -9,6 +11,25 @@ public class Join {
 
     @com.google.gson.annotations.SerializedName("id")
     public String Id;
+
+    @Expose
+    @com.google.gson.annotations.SerializedName("lat")
+    private float lat;
+    public float getLat() { return lat; }
+    public void setLat(float value) { lat = value; }
+
+    @Expose
+    @com.google.gson.annotations.SerializedName("lon")
+    private float lon;
+    public float getLon() { return lon; }
+    public void setLon(float value) { lon = value; }
+
+    @com.google.gson.annotations.SerializedName("deviceid")
+    private String deviceId;
+    public String getDeviceId() { return deviceId; }
+    public void setDeviceId(String value){
+        deviceId = value;
+    }
 
     @com.google.gson.annotations.SerializedName("when_joined")
     private Date whenJoined;
@@ -28,12 +49,6 @@ public class Join {
         rideCode = value;
     }
 
-    @com.google.gson.annotations.SerializedName("deviceid")
-    private String deviceId;
-    public String getDeviceId() { return deviceId; }
-    public void setDeviceId(String value){
-        deviceId = value;
-    }
 
     @com.google.gson.annotations.SerializedName("picture_url")
     private String picture_url;
