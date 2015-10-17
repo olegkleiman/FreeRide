@@ -892,18 +892,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (intent.resolveActivity(getPackageManager()) != null) {
 
-            File photoFile = null;
-
             try {
-                photoFile = createImageFile();
+                uriPhotoAppeal = createImageFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            if (photoFile != null) {
+            if (uriPhotoAppeal != null) {
 
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
-
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhotoAppeal);
                 startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
             }
         }
@@ -943,23 +940,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    private File createImageFile() throws IOException {
+    public void onClickGoTutorial(View view){
+
+    }
+
+    private Uri createImageFile() throws IOException {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String photoFileName = "AppealJPEG_" + timeStamp + "_";
 
-
         File storageDir = getExternalFilesDir(null);
 
         File photoFile = File.createTempFile(
-                photoFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
+                                        photoFileName,  /* prefix */
+                                        ".jpg",         /* suffix */
+                                        storageDir      /* directory */
         );
 
-        //mCurrentPhotoPath = "file:" + photoFile.getAbsolutePath();
-        uriPhotoAppeal = Uri.fromFile(photoFile);
-        return photoFile;
+        return Uri.fromFile(photoFile);
     }
 
     @Override
@@ -973,12 +971,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             case REQUEST_IMAGE_CAPTURE: {
                 if( resultCode == RESULT_OK) {
-//            ImageView imageViewAppeal = (ImageView) findViewById(R.id.imageViewAppeal);
-//            imageViewAppeal.setImageURI(uriPhoto);
-//
                     try {
-                        Bundle extras = data.getExtras();
-                        Bitmap imageBitmap = (Bitmap) extras.get("data");
+//                        Bundle extras = data.getExtras();
+//                        Bitmap imageBitmap = (Bitmap) extras.get("data");
                         //imageViewAppeal.setImageBitmap(imageBitmap);
                     } catch (Exception e) {
                         Log.e(LOG_TAG, e.getMessage());

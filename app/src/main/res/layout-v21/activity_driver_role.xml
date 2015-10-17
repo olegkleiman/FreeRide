@@ -40,7 +40,6 @@
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="@string/default_ride_code"
             android:layout_gravity="center"
             android:layout_marginStart="8dp"
             android:visibility="gone" />
@@ -103,7 +102,8 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
             android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp" />
+            android:layout_marginEnd="16dp"
+            android:visibility="gone" />
 
     </RelativeLayout>
 

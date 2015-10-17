@@ -23,7 +23,7 @@
             android:background="?attr/colorPrimary"
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
-            android:visibility="visible">
+            android:visibility="gone">
             <TextView
                 android:id="@+id/code_label_caption"
                 android:textColor="@color/white"
@@ -37,7 +37,6 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:text="@string/default_ride_code"
                 android:layout_gravity="center"
                 android:layout_marginStart="8dp"
                 android:layout_marginLeft="8dp"
@@ -59,7 +58,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/card_backpanel_height"
             android:background="?attr/colorPrimary"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <RelativeLayout
             android:id="@+id/drive_internal_layout"
@@ -73,7 +72,7 @@
             android:layout_marginRight="@dimen/card_horizontal_margin"
             android:layout_marginBottom="@dimen/driver_status_horizontal_margin"
             android:layout_marginTop="@dimen/negativeActionBarSize"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerViewPeers"
@@ -102,7 +101,8 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginBottom="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginRight="16dp"/>
+                android:layout_marginRight="16dp"
+                android:visibility="gone" />
 
         </RelativeLayout>
 
@@ -111,19 +111,18 @@
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/ColorBackground"
+            android:background="@color/gray"
             android:id="@+id/cabin_background_layout"
             android:layout_weight="0.5"
-            android:visibility="gone"
+            android:visibility="visible"
             android:clickable="false">
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_centerInParent="true"
+                android:layout_centerHorizontal="true"
                 android:id="@+id/centerImage"
                 android:contentDescription="@string/cabin_image_description"
-                android:src="@drawable/cabin_land"
-                android:scaleType="fitStart" />
+                android:src="@drawable/cabin_land" />
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/passenger1"
@@ -166,11 +165,11 @@
                 app:backgroundTint="@color/ColorAccent"
                 app:borderWidth="0dp"
                 android:onClick="onButtonPassengerCamera"
+                android:layout_marginRight="146dp"
+                android:layout_marginEnd="146dp"
                 android:layout_alignTop="@+id/passenger1"
                 android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginRight="110dp"
-                android:layout_marginEnd="110dp" />
+                android:layout_alignParentEnd="true" />
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/passenger3"
