@@ -332,7 +332,7 @@ public class CameraCVActivity extends Activity
                                                          mMatTemplate.getNativeObjAddr(),
                                                          mCurrentOrientation);
                 // TODO: For tests only! Remove it from here.
-                bTemplateFound = false;
+                //bTemplateFound = false;
                 if( bTemplateFound ) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -350,7 +350,9 @@ public class CameraCVActivity extends Activity
 
             }
             else {
-                bMatchFound = mCVWrapper.matchTemplate(mGray.getNativeObjAddr());
+                bMatchFound = mCVWrapper.matchTemplate(mRgba.getNativeObjAddr(),
+                                                       mGray.getNativeObjAddr(),
+                                                       mCurrentOrientation);
                 if (!isCheckerMatchTimerRunning()) {
                     mCheckMatchResultTimer.scheduleAtFixedRate(
                             new Runnable() {
