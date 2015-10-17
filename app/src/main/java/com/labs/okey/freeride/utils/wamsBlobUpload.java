@@ -20,7 +20,7 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 
 /**
- * Created by Oleg on 18-Aug-15.
+ * Created by Oleg Kleiman on 18-Aug-15.
  */
 public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
 
@@ -30,6 +30,7 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
     Exception error;
 
     Context mContext;
+    String  mContainerName;
     IPictureURLUpdater mUrlUpdater;
 
     ProgressDialog mProgressDialog;
@@ -39,7 +40,10 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
                     "AccountName=fastride;" +
                     "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
 
-    public wamsBlobUpload(Context ctx){
+    public wamsBlobUpload(Context ctx, String containerName){
+
+        mContainerName = containerName;
+
         mContext = ctx;
         if( ctx instanceof IPictureURLUpdater )
             mUrlUpdater = (IPictureURLUpdater)ctx;
@@ -67,12 +71,10 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
 
         File photoFile = params[0];
 
-        String containerName = "pictures";
-
         try {
             CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
             CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-            CloudBlobContainer container = blobClient.getContainerReference(containerName);
+            CloudBlobContainer container = blobClient.getContainerReference(mContainerName);
 
             String fileName = photoFile.getName();
 

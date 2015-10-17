@@ -56,6 +56,8 @@ public class Globals {
         LINEAR_LAYOUT_MANAGER
     }
 
+    public static int EMOJI_INDICATOR = 1;
+
     private static class DManClassFactory {
 
         static DrawMan drawMan;
