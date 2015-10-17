@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
@@ -909,36 +910,37 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     public void onAppealCamera(){
-//        MaterialDialog.Builder builder = new MaterialDialog.Builder(getApplicationContext());
-//
-//        try {
-//
-//            builder.title(R.string.appeal)
-//                    .iconRes(R.drawable.ic_picture)
-//                    .positiveText(R.string.appeal_ok)
-//                    .negativeText(R.string.appeal_cancel)
-//                    .title(R.string.appeal);
-//
-//            LayoutInflater inflater = getLayoutInflater();
-//            builder.customView(inflater.inflate(R.layout.dialog_appeal, null),false);
-//
-//            builder.callback(new MaterialDialog.ButtonCallback() {
-//                @Override
-//                public void onPositive(MaterialDialog dialog) {
-//                    AppealCamera();
-//                }
-//            });
-//
-//            //TODO update from server the Globals.EMOJI_INDICATOR
-//            ImageView emoji = (ImageView) findViewById(R.id.appeal_emoji);
-//            String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
-//            int imageResource = getResources().getIdentifier(uri, null, null);
-//            emoji.setImageResource(imageResource);
-//
-//            builder.show();
-//        } catch (MaterialDialog.DialogException e) {
-//            // better that catch the exception here would be use handle to send events the activity
-//        }
+
+        try {
+
+            MaterialDialog.Builder builder = new MaterialDialog.Builder(this)
+                    .title(R.string.appeal)
+                    .iconRes(R.drawable.ic_action_appeal)
+                    .positiveText(R.string.ok)
+                    .negativeText(R.string.cancel)
+                    .title(R.string.appeal);
+
+            View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal, null);
+            builder.customView(customDialog, false);
+
+            builder.callback(new MaterialDialog.ButtonCallback() {
+                @Override
+                public void onPositive(MaterialDialog dialog) {
+                    AppealCamera();
+                }
+            });
+
+            // TODO: update from server the Globals.EMOJI_INDICATOR
+            ImageView emoji = (ImageView)customDialog.findViewById(R.id.appeal_emoji);
+            String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
+            int imageResource = getResources().getIdentifier(uri, "id", this.getPackageName());
+            emoji.setImageResource(imageResource);
+
+            builder.show();
+        } catch (Exception e) {
+            Log.e(LOG_TAG, e.getMessage());
+            // better that catch the exception here would be use handle to send events the activity
+        }
     }
 
     private File createImageFile() throws IOException {
@@ -974,9 +976,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //            ImageView imageViewAppeal = (ImageView) findViewById(R.id.imageViewAppeal);
 //            imageViewAppeal.setImageURI(uriPhoto);
 //
-////            Bundle extras = data.getExtras();
-////            Bitmap imageBitmap = (Bitmap) extras.get("data");
-////            imageViewAppeal.setImageBitmap(imageBitmap);
+                    try {
+                        Bundle extras = data.getExtras();
+                        Bitmap imageBitmap = (Bitmap) extras.get("data");
+                        //imageViewAppeal.setImageBitmap(imageBitmap);
+                    } catch (Exception e) {
+                        Log.e(LOG_TAG, e.getMessage());
+                    }
                 }
             }
             break;
