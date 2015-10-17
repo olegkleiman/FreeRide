@@ -147,7 +147,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
         int facesSize = cvRound(height * 0.4f);
 
         vector<Rect> faces;
-        faceClassifier->detectMultiScale(mGrayChannel,
+        faceClassifier->detectMultiScale(tmpMat,
                                          faces,
                                          1.2, // How many different sizes of eye to look for
                                         // 1.1 is for good detection
@@ -161,13 +161,29 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
             Rect faceRect = faces[0];
+
+            Point tl;
+            Point br;
+
+            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
+                                 // Reverse transpose & flip
+                tl.x = faceRect.tl().y; // y --> x
+                tl.y = faceRect.tl().x; // x --> y
+
+                br.x = faceRect.br().y; // y --> x
+                br.y = faceRect.br().x; // x --> y
+            } else {
+                tl = faceRect.tl();
+                br = faceRect.br();
+            }
+
+            rectangle(mRgbaChannel, tl, br,
+                      Scalar(0, 255, 0),
+                      2);
+
             faceRect.width = faceRect.width / 2;
             Mat lRoiFace;
             mGrayChannel(faceRect).copyTo(lRoiFace);
-
-            rectangle(mRgbaChannel, faceRect,
-                      Scalar(0, 255, 0),
-                      2);
 
             Mat result;
             int result_cols = mGrayChannel.cols + roiTemplate.cols + 1;
@@ -179,7 +195,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
             matchTemplate(lRoiFace, roiTemplate, result, compare_method);
             normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
 
-            //DPRINTF("Templated match");
+            //DPRINTF("Template match");
 
             double minValue, maxValue;
             Point minLoc, maxLoc;
@@ -290,7 +306,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
                                       Size(140, 140));
         if( eyes.size() > 0 ) {
 
-            DPRINTF("Eye(s) detected. Cons. Frames: %d:", nFoundTemplateCounter);
+            //DPRINTF("Eye(s) detected. Cons. Frames: %d:", nFoundTemplateCounter);
             Rect _eyeRect = eyes[0];
 
             Point tl;
