@@ -168,8 +168,8 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemp
         faceClassifier->detectMultiScale(tmpMat,
                                          faces,
                                          1.2, // How many different sizes of eye to look for
-                                        // 1.1 is for good detection
-                                        // 1.2 for faster detection
+                                              // 1.1 is for good detection
+                                              // 1.2 for faster detection
                                          3, // Neighbors : how sure the detector should be that has detected face.
                                         // Set to higher than 3 (default) if you want more reliable eyes
                                         // even if many faces are not included
