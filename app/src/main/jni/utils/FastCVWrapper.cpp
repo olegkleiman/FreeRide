@@ -47,6 +47,9 @@ Rect _faceRect;
 int nFoundTemplateCounter = 0;
 const int CONSECUTIVE_TEMPLATE_COUNTER = 3;
 
+int nNotFoundFacesForMatch = 0;
+const int NO_FACES_FOR_MATCH = 5;
+
 int nFoundMatchCounter = 0;
 const int CONSECUTIVE_MATCH_COUNTER = 10;
 
@@ -76,6 +79,15 @@ struct CascadeAggregator {
         EyesClassifier->load(eyes_cascade_name);
     }
 };
+
+void throwJavaException(JNIEnv *env, const char *msg){
+
+    jclass je = env->FindClass("org/opencv/core/CvException");
+
+    if (!je)
+        je = env->FindClass("java/lang/Exception");
+    env->ThrowNew(je, msg);
+}
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -107,7 +119,13 @@ JNIEXPORT jlong JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_nativeC
 
 }
 
-JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
+//
+// Return: -1 - reset (no faces for 5 consecutive frames)
+//          0 - no match
+//          1 - match
+//
+
+JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
         (JNIEnv *env, jclass jc,
          jlong thiz,
          jlong addrRgba,
@@ -123,7 +141,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
         // Load face cascade
         Ptr<CascadeClassifier> faceClassifier = ((CascadeAggregator *)thiz)->FaceClassifier;
         if( faceClassifier == NULL )
-            return false;
+            return 0;
 
         flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
         flip(mGrayChannel, mGrayChannel, 1);
@@ -160,30 +178,41 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
 
         if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
 
-            Rect faceRect = faces[0];
+            DPRINTF("Face detected");
+
+            Rect _faceRect = faces[0];
 
             Point tl;
             Point br;
 
             if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
                                  // Reverse transpose & flip
-                tl.x = faceRect.tl().y; // y --> x
-                tl.y = faceRect.tl().x; // x --> y
+                tl.x = _faceRect.tl().y; // y --> x
+                tl.y = _faceRect.tl().x; // x --> y
 
-                br.x = faceRect.br().y; // y --> x
-                br.y = faceRect.br().x; // x --> y
+                br.x = _faceRect.br().y; // y --> x
+                br.y = _faceRect.br().x; // x --> y
             } else {
-                tl = faceRect.tl();
-                br = faceRect.br();
+                tl = _faceRect.tl();
+                br = _faceRect.br();
             }
 
-            rectangle(mRgbaChannel, tl, br,
-                      Scalar(0, 255, 0),
-                      2);
+            Rect faceRect = Rect(tl, br);
 
-            faceRect.width = faceRect.width / 2;
+            // Eyes are in top half of the face rectangle
+            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT {
+                faceRect.width = faceRect.width / 2;
+            } else {
+                faceRect.height = faceRect.height / 2;
+            }
+
+            rectangle(mRgbaChannel, faceRect,
+                      Scalar(0, 255, 0), 2);
+
             Mat lRoiFace;
-            mGrayChannel(faceRect).copyTo(lRoiFace);
+            // Should be:
+            //mGrayChannel(_faceRect).copyTo(roiFace);
+            tmpMat(_faceRect).copyTo(lRoiFace);
 
             Mat result;
             int result_cols = mGrayChannel.cols + roiTemplate.cols + 1;
@@ -195,7 +224,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
             matchTemplate(lRoiFace, roiTemplate, result, compare_method);
             normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
 
-            //DPRINTF("Template match");
+            DPRINTF("Template match");
 
             double minValue, maxValue;
             Point minLoc, maxLoc;
@@ -206,26 +235,29 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTem
             else // e.g. TM_CCOEFF_NORMED
                 matchLoc = maxLoc;
 
-            rectangle(mGrayChannel,
+            rectangle(mRgbaChannel,
                       Point(matchLoc.x + faceRect.x,
                             matchLoc.y + faceRect.y ),
                       Point(matchLoc.x + roiTemplate.cols + faceRect.x,
                             matchLoc.y + roiTemplate.rows + faceRect.y),
                       Scalar::all(255), 2, 8, 0);
-
-            if( ++nFoundMatchCounter > CONSECUTIVE_MATCH_COUNTER )
-                return true;
+//
+//            if( ++nFoundMatchCounter > CONSECUTIVE_MATCH_COUNTER )
+//                return 1;
 
         }
+//        else { // no faces found
+//            if (++nNotFoundFacesForMatch > NO_FACES_FOR_MATCH)
+//                return -1;
+//        }
 
-        return false;
+        return 0;
 
     } catch(Exception ex) {
-        jclass je = env->FindClass("org/opencv/core/CvException");
 
-        if (!je)
-            je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, ex.what());
+        const char *msg = ex.what();
+        DPRINTF(msg);
+        throwJavaException(env, msg);
 
         return false;
     }
@@ -313,7 +345,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             Point br;
 
             if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
-                // Reverse transpose & flip
+                                 // Reverse transpose & flip
                 tl.x = _eyeRect.tl().y; // y --> x
                 tl.y = _eyeRect.tl().x; // x --> y
 
@@ -331,8 +363,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
             if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
 
                 //Rect eyeRect = Rect(tl, br);
-                tmpMat(_eyeRect).copyTo(templateMat);
                 //tmpMat(eyeRect).copyTo(templateMat);
+                tmpMat(_eyeRect).copyTo(templateMat);
+                tmpMat(_eyeRect).copyTo(roiTemplate);
 
                 nFoundTemplateCounter = 0;
                 return true;
@@ -346,12 +379,10 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
 
         return false;
     } catch(Exception ex) {
-        DPRINTF(ex.what());
-        jclass je = env->FindClass("org/opencv/core/CvException");
 
-         if (!je)
-            je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, ex.what());
+        const char *msg = ex.what();
+        DPRINTF(msg);
+        throwJavaException(env, msg);
     }
 }
 
@@ -416,54 +447,6 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
         // Hence the number of objects returned will be either one ore none.
         // CASCADE_DO_ROUGH_SEARCH is used only with CASCADE_FIND_BIGGEST_OBJECT.
         // This flag is used to terminate the search at whatever scale the first candidate is found.
-
-        // Now detect open eyes
-//        vector<Rect> eyes;
-//        eyesCascade->detectMultiScale(tmpMat, eyes,
-//                                      1.2, // How many different sizes of eye to look for
-//                                           // 1.1 is for good detection
-//                                           // 1.2 for faster detection
-//                                      3, // Neighbors : how sure the detector should be that has detected eye.
-//                                         // Set to higher than 3 (default) if you want more reliable faces
-//                                         // even if many faces are not included
-//                                      flags,
-//                                      Size(140, 140));
-//            if( eyes.size() > 0 ) {
-//                DPRINTF("Eye(s) detected");
-////
-////                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
-////
-//                Rect _eyeRect = eyes[0];
-//
-//                Point tl;
-//                Point br;
-//
-//                if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
-//                    // Reverse transpose & flip
-//                    tl.x = _eyeRect.tl().y; // y --> x
-//                    tl.y = _eyeRect.tl().x; // x --> y
-//
-//                    br.x = _eyeRect.br().y; // y --> x
-//                    br.y = _eyeRect.br().x; // x --> y
-//                } else {
-//                    tl = _eyeRect.tl();
-//                    br = _eyeRect.br();
-//                }
-//
-//                //rectangle(mRgbaChannel, _eyeRect, Scalar::all(255), 1, 8, 0);
-//                rectangle(mRgbaChannel, tl, br,
-//                          //Scalar::all(255),
-//                          Scalar(0, 255, 0),
-//                          2);
-////
-////                    return true;
-////                }
-////
-////            } else { // we are looking for consecutive frames
-////                nFoundTemplateCounter = 0;
-//            }
-//
-//        return false;
 
         // Detect face
         vector<Rect> faces;
@@ -546,11 +529,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemp
         tmpMat.release();
 
     } catch(Exception ex) {
-        jclass je = env->FindClass("org/opencv/core/CvException");
-
-        if (!je)
-            je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, ex.what());
+        const char *msg = ex.what();
+        DPRINTF(msg);
+        throwJavaException(env, msg);
     }
 
     return false;
@@ -617,12 +598,10 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
 
         return 0;
 
-    } catch(Exception& e) {
-        jclass je = env->FindClass("org/opencv/core/CvException");
-
-        if(!je)
-            je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, e.what());
+    } catch(Exception &ex) {
+        const char *msg = ex.what();
+        DPRINTF(msg);
+        throwJavaException(env, msg);
     } catch( ... ) {
         jclass je = env->FindClass("org/opencv/core/Exception");
         env->ThrowNew(je, "Unknown exception in JNI:DetectFaces");
