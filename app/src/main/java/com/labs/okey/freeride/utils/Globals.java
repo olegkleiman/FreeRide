@@ -248,10 +248,10 @@ public class Globals {
         }
     }
 
-    public static  String CASCADE_URL = "http://maximum.azurewebsites.net/data/lbpcascades/lbpcascade_frontalface.xml";
+    public static  String CASCADE_URL = "http://maximum.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
     private static String CASCADE_PATH;
     public static void initCascadePath(Context ctx) {
-        String DEFAULT_CASCADE_NAME = "lbpcascade_frontalface.xml";
+        String DEFAULT_CASCADE_NAME = "haarcascade_frontalface_default.xml";
         File file = new File(ctx.getFilesDir(), DEFAULT_CASCADE_NAME);
         synchronized (lock ) {
             CASCADE_PATH = file.getAbsolutePath();
