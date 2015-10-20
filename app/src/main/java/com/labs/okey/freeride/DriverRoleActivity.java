@@ -71,6 +71,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -917,8 +918,25 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .negativeText(R.string.cancel)
                     .title(R.string.appeal);
 
+            builder.title(R.string.appeal)
+                    .iconRes(R.drawable.ic_picture)
+                    .positiveText(R.string.ok)
+                    .negativeText(R.string.cancel);
+
+
             View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal, null);
             builder.customView(customDialog, false);
+
+            if(Globals.EMOJI_INDICATOR == 0){
+                Globals.EMOJI_INDICATOR  =  new Random().nextInt(Globals.NUM_OF_EMOJI);
+            }
+
+            ImageView emoji = (ImageView)customDialog.findViewById(R.id.appeal_emoji);
+            String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
+            int imageResource = getResources().getIdentifier(uri, "id",  this.getPackageName());
+            emoji.setImageResource(imageResource);
+
+
 
             builder.callback(new MaterialDialog.ButtonCallback() {
                 @Override
@@ -927,13 +945,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 }
             });
 
-            // TODO: update from server the Globals.EMOJI_INDICATOR
-            ImageView emoji = (ImageView)customDialog.findViewById(R.id.appeal_emoji);
-            String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
-            int imageResource = getResources().getIdentifier(uri, "id", this.getPackageName());
-            emoji.setImageResource(imageResource);
-
             builder.show();
+
         } catch (Exception e) {
             Log.e(LOG_TAG, e.getMessage());
             // better that catch the exception here would be use handle to send events the activity
@@ -953,8 +966,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         File photoFile = File.createTempFile(
                                         photoFileName,  /* prefix */
-                                        ".jpg",         /* suffix */
-                                        storageDir      /* directory */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
         );
 
         return Uri.fromFile(photoFile);
@@ -972,9 +985,37 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             case REQUEST_IMAGE_CAPTURE: {
                 if( resultCode == RESULT_OK) {
                     try {
-//                        Bundle extras = data.getExtras();
-//                        Bitmap imageBitmap = (Bitmap) extras.get("data");
-                        //imageViewAppeal.setImageBitmap(imageBitmap);
+                        MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
+
+                        builder.title(R.string.appeal_answer)
+                                .iconRes(R.drawable.ic_picture)
+                                .positiveText(R.string.appeal_send)
+                                .negativeText(R.string.appeal_cancel)
+                                .neutralText(R.string.appeal_another_picture);
+
+
+                        View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal_answer, null);
+                        builder.customView(customDialog, false);
+
+                        ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
+                        imageViewAppeal.setImageURI(uriPhotoAppeal);
+
+
+                        builder.callback(new MaterialDialog.ButtonCallback() {
+                            @Override
+                            public void onPositive(MaterialDialog dialog) {
+                                sendAppeal();
+                            }
+
+
+                            @Override
+                            public void onNeutral(MaterialDialog dialog) {
+                                onAppealCamera();
+                            }
+                        });
+
+                        builder.show();
+
                     } catch (Exception e) {
                         Log.e(LOG_TAG, e.getMessage());
                     }
@@ -1012,6 +1053,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             break;
 
         }
+    }
+
+    public  void sendAppeal(){
+        //TODO:  need implementation
     }
 
     //
