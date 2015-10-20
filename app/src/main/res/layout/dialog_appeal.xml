@@ -2,27 +2,32 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 android:orientation="vertical"
 android:layout_width="wrap_content"
-android:layout_height="wrap_content">
+android:layout_height="wrap_content"
+    android:padding="@dimen/abc_action_bar_content_inset_material">
 
     <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-    <TextView
         android:layout_width="wrap_content"
-        android:layout_height="66dp"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:id="@+id/textView2"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="100">
 
-       />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="@string/appeal_take_picture"
+            android:id="@+id/textView2"
+
+            android:layout_weight="85" />
 
         <ImageView
             android:src="@drawable/attention_26"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
 
             android:contentDescription="@string/app_name"
+            android:layout_weight="15"
+            android:nestedScrollingEnabled="true"
             android:onClick="onClickGoTutorial" />
 
     </LinearLayout>
@@ -30,6 +35,7 @@ android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/appeal_emoji"
+        android:src="@drawable/emoji_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scaleType="center"
