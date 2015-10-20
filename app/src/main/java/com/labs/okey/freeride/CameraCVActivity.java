@@ -11,6 +11,8 @@ import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
 import android.support.v7.app.AppCompatActivity;
@@ -43,6 +45,7 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvException;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -68,9 +71,13 @@ import java.util.concurrent.TimeUnit;
 public class CameraCVActivity extends Activity
         implements CameraBridgeViewBase.CvCameraViewListener2,
                     Camera.PictureCallback,
-                    IPictureURLUpdater{
+                    IPictureURLUpdater,
+                    Handler.Callback {
 
     private static final String LOG_TAG = "FR.CV";
+
+    private Handler handle = new Handler(this);
+    public Handler getHandler() { return handle; }
 
     private String mRideCode = "73373";
     private UUID mFaceID;
@@ -129,37 +136,13 @@ public class CameraCVActivity extends Activity
 
                     System.loadLibrary("fastcvUtils");
 
-//                    try {
-                        //InputStream is = getResources().openRawResource(R.raw.haarcascade_smile);
-//                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
-//                        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-//                        File cascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
-//
-//                        FileOutputStream os = new FileOutputStream(cascadeFile);
-//                        byte[] buffer = new byte[4096];
-//                        int bytesRead;
-//                        while( (bytesRead = is.read(buffer)) != -1) {
-//                            os.write(buffer, 0, bytesRead);
-//                        }
-//
-//                        os.close();
-//                        is.close();
+                    String faceCascadeFilePath = createCascadeFile(R.raw.haarcascade_frontalface_default,
+                                                                "haarcascade_frontalface_default.xml");
+                    String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_eye,
+                                                                "haarcascade_eye.xml");
 
-                        //cascadeDir.delete();
-
-                        String faceCascadeFilePath = createCascadeFile(R.raw.lbpcascade_frontalface,
-                                                                    "lbpcascade_frontalface.xml");
-                        String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_righteye_2splits,
-                                                                        "haarcascade_righteye_2splits.xml");
-//                        String eyesCascadeFilePath = createCascadeFile(R.raw.haarcascade_eye,
-//                                                                   "haarcascade_eye.xml");
-
-                        mCVWrapper = new FastCVWrapper(faceCascadeFilePath,
-                                                       eyesCascadeFilePath);
-
-//                    } catch(IOException ex) {
-//                        Log.e(LOG_TAG, ex.getMessage());
-//                    }
+                    mCVWrapper = new FastCVWrapper(faceCascadeFilePath,
+                                                   eyesCascadeFilePath);
 
                     if( mOpenCvCameraView != null) {
                         mOpenCvCameraView.enableView();
@@ -301,11 +284,12 @@ public class CameraCVActivity extends Activity
         mMatTemplate.release();
     }
 
-    long mExecutionTime = 0;
-    long mFramesReceived = 0;
-
     boolean bTemplateFound = false;
-    boolean bMatchFound = false;
+    private boolean mbSearchInitialized = false;
+    int matchResult = 0; // Possible values: -1 - restart search (e.g. face is out of frame)
+                         //                  0 - no match
+                         //                  1 - match
+                         // Start with 'no match'
 
     ScheduledExecutorService mCheckMatchResultTimer =
             Executors.newScheduledThreadPool(1);
@@ -314,15 +298,95 @@ public class CameraCVActivity extends Activity
         return checkMatchRunning;
     }
 
+    private int initialEyesDetectedCounter = 0;
+    private int INITIAL_EYES = 3;
+    private int missedEyesCounter = 0;
+    private int MISSED_EYES = 3;
+
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+
+        long executionTime = 0L;
+        long start = System.currentTimeMillis();
+
+        // input frame has RGBA format
+        mRgba = inputFrame.rgba();
+        mGray = inputFrame.gray();
+
+        try {
+            Mat faceMat = new Mat();
+            if( mCVWrapper.DetectFace(mRgba.getNativeObjAddr(),
+                    mGray.getNativeObjAddr(),
+                    faceMat.getNativeObjAddr(),
+                    mCurrentOrientation) )
+            {
+                final Mat eyeMat = new Mat();
+                boolean bEyeFound = mCVWrapper.DetectEye(mRgba.getNativeObjAddr(),
+                                    faceMat.getNativeObjAddr(),
+                                    eyeMat.getNativeObjAddr(),
+                                    mCurrentOrientation);
+
+                if( !mbSearchInitialized ) {
+                    if( bEyeFound ) {
+
+                        if( ++initialEyesDetectedCounter >= INITIAL_EYES) {
+                            mbSearchInitialized = true;
+
+                            getHandler().post(new Runnable() {
+
+                                @Override
+                                public void run() {
+
+                                    if( mCurrentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+                                            Core.transpose(eyeMat, eyeMat);
+                                    }
+
+                                    Bitmap bmp = Bitmap.createBitmap(eyeMat.cols(),
+                                                                     eyeMat.rows(),
+                                                                     Bitmap.Config.ARGB_8888);
+                                    Utils.matToBitmap(eyeMat, bmp);
+
+                                    ImageView imgView = (ImageView)findViewById(R.id.imageViewTemplate);
+                                    imgView.setImageBitmap(bmp);
+                                }
+                            });
+                        }
+
+                    }
+                } else {
+                    if( !bEyeFound ) {
+
+                        if( ++missedEyesCounter >= MISSED_EYES ) {
+                            mOpenCvCameraView.stopPreview();
+                            sendToDetect(null);
+                        }
+
+                    }
+                }
+          }
+        } catch( Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
+
+
+        executionTime += (System.currentTimeMillis() - start);
+        String msg = String.format("Executed for %d ms.", executionTime);
+        Log.d(LOG_TAG, msg);
+
+        System.gc();
+        return mRgba;
+    }
+
+    //@Override
+    public Mat onCameraFrame2(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+
+        long executionTime = 0L;
+        long start = System.currentTimeMillis();
 
         // input frame has RGBA format
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
         //Log.d(LOG_TAG, String.format("Channel rows: %d cols: %d", mGray.rows(), mGray.cols()));
-
-        long start = System.currentTimeMillis();
 
         try {
 
@@ -350,31 +414,31 @@ public class CameraCVActivity extends Activity
 
             }
             else {
-                bMatchFound = mCVWrapper.matchTemplate(mRgba.getNativeObjAddr(),
+                matchResult = mCVWrapper.matchTemplate(mRgba.getNativeObjAddr(),
                                                        mGray.getNativeObjAddr(),
                                                        mCurrentOrientation);
-                if (!isCheckerMatchTimerRunning()) {
-                    mCheckMatchResultTimer.scheduleAtFixedRate(
-                            new Runnable() {
-                                               @Override
-                                               public void run() {
-                                                   Log.d(LOG_TAG, "Match checker");
-                                                   if (bMatchFound) {
-                                                       Log.d(LOG_TAG, "MATCH!!!");
-
-                                                       mCheckMatchResultTimer.shutdown();
-
-                                                       mOpenCvCameraView.stopPreview();
-                                                       sendToDetect(null);
-                                                   }
-                                               }
-                                            },
-                            0, // no delay
-                            1, // 1 sec period between successive executions
-                            TimeUnit.SECONDS);
-
-                    checkMatchRunning = true;
-                }
+//                if (!isCheckerMatchTimerRunning()) {
+//                    mCheckMatchResultTimer.scheduleAtFixedRate(
+//                            new Runnable() {
+//                                               @Override
+//                                               public void run() {
+//                                                   Log.d(LOG_TAG, "Match checker");
+//                                                   if( matchResult == 1 ) {
+//                                                       Log.d(LOG_TAG, "MATCH!!!");
+//
+//                                                       mCheckMatchResultTimer.shutdown();
+//
+//                                                       mOpenCvCameraView.stopPreview();
+//                                                       sendToDetect(null);
+//                                                   }
+//                                               }
+//                                            },
+//                            0, // no delay
+//                            1, // 1 sec period between successive executions
+//                            TimeUnit.SECONDS);
+//
+//                    checkMatchRunning = true;
+//                }
             }
 
 //            nFaces = mCVWrapper.DetectFaces(mGray.getNativeObjAddr(),
@@ -382,12 +446,12 @@ public class CameraCVActivity extends Activity
 
 
         }
-        catch (Exception ex) {
+        catch (CvException ex) {
             Log.e(LOG_TAG, ex.getMessage());
         }
 
-        mExecutionTime += (System.currentTimeMillis() - start);
-        String msg = String.format("Executed for %d ms.", mExecutionTime / ++mFramesReceived);
+        executionTime += (System.currentTimeMillis() - start);
+        String msg = String.format("Executed for %d ms.", executionTime);
         Log.d(LOG_TAG, msg);
 
         //tmpMat.release();
@@ -624,5 +688,10 @@ public class CameraCVActivity extends Activity
             restoreFromSendToDetect(null);
         else
             finish();
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        return true;
     }
 }

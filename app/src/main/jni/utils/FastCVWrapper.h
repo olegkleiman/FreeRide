@@ -34,6 +34,22 @@ JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFac
         (JNIEnv *env, jclass jc,
          jlong addrRgba, jstring face_cascade_name);
 
+JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFace
+        (JNIEnv *env, jclass jc,
+         jlong thiz,
+         jlong addrRgba,
+         jlong addrGray,
+         jlong addrFace,
+         jint rotation);
+
+JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEye
+        (JNIEnv *env, jclass jc,
+         jlong thiz,
+         jlong addrRgba,
+         jlong addrGray,
+         jlong addrEye,
+         jint rotation);
+
 #ifdef __cplusplus
 }
 #endif
