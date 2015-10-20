@@ -256,4 +256,8 @@ limitations under the License.</string>
     <string name="appeal">Appeal</string>
     <string name="title_activity_camera_appeal">Appeal Activity</string>
     <string name="appeal_take_picture">Take a picture with the next movement</string>
+    <string name="appeal_answer">appeal_answer</string>
+    <string name="appeal_send">appeal_send</string>
+    <string name="appeal_cancel">appeal_cancel</string>
+    <string name="appeal_another_picture">appeal_another_picture</string>
 </resources>
