@@ -57,6 +57,7 @@ public class Globals {
     }
 
     public static int EMOJI_INDICATOR = 1;
+    public static int NUM_OF_EMOJI = 7;
 
     private static class DManClassFactory {
 
