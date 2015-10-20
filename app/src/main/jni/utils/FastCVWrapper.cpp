@@ -54,6 +54,9 @@ const int NO_FACES_FOR_MATCH = 5;
 int nFoundMatchCounter = 0;
 const int CONSECUTIVE_MATCH_COUNTER = 10;
 
+int xShift = 0;
+int yShift = 0;
+
 //
 // Helper functions
 //
@@ -374,15 +377,22 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFa
 
                 br.x = _faceRect.br().y; // y --> x
                 br.y = _faceRect.br().x; // x --> y
+
+                xShift = _faceRect.x;
+                yShift = _faceRect.y;
+
             } else {
                 tl = _faceRect.tl();
                 br = _faceRect.br();
+
+                xShift = _faceRect.x;
+                yShift = _faceRect.y;
             }
 
             Rect faceRect = Rect(tl, br);
 
             rectangle(mRgbaChannel, faceRect,
-                      Scalar(0, 255, 0), 2);
+                      Scalar(0, 0, 255), 2);
 
             tmpMat(faceRect).copyTo(faceMat);
 
@@ -410,7 +420,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
 {
     Mat &mRgbaChannel = *(Mat *)addrRgba;
     Mat &mFaceChannel = *(Mat *)addrFace;
-    Mat &faceMat = *(Mat *)addrEye;
+    Mat &eyeMat = *(Mat *)addrEye;
 
 
     try {
@@ -426,25 +436,25 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
         // and passed to cascade classifiers as input parameter.
 
         flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
-        flip(mFaceChannel, mFaceChannel, 1);
+        //flip(mFaceChannel, mFaceChannel, 1);
         //equalizeHist(mGrayChannel, mGrayChannel);
         Mat tmpMat = mFaceChannel.clone();
-
-
-        // Rotation is a composition of a transpose and flip
-        //
-        // R(90) = F(x) * T
-        // R(-90) = F(y) * T
-        //
-        if( rotation == 1)  { // Configuration.ORIENTATION_PORTRAIT
-            // In portrait mode, matrix comes inverted relative to top-left corner.
-            // So we need to transpose the already flipped mat.
-            transpose(mFaceChannel, tmpMat);
-            //flip(tmpMat, tmpMat, -1); //transpose+flip(-1)=180
-        } else {
-            // In landscape mode, matrix comes just flipped.
-            // No additional processing is needed because it was flipped already
-        }
+//
+//
+//        // Rotation is a composition of a transpose and flip
+//        //
+//        // R(90) = F(x) * T
+//        // R(-90) = F(y) * T
+//        //
+//        if( rotation == 1)  { // Configuration.ORIENTATION_PORTRAIT
+//            // In portrait mode, matrix comes inverted relative to top-left corner.
+//            // So we need to transpose the already flipped mat.
+//            transpose(mFaceChannel, tmpMat);
+//            //flip(tmpMat, tmpMat, -1); //transpose+flip(-1)=180
+//        } else {
+//            // In landscape mode, matrix comes just flipped.
+//            // No additional processing is needed because it was flipped already
+//        }
 
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
         // CASCADE_FIND_BIGGEST_OBJECT tells OpenCV to return only the largest object found
@@ -473,21 +483,28 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
 
             if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
                 // Reverse transpose & flip
-                tl.x = _eyeRect.tl().y; // y --> x
-                tl.y = _eyeRect.tl().x; // x --> y
+                tl.x = yShift + _eyeRect.tl().y; // y --> x
+                tl.y = xShift + _eyeRect.tl().x; // x --> y
 
-                br.x = _eyeRect.br().y; // y --> x
-                br.y = _eyeRect.br().x; // x --> y
+                br.x = yShift + _eyeRect.br().y; // y --> x
+                br.y = xShift + _eyeRect.br().x; // x --> y
+
             } else {
-                tl = _eyeRect.tl();
-                br = _eyeRect.br();
+
+                tl.x = mRgbaChannel.cols - (xShift + _eyeRect.x);
+                tl.y = yShift + _eyeRect.y;
+
+                br.x = mRgbaChannel.cols - (xShift + _eyeRect.width + _eyeRect.x);
+                br.y = yShift + _eyeRect.height + _eyeRect.y;
             }
 
             rectangle(mRgbaChannel, tl, br,
                       Scalar(0, 255, 0),
                       2);
 
-            return true;
+            mFaceChannel(_eyeRect).copyTo(eyeMat);
+
+            return true; // TODO: for tests purporses only
         }
 
     } catch(Exception ex) {
