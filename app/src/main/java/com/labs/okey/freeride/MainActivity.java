@@ -116,7 +116,7 @@ public class MainActivity extends BaseActivity
             Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
             startActivityForResult(intent, REGISTER_USER_REQUEST);
 
-            Answers.getInstance().logCustom(new CustomEvent("Registration"));
+            Answers.getInstance().logCustom(new CustomEvent(getString(R.string.registration_answer_name)));
 
             // To be continued on onActivityResult()
 
