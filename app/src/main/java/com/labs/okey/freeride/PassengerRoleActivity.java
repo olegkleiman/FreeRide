@@ -487,7 +487,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 int sb2value = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value/2, 0);
 
-                CustomEvent confirmEvent = new CustomEvent("Passenger Confirmation");
+                CustomEvent confirmEvent = new CustomEvent(getString(R.string.passenger_confirmation_answer_name));
                 confirmEvent.putCustomAttribute("User", getUser().getFullName());
 
                 if( mEx != null ) {

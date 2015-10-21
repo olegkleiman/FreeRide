@@ -446,19 +446,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             @Override
             protected void onPostExecute(Void result){
 
-                CustomEvent requestEvent = new CustomEvent("No-fee request");
+                CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
                 requestEvent.putCustomAttribute("User", getUser().getFullName());
 
                 if( mEx != null ) {
 
-                    requestEvent.putCustomAttribute("Sent", 0);
+                    requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 0);
 
                     lt.error();
                     beepError.start();
                 }
                 else {
 
-                    requestEvent.putCustomAttribute("Sent", 1);
+                    requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 1);
 
                     lt.success();
                     beepSuccess.start();

@@ -48,6 +48,9 @@ int nFoundTemplateCounter = 0;
 const int CONSECUTIVE_TEMPLATE_COUNTER = 3;
 const int NO_EYE_PRESENT_COUNTER = 2;
 
+Scalar FACE_RECT_COLOR = Scalar(33, 150, 243);
+Scalar EYE_RECT_COLOR = Scalar(255, 64, 129);
+
 int nNotFoundFacesForMatch = 0;
 const int NO_FACES_FOR_MATCH = 5;
 
@@ -300,7 +303,7 @@ void fastMatch(Mat &src,        //
 JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFace
         (JNIEnv *env, jclass jc,
          jlong thiz,
-         jlong addrRgba,
+         jlong addrRgba, // assume it is flipped around y-axis
          jlong addrGray,
          jlong addrFace,
          jint rotation)
@@ -321,7 +324,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFa
         // Gray matrix is used for processing: it is transposed initially, if needed,
         // and passed to cascade classifiers as input parameter.
 
-        flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
+        //flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
         flip(mGrayChannel, mGrayChannel, 1);
         //equalizeHist(mGrayChannel, mGrayChannel);
         Mat tmpMat = mGrayChannel.clone();
@@ -381,20 +384,25 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFa
                 xShift = _faceRect.x;
                 yShift = _faceRect.y;
 
+                Rect faceRect = Rect(tl, br);
+                rectangle(mRgbaChannel, faceRect,
+                          FACE_RECT_COLOR, 2);
+
+                tmpMat(_faceRect).copyTo(faceMat);
+
             } else {
                 tl = _faceRect.tl();
                 br = _faceRect.br();
 
                 xShift = _faceRect.x;
                 yShift = _faceRect.y;
+
+                Rect faceRect = Rect(tl, br);
+                rectangle(mRgbaChannel, faceRect,
+                          FACE_RECT_COLOR, 2);
+
+                tmpMat(faceRect).copyTo(faceMat);
             }
-
-            Rect faceRect = Rect(tl, br);
-
-            rectangle(mRgbaChannel, faceRect,
-                      Scalar(0, 0, 255), 2);
-
-            tmpMat(faceRect).copyTo(faceMat);
 
             return true;
         }
@@ -435,26 +443,10 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
         // Gray matrix is used for processing: it is transposed initially, if needed,
         // and passed to cascade classifiers as input parameter.
 
-        flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
-        //flip(mFaceChannel, mFaceChannel, 1);
+        //flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
+        flip(mFaceChannel, mFaceChannel, 1);
         //equalizeHist(mGrayChannel, mGrayChannel);
         Mat tmpMat = mFaceChannel.clone();
-//
-//
-//        // Rotation is a composition of a transpose and flip
-//        //
-//        // R(90) = F(x) * T
-//        // R(-90) = F(y) * T
-//        //
-//        if( rotation == 1)  { // Configuration.ORIENTATION_PORTRAIT
-//            // In portrait mode, matrix comes inverted relative to top-left corner.
-//            // So we need to transpose the already flipped mat.
-//            transpose(mFaceChannel, tmpMat);
-//            //flip(tmpMat, tmpMat, -1); //transpose+flip(-1)=180
-//        } else {
-//            // In landscape mode, matrix comes just flipped.
-//            // No additional processing is needed because it was flipped already
-//        }
 
         int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
         // CASCADE_FIND_BIGGEST_OBJECT tells OpenCV to return only the largest object found
@@ -491,20 +483,19 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
 
             } else {
 
-                tl.x = mRgbaChannel.cols - (xShift + _eyeRect.x);
+                tl.x = xShift + _eyeRect.x;
                 tl.y = yShift + _eyeRect.y;
 
-                br.x = mRgbaChannel.cols - (xShift + _eyeRect.width + _eyeRect.x);
+                br.x = xShift + _eyeRect.width + _eyeRect.x;
                 br.y = yShift + _eyeRect.height + _eyeRect.y;
             }
 
             rectangle(mRgbaChannel, tl, br,
-                      Scalar(0, 255, 0),
-                      2);
+                      EYE_RECT_COLOR, 2);
 
             mFaceChannel(_eyeRect).copyTo(eyeMat);
 
-            return true; // TODO: for tests purporses only
+            return true;
         }
 
     } catch(Exception ex) {
@@ -516,510 +507,3 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
     return false;
 }
 
-//
-// Return: -1 - reset (no faces for 5 consecutive frames)
-//          0 - no match
-//          1 - match
-//
-
-JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate2
-        (JNIEnv *env, jclass jc,
-         jlong thiz,
-         jlong addrRgba,
-         jlong addrGray,
-         jint rotation)
-{
-
-    Mat &mRgbaChannel = *(Mat *)addrRgba;
-    Mat &mGrayChannel = *(Mat *) addrGray;
-
-    try {
-
-        // Load face cascade
-        Ptr<CascadeClassifier> faceClassifier = ((CascadeAggregator *)thiz)->FaceClassifier;
-        if( faceClassifier == NULL )
-            return 0;
-
-        flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
-        flip(mGrayChannel, mGrayChannel, 1);
-        Mat tmpMat = mGrayChannel.clone();
-
-        if( rotation == 1)  { // Configuration.ORIENTATION_PORTRAIT
-            // In portrait mode, matrix comes inverted relative to top-left corner.
-            // So we need to transpose the already flipped mat.
-            transpose(mGrayChannel, tmpMat);
-            //flip(tmpMat, tmpMat, -1); //transpose+flip(-1)=180
-        } else {
-            // In landscape mode, matrix comes just flipped.
-            // No additional processing is needed because it was flipped already
-        }
-
-        // Detect face
-        int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH; // See more these values
-                                                                           // in FindTemplate
-
-        int height = mGrayChannel.rows;
-        int facesSize = cvRound(height * 0.4f);
-
-        vector<Rect> faces;
-        faceClassifier->detectMultiScale(tmpMat,
-                                         faces,
-                                         1.2, // How many different sizes of eye to look for
-                                              // 1.1 is for good detection
-                                              // 1.2 for faster detection
-                                         3, // Neighbors : how sure the detector should be that has detected face.
-                                        // Set to higher than 3 (default) if you want more reliable eyes
-                                        // even if many faces are not included
-                                         flags,
-                                         Size(facesSize, facesSize));
-
-        if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
-
-            DPRINTF("Face detected");
-
-            Rect _faceRect = faces[0];
-
-            Point tl;
-            Point br;
-
-            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
-                                 // Reverse transpose & flip because the rectangle
-                                 // be shown on original (mRgbaChannel) matrix
-                tl.x = _faceRect.tl().y; // y --> x
-                tl.y = _faceRect.tl().x; // x --> y
-
-                br.x = _faceRect.br().y; // y --> x
-                br.y = _faceRect.br().x; // x --> y
-            } else {
-                tl = _faceRect.tl();
-                br = _faceRect.br();
-            }
-
-            Rect faceRect = Rect(tl, br);
-
-            // Eyes are in top half of the face rectangle
-            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT {
-                faceRect.width = faceRect.width / 2;
-            } else {
-                faceRect.height = faceRect.height / 2;
-            }
-
-            rectangle(mRgbaChannel, faceRect,
-                      Scalar(0, 255, 0), 2);
-
-//            Mat lRoiFace;
-//            // Should be:
-//            //mGrayChannel(_faceRect).copyTo(roiFace);
-//            tmpMat(_faceRect).copyTo(lRoiFace);
-//
-//            Mat result;
-//            int result_cols = mGrayChannel.cols + roiTemplate.cols + 1;
-//            int result_rows = mGrayChannel.rows + roiTemplate.rows + 1;
-//            result.create(result_rows, result_cols, CV_32FC1);
-//
-//            int compare_method = TM_CCOEFF_NORMED; //TM_SQDIFF;
-//
-//            matchTemplate(lRoiFace, roiTemplate, result, compare_method);
-//            normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
-//
-//            DPRINTF("Template match");
-//
-//            double minValue, maxValue;
-//            Point minLoc, maxLoc;
-//            Point matchLoc;
-//            minMaxLoc(result, &minValue, &maxValue, &minLoc, &maxLoc, Mat());
-//            if( compare_method == TM_SQDIFF || compare_method == TM_SQDIFF_NORMED)
-//                matchLoc = minLoc;
-//            else // e.g. TM_CCOEFF_NORMED
-//                matchLoc = maxLoc;
-//
-//            DPRINTF("matchLoc x: %d, y: %d. faceRect x: %d, y: %d ROI cols: %d, rows: %d",
-//                    matchLoc.x, matchLoc.y, faceRect.x, faceRect.y, roiTemplate.cols, roiTemplate.rows);
-//
-//            circle(mRgbaChannel,
-//                   Point(matchLoc.x + faceRect.x,
-//                         matchLoc.y + faceRect.y),
-//                   10, // radius
-//                   Scalar::all(255), 2, LINE_8);
-
-//            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT {
-//                rectangle(mRgbaChannel,
-//                          Point(matchLoc.y + faceRect.y,
-//                                matchLoc.x + faceRect.x),
-//                          Point(matchLoc.y + roiTemplate.rows + faceRect.y,
-//                                matchLoc.x + roiTemplate.cols + faceRect.x),
-//                          Scalar::all(255), 2, 8, 0);
-//            } else
-//                rectangle(mRgbaChannel,
-//                          Point(matchLoc.x + faceRect.x,
-//                                matchLoc.y + faceRect.y ),
-//                          Point(matchLoc.x + roiTemplate.cols + faceRect.x,
-//                                matchLoc.y + roiTemplate.rows + faceRect.y),
-//                          Scalar::all(255), 2, LINE_8, 0);
-//
-//            if( ++nFoundMatchCounter > CONSECUTIVE_MATCH_COUNTER )
-//                return 1;
-
-        }
-//        else { // no faces found
-//            if (++nNotFoundFacesForMatch > NO_FACES_FOR_MATCH)
-//                return -1;
-//        }
-
-        return 0;
-
-    } catch(Exception ex) {
-
-        const char *msg = ex.what();
-        DPRINTF(msg);
-        throwJavaException(env, msg);
-
-        return false;
-    }
-}
-
-JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemplate
-        (JNIEnv *env, jclass jc,
-         jlong thiz,
-         jlong addrRgba,
-         jlong addrGray,
-         jlong addrTemplate,
-         jint rotation)
-{
-    Mat &mRgbaChannel = *(Mat *)addrRgba;
-    Mat &mGrayChannel = *(Mat *)addrGray;
-    Mat &templateMat = *(Mat *)addrTemplate;
-
-    int rows = mGrayChannel.rows;
-    int cols = mGrayChannel.cols;
-
-    DPRINTF("FindTemplate called. Rotation: %d", rotation);
-
-    try {
-        // Load face cascade
-        Ptr<CascadeClassifier> faceClassifier = ((CascadeAggregator *)thiz)->FaceClassifier;
-        if( faceClassifier == NULL ) {
-            EPRINTF("Can not load face cascade");
-            return false;
-        }
-
-        // Load open eye cascade
-        Ptr<CascadeClassifier> eyesCascade = ((CascadeAggregator *)thiz)->EyesClassifier;
-        if( eyesCascade == NULL ) {
-            EPRINTF("Can not load eye cascade");
-            return false;
-        }
-
-        // RGB matrix is used only for drawing found features' rectangles: faces, eyes
-        // Gray matrix is used for processing: it is transposed initially, if needed,
-        // and passed to cascade classifiers as input parameter.
-
-        flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
-        flip(mGrayChannel, mGrayChannel, 1);
-        //equalizeHist(mGrayChannel, mGrayChannel);
-        Mat tmpMat = mGrayChannel.clone();
-
-        // Rotation is a composition of a transpose and flip
-        //
-        // R(90) = F(x) * T
-        // R(-90) = F(y) * T
-        //
-        if( rotation == 1)  { // Configuration.ORIENTATION_PORTRAIT
-            // In portrait mode, matrix comes inverted relative to top-left corner.
-            // So we need to transpose the already flipped mat.
-            transpose(mGrayChannel, tmpMat);
-            //flip(tmpMat, tmpMat, -1); //transpose+flip(-1)=180
-        } else {
-            // In landscape mode, matrix comes just flipped.
-            // No additional processing is needed because it was flipped already
-        }
-
-        int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
-        // CASCADE_FIND_BIGGEST_OBJECT tells OpenCV to return only the largest object found
-        // Hence the number of objects returned will be either one ore none.
-        // CASCADE_DO_ROUGH_SEARCH is used only with CASCADE_FIND_BIGGEST_OBJECT.
-        // This flag is used to terminate the search at whatever scale the first candidate is found.
-
-        // Now detect open eyes
-        vector<Rect> eyes;
-        eyesCascade->detectMultiScale(tmpMat, eyes,
-                                      1.2, // How many different sizes of eye to look for
-                                            // 1.1 is for good detection
-                                            // 1.2 for faster detection
-                                      3, // Neighbors : how sure the detector should be that has detected eye.
-                                         // Set to higher than 3 (default) if you want more reliable faces
-                                         // even if many faces are not included
-                                      flags,
-                                      Size(140, 140));
-        if( eyes.size() > 0 ) {
-
-            //DPRINTF("Eye(s) detected. Cons. Frames: %d:", nFoundTemplateCounter);
-            Rect _eyeRect = eyes[0];
-
-            Point tl;
-            Point br;
-
-            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
-                                 // Reverse transpose & flip
-                tl.x = _eyeRect.tl().y; // y --> x
-                tl.y = _eyeRect.tl().x; // x --> y
-
-                br.x = _eyeRect.br().y; // y --> x
-                br.y = _eyeRect.br().x; // x --> y
-            } else {
-                tl = _eyeRect.tl();
-                br = _eyeRect.br();
-            }
-
-            rectangle(mRgbaChannel, tl, br,
-                      Scalar(0, 255, 0),
-                      2);
-
-            if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
-
-                //Rect eyeRect = Rect(tl, br);
-                //tmpMat(eyeRect).copyTo(templateMat);
-                tmpMat(_eyeRect).copyTo(templateMat);
-                tmpMat(_eyeRect).copyTo(roiTemplate);
-
-                nFoundTemplateCounter = 0;
-                return true;
-            }
-
-
-        }  else { // we are looking for consecutive frames
-            nFoundTemplateCounter = 0;
-            DPRINTF("Reset");
-        }
-
-        return false;
-    } catch(Exception ex) {
-
-        const char *msg = ex.what();
-        DPRINTF(msg);
-        throwJavaException(env, msg);
-    }
-}
-
-JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemplateX
-        (JNIEnv *env, jclass jc,
-         jlong thiz,
-         jlong addrRgba,
-         jlong addrGray,
-         jlong addrTemplate,
-         jint rotation)
-{
-    Mat &mRgbaChannel = *(Mat *)addrRgba;
-    Mat &mGrayChannel = *(Mat *)addrGray;
-    Mat &templateMat = *(Mat *)addrTemplate;
-
-    int rows = mGrayChannel.rows;
-    int cols = mGrayChannel.cols;
-
-    DPRINTF("FindTemplate called. Rotation: %d", rotation);
-
-    try {
-        // Load face cascade
-        Ptr<CascadeClassifier> faceClassifier = ((CascadeAggregator *)thiz)->FaceClassifier;
-        if( faceClassifier == NULL ) {
-            EPRINTF("Can not load face cascade");
-            return false;
-        }
-
-        // Load open eye cascade
-        Ptr<CascadeClassifier> eyesCascade = ((CascadeAggregator *)thiz)->EyesClassifier;
-        if( eyesCascade == NULL ) {
-            EPRINTF("Can not load eye cascade");
-            return false;
-        }
-
-        // RGB matrix is used only for drawing found features' rectangles: faces, eyes
-        // Gray matrix is used for processing: it is transposed initially, if needed,
-        // and passed to cascade classifiers as input parameter.
-
-        flip(mRgbaChannel, mRgbaChannel, 1); // flip around y-axis: mirror
-        flip(mGrayChannel, mGrayChannel, 1);
-        //equalizeHist(mGrayChannel, mGrayChannel);
-        Mat tmpMat = mGrayChannel.clone();
-
-        // Rotation is a composition of a transpose and flip
-        //
-        // R(90) = F(x) * T
-        // R(-90) = F(y) * T
-        //
-        if( rotation == 1)  { // Configuration.ORIENTATION_PORTRAIT
-            // In portrait mode, matrix comes inverted relative to top-left corner.
-            // So we need to transpose the already flipped mat.
-            transpose(mGrayChannel, tmpMat);
-            //flip(tmpMat, tmpMat, -1); //transpose+flip(-1)=180
-        } else {
-            // In landscape mode, matrix comes just flipped.
-            // No additional processing is needed because it was flipped already
-         }
-
-        int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH;
-        // CASCADE_FIND_BIGGEST_OBJECT tells OpenCV to return only the largest object found
-        // Hence the number of objects returned will be either one ore none.
-        // CASCADE_DO_ROUGH_SEARCH is used only with CASCADE_FIND_BIGGEST_OBJECT.
-        // This flag is used to terminate the search at whatever scale the first candidate is found.
-
-        // Detect face
-        vector<Rect> faces;
-        int faceSize = (int)round(rows * 0.3f);
-
-        faceClassifier->detectMultiScale(tmpMat,
-                                     faces,
-                                     1.2, // How many different sizes of eye to look for
-                                          // 1.1 is for good detection
-                                          // 1.2 for faster detection
-                                      3, // Neighbors : how sure the detector should be that has detected face.
-                                         // Set to higher than 3 (default) if you want more reliable eyes
-                                         // even if many faces are not included
-                                      flags,
-                                      Size(faceSize, faceSize));
-
-        if( faces.size() > 0) { // only one region supposed to be found - see flags passed to detectMultiScale()
-
-            _faceRect = faces[0];
-            DPRINTF("Face region: x: %d y: %d height: %d width: %d",
-                    _faceRect.x, _faceRect.y, _faceRect.height, _faceRect.width);
-
-            Point tl;
-            Point br;
-
-            if( rotation == 1) { // Configuration.ORIENTATION_PORTRAIT
-                // Reverse transpose & flip
-                tl.x = _faceRect.tl().y; // y --> x
-                tl.y = _faceRect.tl().x; // x --> y
-
-                br.x = _faceRect.br().y; // y --> x
-                br.y = _faceRect.br().x; // x --> y
-            } else {
-                tl = _faceRect.tl();
-                br = _faceRect.br();
-            }
-
-            rectangle(mRgbaChannel,
-                      tl, br,
-                      Scalar::all(255), 2);
-
-            mGrayChannel(_faceRect).copyTo(roiFace);
-            equalizeHist(roiFace, roiFace);
-
-            // Now detect open eyes
-            vector<Rect> eyes;
-            eyesCascade->detectMultiScale(roiFace, eyes,
-                                        1.2,
-                                        3,
-                                        flags,
-                                        Size(120, 120));
-            if( eyes.size() > 0 ) {
-
-                DPRINTF("Eye(s) detected");
-
-                if( ++nFoundTemplateCounter > CONSECUTIVE_TEMPLATE_COUNTER ) {
-
-                    Rect _eyeRect = eyes[0];
-                    //DPRINTF("Eye region: x: %d y: %d height: %d width: %d",
-                    //        _eyeRect.x, _eyeRect.y, _eyeRect.height, _eyeRect.width);
-                    roiFace(_eyeRect).copyTo(roiTemplate);
-                    roiFace(_eyeRect).copyTo(templateMat);
-
-                    rectangle(mGrayChannel,
-                              Point(_faceRect.x + _eyeRect.x, _faceRect.y + _eyeRect.y),
-                              Point(_faceRect.x + _eyeRect.x + _eyeRect.width,
-                                    _faceRect .y + _eyeRect.y + _eyeRect.height),
-                              Scalar::all(240),
-                              1, 8, 0);
-
-                    return true;
-               }
-
-            } else { // we are looking for consecutive frames
-                nFoundTemplateCounter = 0;
-            }
-
-        }
-
-        tmpMat.release();
-
-    } catch(Exception ex) {
-        const char *msg = ex.what();
-        DPRINTF(msg);
-        throwJavaException(env, msg);
-    }
-
-    return false;
-}
-
-JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFaces
-        (JNIEnv *env, jclass jc, jlong addrGray, jstring face_cascade_name)
-{
-    try {
-
-        milliseconds start = duration_cast<milliseconds>(
-                system_clock::now().time_since_epoch());
-
-        CascadeClassifier face_cascade;
-        vector<Rect> faces;
-
-        const char *cascade_name = env->GetStringUTFChars(face_cascade_name, NULL);
-        ifstream f(cascade_name);
-        if( !f.good() ) {
-            DPRINTF("Can not access cascade file");
-            return 0;
-        }
-
-        if( !face_cascade.load(cascade_name) ) {
-            DPRINTF("Can not load cascade");
-            return 0;
-        }
-        env->ReleaseStringUTFChars(face_cascade_name, cascade_name);
-
-        Mat &mGrayChannel = *(Mat *)addrGray;
-
-        flip(mGrayChannel, mGrayChannel, 1);
-        //equalizeHist(mGrayChannel, mGrayChannel);
-
-        int flags = CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH; //0 | CV_HAAR_SCALE_IMAGE
-
-        face_cascade.detectMultiScale(mGrayChannel, faces,
-                                      1.1, // 1.1 is for good detection
-                                      // 1.2 for faster detection
-                                      2, // Neighbors
-                                      flags,
-                                      Size(40, 40));
-
-        int faces_size = faces.size();
-        if( faces_size > 0 ) {
-            DPRINTF("Detected %d faces", faces_size);
-
-            for(int i = 0; i < faces_size; i++) {
-                Rect _rect = faces[i];
-
-                rectangle(mGrayChannel, _rect,
-                          Scalar(255, 255, 255),
-                          1, 8, 0);
-            }
-        }
-
-        milliseconds finish = duration_cast<milliseconds>(
-                system_clock::now().time_since_epoch());
-
-        long long int dur = duration_cast<milliseconds>(finish - start).count();
-        DPRINTF("Frame processes for %llu", dur);
-
-        return faces_size;
-
-        return 0;
-
-    } catch(Exception &ex) {
-        const char *msg = ex.what();
-        DPRINTF(msg);
-        throwJavaException(env, msg);
-    } catch( ... ) {
-        jclass je = env->FindClass("org/opencv/core/Exception");
-        env->ThrowNew(je, "Unknown exception in JNI:DetectFaces");
-    }
-
-}

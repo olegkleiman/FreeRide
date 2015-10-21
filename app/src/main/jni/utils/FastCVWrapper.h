@@ -1,5 +1,5 @@
 //
-// Created by Oleg on 22-Aug-15.
+// Created by Oleg Kleiman on 22-Aug-15.
 //
 #include <jni.h>
 
@@ -14,25 +14,6 @@ JNIEXPORT jlong JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_nativeC
         (JNIEnv *env, jclass jc,
          jstring faceCascadeFileName,
          jstring eyesCascadeFileName);
-
-JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_FindTemplate
-        (JNIEnv *env, jclass jc,
-         jlong thiz,
-         jlong addrRgba,
-         jlong addrGray,
-         jlong addrTemplate,
-         jint rotation);
-
-JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_MatchTemplate
-        (JNIEnv *env, jclass jc,
-         jlong thiz,
-         jlong addrRgba,
-         jlong addrGray,
-         jint rotation);
-
-JNIEXPORT int JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_DetectFaces
-        (JNIEnv *env, jclass jc,
-         jlong addrRgba, jstring face_cascade_name);
 
 JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFace
         (JNIEnv *env, jclass jc,

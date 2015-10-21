@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
+import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,6 +31,8 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.fastcv.FastCVCameraView;
 import com.labs.okey.freeride.fastcv.FastCVWrapper;
 import com.labs.okey.freeride.utils.Globals;
@@ -313,6 +316,8 @@ public class CameraCVActivity extends Activity
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
+        Core.flip(mRgba, mRgba, 1); // flip around y-axis anyway: found face or not
+
         try {
             Mat faceMat = new Mat();
             if( mCVWrapper.DetectFace(mRgba.getNativeObjAddr(),
@@ -320,6 +325,8 @@ public class CameraCVActivity extends Activity
                     faceMat.getNativeObjAddr(),
                     mCurrentOrientation) )
             {
+                //matToView(faceMat);
+
                 final Mat eyeMat = new Mat();
                 boolean bEyeFound = mCVWrapper.DetectEye(mRgba.getNativeObjAddr(),
                                     faceMat.getNativeObjAddr(),
@@ -338,16 +345,11 @@ public class CameraCVActivity extends Activity
                                 public void run() {
 
                                     if( mCurrentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                                            Core.transpose(eyeMat, eyeMat);
+                                        Core.transpose(eyeMat, eyeMat);
                                     }
 
-                                    Bitmap bmp = Bitmap.createBitmap(eyeMat.cols(),
-                                                                     eyeMat.rows(),
-                                                                     Bitmap.Config.ARGB_8888);
-                                    Utils.matToBitmap(eyeMat, bmp);
+                                    matToView(eyeMat);
 
-                                    ImageView imgView = (ImageView)findViewById(R.id.imageViewTemplate);
-                                    imgView.setImageBitmap(bmp);
                                 }
                             });
                         }
@@ -365,6 +367,9 @@ public class CameraCVActivity extends Activity
                 }
           }
         } catch( Exception ex) {
+            if(Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+
             Log.e(LOG_TAG, ex.getMessage());
         }
 
@@ -375,6 +380,25 @@ public class CameraCVActivity extends Activity
 
         System.gc();
         return mRgba;
+    }
+
+    @UiThread
+    private void matToView(final Mat mat){
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Bitmap bmp = Bitmap.createBitmap(mat.cols(),
+                        mat.rows(),
+                        Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(mat, bmp);
+
+                ImageView imgView = (ImageView) findViewById(R.id.imageViewTemplate);
+                imgView.setImageBitmap(bmp);
+            }
+        });
+
+
     }
 
     //@Override
@@ -460,28 +484,19 @@ public class CameraCVActivity extends Activity
         return mRgba;
     }
 
-    public void makeFrame(View view){
-
-//        mOpenCvCameraView.stopPreview();
-//
-//        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
-//        txtStatus.setText(getString(R.string.detection_center_desc));
-//
-//        findViewById(R.id.detection_buttons_bar).setVisibility(View.VISIBLE);
-
-    }
-
+    @UiThread
     public void sendToDetect(View view){
 
-//        // Dismiss buttons
-//        findViewById(R.id.detection_buttons_bar).setVisibility(View.GONE);
-//
-//        // Restore status text
-//        TextView txtStatus = (TextView)findViewById(R.id.detection_monitor);
-//        txtStatus.setText(getString(R.string.detection_freeze));
-//
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(CameraCVActivity.this, "Eye blinking detected", Toast.LENGTH_LONG).
+                        show();
+            }
+        });
+
 //        // Will be continued in onPictureTaken() callback
-       mOpenCvCameraView.takePicture(CameraCVActivity.this);
+//       mOpenCvCameraView.takePicture(CameraCVActivity.this);
     }
 
     public void restoreFromSendToDetect(View view){
@@ -518,6 +533,7 @@ public class CameraCVActivity extends Activity
             Bitmap _bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
 
             processFrame(_bitmap);
+
         } catch(Exception ex) {
             String message = ex.getMessage();
             Log.e(LOG_TAG, message);
@@ -589,6 +605,10 @@ public class CameraCVActivity extends Activity
                                 .callback(new MaterialDialog.ButtonCallback() {
                                         @Override
                                         public void onPositive(MaterialDialog dialog) {
+
+                                        reportAnswer(1);
+
+
                                         setResult(RESULT_OK);
                                         finish();
                                         }
@@ -675,6 +695,15 @@ public class CameraCVActivity extends Activity
             }
 
         }.execute(inputStream);
+    }
+
+    private void reportAnswer(int status){
+
+        CustomEvent confirmEvent = new CustomEvent(getString(R.string.passenger_confirmation_answer_name));
+        // No user for this Answer
+        //confirmEvent.putCustomAttribute("User", getUser().getFullName());
+        confirmEvent.putCustomAttribute(getString(R.string.answer_success_attribute), status);
+        Answers.getInstance().logCustom(confirmEvent);
     }
 
     @Override

@@ -249,6 +249,12 @@ limitations under the License.</string>
     <string name="log_start">Application started</string>
     <string name="camera_directive_1">Look straight into camera lens</string>
 
+    <string name="passenger_confirmation_answer_name">Passenger Confirmation</string>
+    <string name="no_fee_answer_name">No-fee request</string>
+    <string name="registration_answer_name">Registration</string>
+    <string name="answer_sent_attribute">Sent</string>
+    <string name="answer_success_attribute">Success</string>
+
     <string name="selfie">Selfie</string>
     <string name="selfie_content">You are about to make a self-picture. During a capturing, please look at camera lens while your face is shown on the screen and it is bounded by the rectangle</string>
     <string name="selfie_desc_not_show_again">I understood. Don\'t show again.</string>
