@@ -5,8 +5,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -100,6 +103,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     PassengersAdapter mPassengersAdapter;
     private ArrayList<User> mPassengers = new ArrayList<>();
     private int mLastPassengersLength;
+
+    private ArrayList<Integer> mCapturedPassengersIDs = new ArrayList<>();
 
     WiFiUtil mWiFiUtil;
 
@@ -226,6 +231,27 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
             }
 
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_CAPTURED_PASSENGERS_IDS) ) {
+                mCapturedPassengersIDs =
+                        savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_CAPTURED_PASSENGERS_IDS);
+
+                for(int i = 0; i < mCapturedPassengersIDs.size(); i++) {
+
+                    int nCaptured = mCapturedPassengersIDs.get(i);
+
+                    int fabID = getResources().getIdentifier("passenger" + Integer.toString(i+1),
+                                                             "id",  this.getPackageName());
+
+                    FloatingActionButton fab = (FloatingActionButton)findViewById(fabID);
+                    if( fab != null) {
+                        if( nCaptured == 1 )
+                            fab.setImageResource(R.drawable.ic_action_done);
+                        else
+                            fab.setImageResource(R.drawable.ic_action_camera);
+                    }
+                }
+            }
+
             if( !bInitializedBeforeRotation )
                 setupNetwork();
 
@@ -255,6 +281,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             outState.putParcelable(Globals.PARCELABLE_CURRENT_RIDE, mCurrentRide);
 
             outState.putBoolean(Globals.PARCELABLE_APPEAL_SHOWN, mAppealShown);
+
+            outState.putIntegerArrayList(Globals.PARCELABLE_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
         }
 
         super.onSaveInstanceState(outState);
@@ -791,6 +819,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mTxtMonitorStatus = (TextView) findViewById(R.id.status_monitor);
         Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
+        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+            mCapturedPassengersIDs.add(0);
+        }
+        if( Globals.REQUIRED_PASSENGERS_NUMBER < 4 ) {
+            findViewById(R.id.passenger4).setVisibility(View.GONE);
+        }
+
     }
 
     //
@@ -978,80 +1013,65 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         View rootView = findViewById(R.id.cabin_background_layout);
         String tag = Integer.toString(requestCode);
-        FloatingActionButton passengerPicture = (FloatingActionButton)rootView.findViewWithTag(tag);
 
-        switch(requestCode ){
+        if( requestCode == REQUEST_IMAGE_CAPTURE ) {
 
-            case REQUEST_IMAGE_CAPTURE: {
-                if( resultCode == RESULT_OK) {
-                    try {
-                        MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
+            if( resultCode == RESULT_OK) {
+                try {
+                    MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
 
-                        builder.title(R.string.appeal_answer)
-                                .iconRes(R.drawable.ic_picture)
-                                .positiveText(R.string.appeal_send)
-                                .negativeText(R.string.appeal_cancel)
-                                .neutralText(R.string.appeal_another_picture);
+                    builder.title(R.string.appeal_answer)
+                            .iconRes(R.drawable.ic_picture)
+                            .positiveText(R.string.appeal_send)
+                            .negativeText(R.string.appeal_cancel)
+                            .neutralText(R.string.appeal_another_picture);
 
 
-                        View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal_answer, null);
-                        builder.customView(customDialog, false);
+                    View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal_answer, null);
+                    builder.customView(customDialog, false);
 
-                        ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
-                        imageViewAppeal.setImageURI(uriPhotoAppeal);
-
-
-                        builder.callback(new MaterialDialog.ButtonCallback() {
-                            @Override
-                            public void onPositive(MaterialDialog dialog) {
-                                sendAppeal();
-                            }
+                    ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
+                    imageViewAppeal.setImageURI(uriPhotoAppeal);
 
 
-                            @Override
-                            public void onNeutral(MaterialDialog dialog) {
-                                onAppealCamera();
-                            }
-                        });
+                    builder.callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            sendAppeal();
+                        }
 
-                        builder.show();
 
-                    } catch (Exception e) {
-                        Log.e(LOG_TAG, e.getMessage());
-                    }
+                        @Override
+                        public void onNeutral(MaterialDialog dialog) {
+                            onAppealCamera();
+                        }
+                    });
+
+                    builder.show();
+
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, e.getMessage());
                 }
             }
-            break;
-
-            case WIFI_CONNECT_REQUEST: {
+        } else if( requestCode == WIFI_CONNECT_REQUEST ) {
 
                 // if( resultCode == RESULT_OK ) {
                 // How to distinguish between successful connection
                 // and just pressing back from there?
                 wamsInit(true);
-            }
-            break;
 
-            case 1: { // picture from passenger 1
+        } else if( requestCode >= 1 && requestCode <= 4) { // passengers selfies
 
-            }
-            break;
+            FloatingActionButton passengerPicture = (FloatingActionButton)rootView.findViewWithTag(tag);
 
-            case 2: { // picture from passenger 2
+            Bundle extras = data.getExtras();
+            byte[] b = extras.getByteArray("face");
+            Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
+            Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
 
-            }
-            break;
+            passengerPicture.setImageDrawable(drawable);
 
-            case 3: { // picture from passenger 3
-
-            }
-            break;
-
-            case 4: { // picture from passenger 4
-
-            }
-            break;
-
+            mCapturedPassengersIDs.set(requestCode -1, 1);
         }
     }
 

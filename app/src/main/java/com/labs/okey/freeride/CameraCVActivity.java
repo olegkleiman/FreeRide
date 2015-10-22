@@ -3,6 +3,7 @@ package com.labs.okey.freeride;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -407,8 +408,31 @@ public class CameraCVActivity extends Activity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(CameraCVActivity.this, "Eye blinking detected", Toast.LENGTH_LONG).
-                        show();
+
+                new MaterialDialog.Builder(CameraCVActivity.this)
+                        .title(getString(R.string.detection_success))
+                        .positiveText(R.string.ok)
+                        .callback(new MaterialDialog.ButtonCallback() {
+                            @Override
+                            public void onPositive(MaterialDialog dialog) {
+
+                                reportAnswer(1);
+
+                                // TODO: should be face Mat
+                                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_done);
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                                byte[] b = baos.toByteArray();
+
+                                Intent intent = new Intent();
+                                intent.putExtra("face", b);
+
+                                setResult(RESULT_OK, intent);
+                                finish();
+                            }
+                        })
+                        .show();
+
             }
         });
 
@@ -524,7 +548,6 @@ public class CameraCVActivity extends Activity
                                         public void onPositive(MaterialDialog dialog) {
 
                                         reportAnswer(1);
-
 
                                         setResult(RESULT_OK);
                                         finish();

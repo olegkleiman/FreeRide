@@ -286,6 +286,7 @@ public class Globals {
     public static String PARCELABLE_KEY_DRIVERS = "drivers_key";
     public static String PARCELABLE_CURRENT_RIDE = "current_ride";
     public static String PARCELABLE_APPEAL_SHOWN = "appeal_shown";
+    public static String PARCELABLE_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
 
     public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
     public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";
