@@ -34,7 +34,7 @@ public class DrawMan {
 
     private Map<String, Drawable> dMap;
     private final ListeningExecutorService listeningPool;
-    private String LOG_TAG = "DrawMan";
+    private String LOG_TAG = "FR.DrawMan";
 
     public DrawMan() {
         dMap = new HashMap<>();

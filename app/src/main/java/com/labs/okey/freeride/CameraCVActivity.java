@@ -83,12 +83,13 @@ public class CameraCVActivity extends Activity
     private Handler handle = new Handler(this);
     public Handler getHandler() { return handle; }
 
-    private String mRideCode = "73373";
+    private String mRideCode = "73373"; // TODO: get rid of this!
     private UUID mFaceID;
 
     private Mat     mGray;
     private Mat     mRgba;
     private Mat     mMatTemplate;
+    private Bitmap  mFaceBitmap;
 
     Scalar mCameraFontColor = new Scalar(255, 255, 255);
     String mCameraDirective;
@@ -361,7 +362,17 @@ public class CameraCVActivity extends Activity
 
                         if( ++missedEyesCounter >= MISSED_EYES ) {
                             mOpenCvCameraView.stopPreview();
-                            sendToDetect(null);
+
+                            if( mFaceBitmap != null ) {
+                                mFaceBitmap.recycle();
+                                mFaceBitmap = null;
+                            }
+
+                            mFaceBitmap = Bitmap.createBitmap(faceMat.cols(),
+                                                            faceMat.rows(),
+                                                            Bitmap.Config.ARGB_8888);
+                            Utils.matToBitmap(faceMat, mFaceBitmap);
+                            sendToDetect();
                         }
 
                     }
@@ -403,7 +414,7 @@ public class CameraCVActivity extends Activity
     }
 
     @UiThread
-    public void sendToDetect(View view){
+    public void sendToDetect(){
 
         runOnUiThread(new Runnable() {
             @Override
@@ -418,14 +429,13 @@ public class CameraCVActivity extends Activity
 
                                 reportAnswer(1);
 
-                                // TODO: should be face Mat
-                                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_done);
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                                mFaceBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                                 byte[] b = baos.toByteArray();
 
                                 Intent intent = new Intent();
                                 intent.putExtra("face", b);
+                                intent.putExtra("faceid", "4444444");
 
                                 setResult(RESULT_OK, intent);
                                 finish();
@@ -436,8 +446,8 @@ public class CameraCVActivity extends Activity
             }
         });
 
-//        // Will be continued in onPictureTaken() callback
-//       mOpenCvCameraView.takePicture(CameraCVActivity.this);
+       // Will be continued in onPictureTaken() callback/
+       // mOpenCvCameraView.takePicture(CameraCVActivity.this);
     }
 
     public void restoreFromSendToDetect(View view){

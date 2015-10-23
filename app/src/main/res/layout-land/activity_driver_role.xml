@@ -122,54 +122,108 @@
                 android:layout_centerHorizontal="true"
                 android:id="@+id/centerImage"
                 android:contentDescription="@string/cabin_image_description"
-                android:src="@drawable/cabin_land" />
+                android:src="@drawable/cabin_land"
+                android:scaleType="fitCenter" />
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger1"
-                android:tag="1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
-
-                app:layout_anchor="@id/recyclerViewPeers"
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="end|bottom"
-                app:fabSize="normal"
-
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera"
-                android:layout_marginTop="27dp"
+            <FrameLayout
+                android:id="@+id/passengerLayout1"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
                 android:layout_alignParentTop="true"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_marginLeft="169dp"
-                android:layout_marginStart="169dp" />
+                android:layout_toLeftOf="@+id/passengerLayout4"
+                android:layout_toStartOf="@+id/passengerLayout4"
+                android:layout_marginRight="23dp"
+                android:layout_marginEnd="23dp">
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger2"
-                android:tag="1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger1"
+                    android:tag="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
 
-                app:layout_anchor="@id/recyclerViewPeers"
-                app:layout_anchorGravity="bottom|right|end"
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
 
-                android:layout_gravity="end|bottom"
-                app:fabSize="normal"
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="normal"
 
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera"
-                android:layout_marginRight="146dp"
-                android:layout_marginEnd="146dp"
-                android:layout_alignTop="@+id/passenger1"
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/passengerLayout2"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_alignBottom="@+id/passengerLayout1"
+                android:layout_alignLeft="@+id/passengerLayout3"
+                android:layout_alignStart="@+id/passengerLayout3">
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger2"
+                    android:tag="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
+
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="normal"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/passengerLayout4"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_above="@+id/passengerLayout3"
                 android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="235dp"
+                android:layout_marginEnd="235dp">
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger4"
+                    android:tag="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="73dp"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
+
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="normal"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/passengerLayout3"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+
+                android:layout_marginLeft="94dp"
+                android:layout_marginStart="94dp"
+                android:layout_marginBottom="24dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignLeft="@+id/passengerLayout4"
+                android:layout_alignStart="@+id/passengerLayout4">
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/passenger3"
@@ -187,33 +241,10 @@
 
                 app:backgroundTint="@color/ColorAccent"
                 app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera"
-                android:layout_marginRight="23dp"
-                android:layout_marginEnd="23dp"
-                android:layout_below="@+id/passenger2"
-                android:layout_toLeftOf="@+id/passenger2"
-                android:layout_toStartOf="@+id/passenger2" />
+                android:onClick="onButtonPassengerCamera" />
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger4"
-                android:tag="1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
+            </FrameLayout>
 
-                app:layout_anchor="@id/recyclerViewPeers"
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="end|bottom"
-                app:fabSize="normal"
-
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera"
-                android:layout_below="@+id/passenger3"
-                android:layout_alignLeft="@+id/passenger2"
-                android:layout_alignStart="@+id/passenger2" />
         </RelativeLayout>
 
         <LinearLayout

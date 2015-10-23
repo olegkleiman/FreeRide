@@ -3,9 +3,11 @@ package com.labs.okey.freeride;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
@@ -20,6 +22,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
 import android.support.design.widget.FloatingActionButton;
@@ -60,6 +63,7 @@ import com.labs.okey.freeride.utils.IMessageTarget;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
+import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
@@ -239,10 +243,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                     int nCaptured = mCapturedPassengersIDs.get(i);
 
-                    int fabID = getResources().getIdentifier("passenger" + Integer.toString(i+1),
-                                                             "id",  this.getPackageName());
+                    int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
+                            "id", this.getPackageName());
 
-                    FloatingActionButton fab = (FloatingActionButton)findViewById(fabID);
+                    ImageView fab = (ImageView)findViewById(fabID);
                     if( fab != null) {
                         if( nCaptured == 1 )
                             fab.setImageResource(R.drawable.ic_action_done);
@@ -822,9 +826,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
             mCapturedPassengersIDs.add(0);
         }
-        if( Globals.REQUIRED_PASSENGERS_NUMBER < 4 ) {
+
+        if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 )
             findViewById(R.id.passenger4).setVisibility(View.GONE);
-        }
 
     }
 
@@ -1014,45 +1018,45 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         View rootView = findViewById(R.id.cabin_background_layout);
         String tag = Integer.toString(requestCode);
 
-        if( requestCode == REQUEST_IMAGE_CAPTURE ) {
+        if( requestCode == REQUEST_IMAGE_CAPTURE
+                && resultCode == RESULT_OK) {
 
-            if( resultCode == RESULT_OK) {
-                try {
-                    MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
+            try {
+                MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
 
-                    builder.title(R.string.appeal_answer)
-                            .iconRes(R.drawable.ic_picture)
-                            .positiveText(R.string.appeal_send)
-                            .negativeText(R.string.appeal_cancel)
-                            .neutralText(R.string.appeal_another_picture);
-
-
-                    View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal_answer, null);
-                    builder.customView(customDialog, false);
-
-                    ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
-                    imageViewAppeal.setImageURI(uriPhotoAppeal);
+                builder.title(R.string.appeal_answer)
+                        .iconRes(R.drawable.ic_picture)
+                        .positiveText(R.string.appeal_send)
+                        .negativeText(R.string.appeal_cancel)
+                        .neutralText(R.string.appeal_another_picture);
 
 
-                    builder.callback(new MaterialDialog.ButtonCallback() {
-                        @Override
-                        public void onPositive(MaterialDialog dialog) {
-                            sendAppeal();
-                        }
+                View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal_answer, null);
+                builder.customView(customDialog, false);
+
+                ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
+                imageViewAppeal.setImageURI(uriPhotoAppeal);
 
 
-                        @Override
-                        public void onNeutral(MaterialDialog dialog) {
-                            onAppealCamera();
-                        }
-                    });
+                builder.callback(new MaterialDialog.ButtonCallback() {
+                    @Override
+                    public void onPositive(MaterialDialog dialog) {
+                        sendAppeal();
+                    }
 
-                    builder.show();
 
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, e.getMessage());
-                }
+                    @Override
+                    public void onNeutral(MaterialDialog dialog) {
+                        onAppealCamera();
+                    }
+                });
+
+                builder.show();
+
+            } catch (Exception e) {
+                Log.e(LOG_TAG, e.getMessage());
             }
+
         } else if( requestCode == WIFI_CONNECT_REQUEST ) {
 
                 // if( resultCode == RESULT_OK ) {
@@ -1060,16 +1064,27 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 // and just pressing back from there?
                 wamsInit(true);
 
-        } else if( requestCode >= 1 && requestCode <= 4) { // passengers selfies
+        } else if( (requestCode >= 1 && requestCode <= 4 )  // passengers selfies
+                && resultCode == RESULT_OK ) {
 
             FloatingActionButton passengerPicture = (FloatingActionButton)rootView.findViewWithTag(tag);
+            if( passengerPicture != null ) {
+                passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
 
-            Bundle extras = data.getExtras();
-            byte[] b = extras.getByteArray("face");
-            Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
-            Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
+                Bundle extras = data.getExtras();
+                byte[] b = extras.getByteArray("face");
+                Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
+                Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
 
-            passengerPicture.setImageDrawable(drawable);
+                drawable = RoundedDrawable.fromDrawable(drawable);
+                ((RoundedDrawable) drawable)
+                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                        .setBorderColor(Color.WHITE)
+                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                        .setOval(true);
+
+                passengerPicture.setImageDrawable(drawable);
+            }
 
             mCapturedPassengersIDs.set(requestCode -1, 1);
         }
