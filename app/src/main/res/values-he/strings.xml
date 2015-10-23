@@ -118,4 +118,15 @@
     <string name="detection_success">אימות הצליח. תודה.</string>
     <string name="selfie_desc_not_show_again">הבנתי. אל תציגו שוב</string>
 
+    <string name="appeal">בקשתך לפטור נדחתה, הינך יכול\ה להגיש ערעור</string>
+    <string name="appeal_another_picture">נסה שנית</string>
+    <string name="appeal_answer">לשלוח ערעור?</string>
+    <string name="appeal_cancel">ביטול</string>
+    <string name="appeal_ok">Ok</string>
+    <string name="appeal_send">שלח</string>
+    <string name="appeal_send_success">הערעור נשלח</string>
+    <string name="appeal_send_title">ערעור</string>
+    <string name="appeal_take_picture">צלם\י תמונה עם הסימון הבא</string>
+
+
 </resources>
