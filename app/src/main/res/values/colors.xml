@@ -5,6 +5,7 @@
     <color name="white">#FFF</color>
     <color name="black">#000</color>
     <color name="gray">#ffb9b9b9</color>
+    <color name="green">#4CAF50</color>
     <color name="light_gray">#ddd</color>
     <color name="red">#bf360c</color>
     <color name="ripple_red">#ffbf5232</color>
@@ -20,9 +21,9 @@
     
     <color name="ColorPrimary">@color/material_blue_500</color>
     <color name="ColorPrimaryDark">@color/material_blue_900</color>
-    <!-- Orange palette. 900 -->
-    <!--<color name="ColorAccent">@color/material_green_500</color>-->
-    <color name="ColorAccent">#ff4081</color>
+
+    <!--<color name="ColorAccent">#ff4081</color>-->
+    <color name="ColorAccent">#E91E63</color>
     <color name="ColorBackground">#FFF</color>
 
 </resources>
