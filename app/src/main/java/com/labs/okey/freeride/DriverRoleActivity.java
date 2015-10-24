@@ -25,6 +25,7 @@ import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
+import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -453,6 +454,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     };
 
+    public void onButtonSubmitRidePics(View view){
+
+    }
+
     public void onButtonSubmitRide(View v) {
 
         if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER ) {
@@ -706,11 +711,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                                  }
                                                              });
 
-                                                         } else if( mPassengerFaces.size() >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
-                                                             FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
-                                                             Context ctx =  getApplicationContext();
-                                                             fab.setVisibility(View.VISIBLE);
-                                                             fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
                                                          }
 
                                                      }
@@ -811,6 +811,46 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
         }.start();
 
+    }
+
+    @UiThread
+    private void showSubmitPicsButton() {
+
+        FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button_pics);
+        Context ctx =  getApplicationContext();
+        if( fab != null) {
+            fab.setVisibility(View.VISIBLE);
+            fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+        }
+    }
+
+    private void addPassengerFace(int at, UUID faceID) {
+
+        try {
+
+            PassengerFace pFace = mPassengerFaces.get(at);
+            if (pFace != null) {
+                pFace.setFaceId(faceID.toString());
+
+                int size = 0;
+                for (PassengerFace pf : mPassengerFaces) {
+                    if (pf.isInitialized())
+                        size++;
+                }
+
+                if( size >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
+                    getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showSubmitPicsButton();
+                        }
+                    });
+                }
+            }
+
+        } catch(Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
     }
 
     @Override
@@ -957,9 +997,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if (intent.resolveActivity(getPackageManager()) != null) {
 
             try {
-                uriPhotoAppeal = createImageFile();
+                createImageFile();
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, e.getMessage());
             }
 
             if (uriPhotoAppeal != null) {
@@ -972,20 +1012,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public void onAppealCamera(){
 
-        try {
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
 
-            MaterialDialog.Builder builder = new MaterialDialog.Builder(this)
-                    .title(R.string.appeal)
-                    .iconRes(R.drawable.ic_action_appeal)
-                    .positiveText(R.string.ok)
-                    .negativeText(R.string.cancel)
-                    .title(R.string.appeal);
+        try {
 
             builder.title(R.string.appeal)
                     .iconRes(R.drawable.ic_picture)
                     .positiveText(R.string.ok)
                     .negativeText(R.string.cancel);
-
 
             View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal, null);
             builder.customView(customDialog, false);
@@ -998,8 +1032,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
             int imageResource = getResources().getIdentifier(uri, "id",  this.getPackageName());
             emoji.setImageResource(imageResource);
-
-
 
             builder.callback(new MaterialDialog.ButtonCallback() {
                 @Override
@@ -1020,7 +1052,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    private Uri createImageFile() throws IOException {
+    private void createImageFile() throws IOException {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String photoFileName = "AppealJPEG_" + timeStamp + "_";
@@ -1028,12 +1060,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         File storageDir = getExternalFilesDir(null);
 
         File photoFile = File.createTempFile(
-                                        photoFileName,  /* prefix */
-                                        ".jpg",         /* suffix */
-                                        storageDir      /* directory */
-        );
+                                            photoFileName,  /* prefix */
+                                            ".jpg",         /* suffix */
+                                            storageDir      /* directory */
+                                            );
 
-        return Uri.fromFile(photoFile);
+        uriPhotoAppeal = Uri.fromFile(photoFile);
     }
 
     @Override
@@ -1096,27 +1128,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
 
                 Bundle extras = data.getExtras();
-                byte[] b = extras.getByteArray("face");
-                if( b != null) {
-                    Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
+                Bitmap bmp = extras.getParcelable("face");
+                if( bmp != null) {
                     Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
 
                     drawable = RoundedDrawable.fromDrawable(drawable);
                     ((RoundedDrawable) drawable)
                             .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
                             .setBorderColor(Color.WHITE)
-                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                            .setBorderWidth(0) //Globals.PICTURE_BORDER_WIDTH)
                             .setOval(true);
 
                     passengerPicture.setImageDrawable(drawable);
                 }
 
                 UUID _faceId  = (UUID)extras.getSerializable("faceid");
-
-                PassengerFace pf = mPassengerFaces.get(requestCode - 1);
-                if( pf != null )
-                    pf.setFaceId(_faceId.toString());
-
+                addPassengerFace(requestCode - 1, _faceId);
             }
 
             mCapturedPassengersIDs.set(requestCode -1, 1);

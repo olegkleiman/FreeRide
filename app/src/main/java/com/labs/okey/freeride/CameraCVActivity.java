@@ -1,25 +1,21 @@
 package com.labs.okey.freeride;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
@@ -30,7 +26,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -39,10 +34,7 @@ import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.fastcv.FastCVCameraView;
 import com.labs.okey.freeride.fastcv.FastCVWrapper;
-import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IPictureURLUpdater;
-import com.labs.okey.freeride.utils.wamsBlobUpload;
-import com.labs.okey.freeride.utils.wamsPictureURLUpdater;
 import com.microsoft.projectoxford.face.FaceServiceClient;
 import com.microsoft.projectoxford.face.contract.Face;
 
@@ -54,15 +46,9 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
-import org.opencv.core.CvException;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfRect;
-import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -75,7 +61,6 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class CameraCVActivity extends Activity
         implements CameraBridgeViewBase.CvCameraViewListener2,
@@ -330,6 +315,8 @@ public class CameraCVActivity extends Activity
     private int missedEyesCounter = 0;
     private int MISSED_EYES = 3;
 
+    private boolean bUploadingFrame = false;
+
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
@@ -386,17 +373,22 @@ public class CameraCVActivity extends Activity
                         if( ++missedEyesCounter >= MISSED_EYES ) {
                             mOpenCvCameraView.stopPreview();
 
-                            final Bitmap faceBitmap = Bitmap.createBitmap(faceMat.cols(),
-                                                            faceMat.rows(),
-                                                            Bitmap.Config.ARGB_8888);
-                            Utils.matToBitmap(faceMat, faceBitmap);
+                            if( !bUploadingFrame ) {
 
-                            getHandler().post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    processFrame(faceBitmap);
-                                }
-                            });
+                                bUploadingFrame = true;
+
+                                final Bitmap faceBitmap = Bitmap.createBitmap(faceMat.cols(),
+                                                                              faceMat.rows(),
+                                                                              Bitmap.Config.ARGB_8888);
+                                Utils.matToBitmap(faceMat, faceBitmap);
+
+                                getHandler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        uploadFrame(faceBitmap);
+                                    }
+                                });
+                            }
 
 
 //                            getHandler().postDelayed(new Runnable() {
@@ -508,7 +500,7 @@ public class CameraCVActivity extends Activity
                 }
             });
 
-            processFrame(_bitmap);
+            uploadFrame(_bitmap);
 
         } catch(Exception ex) {
             String message = ex.getMessage();
@@ -517,7 +509,7 @@ public class CameraCVActivity extends Activity
         }
     }
 
-    private void processFrame(final Bitmap sampleBitmap) {
+    private void uploadFrame(final Bitmap sampleBitmap) {
 
         if( sampleBitmap == null )
             return;
@@ -583,28 +575,46 @@ public class CameraCVActivity extends Activity
                         Face _face = result[0];
                         final UUID faceID = _face.faceId;
 
-                        new MaterialDialog.Builder(CameraCVActivity.this)
-                                .title(getString(R.string.detection_success))
-                                .positiveText(R.string.ok)
-                                .callback(new MaterialDialog.ButtonCallback() {
-                                        @Override
-                                        public void onPositive(MaterialDialog dialog) {
+                        reportAnswer(1);
 
-                                            reportAnswer(1);
+//                        int bmpSize = getBitmapSize(sampleBitmap);
+//                        int bmpWidth = sampleBitmap.getWidth();
+//                        int bmpHeight = sampleBitmap.getHeight();
 
-                                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                            sampleBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                                            byte[] b = baos.toByteArray();
+                        Bitmap thumbFace = Bitmap.createScaledBitmap(sampleBitmap, 40, 40, false);
+//                        bmpSize = getBitmapSize(thumbFace);
+//                        bmpWidth = thumbFace.getWidth();
+//                        bmpHeight = thumbFace.getHeight();
 
-                                            Intent intent = new Intent();
-                                            intent.putExtra("face", b);
-                                            intent.putExtra("faceid", faceID);
+                        Intent intent = new Intent();
+                        intent.putExtra("face", thumbFace);
+                        intent.putExtra("faceid", faceID);
 
-                                            setResult(RESULT_OK, intent);
-                                            finish();
-                                        }
-                                })
-                                .show();
+                        setResult(RESULT_OK, intent);
+                        finish();
+
+//                        new MaterialDialog.Builder(CameraCVActivity.this)
+//                                .title(getString(R.string.detection_success))
+//                                .positiveText(R.string.ok)
+//                                .callback(new MaterialDialog.ButtonCallback() {
+//                                        @Override
+//                                        public void onPositive(MaterialDialog dialog) {
+//
+//                                            reportAnswer(1);
+//
+//                                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//                                            sampleBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+//                                            byte[] b = baos.toByteArray();
+//
+//                                            Intent intent = new Intent();
+//                                            intent.putExtra("face", b);
+//                                            intent.putExtra("faceid", faceID);
+//
+//                                            setResult(RESULT_OK, intent);
+//                                            finish();
+//                                        }
+//                                })
+//                                .show();
 
 //                        new MaterialDialog.Builder(CameraCVActivity.this)
 //                                .title(getString(R.string.detection_results))
@@ -681,6 +691,13 @@ public class CameraCVActivity extends Activity
             }
 
         }.execute(inputStream);
+    }
+
+    private int getBitmapSize(Bitmap bmp) {
+        if(Build.VERSION.SDK_INT< Build.VERSION_CODES.KITKAT){
+            return bmp.getByteCount();
+        } else
+            return bmp.getAllocationByteCount();
     }
 
     private void reportAnswer(int status){
