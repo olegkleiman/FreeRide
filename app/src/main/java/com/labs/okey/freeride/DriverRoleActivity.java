@@ -53,6 +53,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.labs.okey.freeride.adapters.PassengersAdapter;
 import com.labs.okey.freeride.model.GlobalSettings;
+import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
@@ -81,6 +82,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -108,6 +110,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     PassengersAdapter mPassengersAdapter;
     private ArrayList<User> mPassengers = new ArrayList<>();
     private int mLastPassengersLength;
+
+    private ArrayList<PassengerFace> mPassengerFaces = new ArrayList<>();
 
     private ArrayList<Integer> mCapturedPassengersIDs = new ArrayList<>();
 
@@ -199,9 +203,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 animationDrawable.start();
             }
 
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_CURRENT_RIDE) ) {
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CURRENT_RIDE) ) {
                 bInitializedBeforeRotation = true;
-                mCurrentRide = savedInstanceState.getParcelable(Globals.PARCELABLE_CURRENT_RIDE);
+                mCurrentRide = savedInstanceState.getParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE);
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS) ) {
@@ -226,19 +230,21 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             }
 
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_APPEAL_SHOWN) ) {
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_SHOWN) ) {
                 bInitializedBeforeRotation = true;
 
-                mAppealShown = savedInstanceState.getBoolean(Globals.PARCELABLE_APPEAL_SHOWN);
+                mAppealShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_APPEAL_SHOWN);
                 if( mAppealShown )
                     findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
                 else
                     findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
             }
 
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_CAPTURED_PASSENGERS_IDS) ) {
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS) ) {
+                bInitializedBeforeRotation = true;
+
                 mCapturedPassengersIDs =
-                        savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_CAPTURED_PASSENGERS_IDS);
+                        savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS);
 
                 if( mCapturedPassengersIDs != null ) {
                     for (int i = 0; i < mCapturedPassengersIDs.size(); i++) {
@@ -257,6 +263,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         }
                     }
                 }
+            }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS) ) {
+                bInitializedBeforeRotation = true;
+
+                mPassengerFaces = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
             }
 
             if( !bInitializedBeforeRotation )
@@ -285,11 +297,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, rideCode);
             outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
 
-            outState.putParcelable(Globals.PARCELABLE_CURRENT_RIDE, mCurrentRide);
+            outState.putParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE, mCurrentRide);
 
-            outState.putBoolean(Globals.PARCELABLE_APPEAL_SHOWN, mAppealShown);
+            outState.putBoolean(Globals.PARCELABLE_KEY_APPEAL_SHOWN, mAppealShown);
 
-            outState.putIntegerArrayList(Globals.PARCELABLE_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
+            outState.putIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
+
+            outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, mPassengerFaces);
         }
 
         super.onSaveInstanceState(outState);
@@ -692,6 +706,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                                  }
                                                              });
 
+                                                         } else if( mPassengerFaces.size() >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
+                                                             FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
+                                                             Context ctx =  getApplicationContext();
+                                                             fab.setVisibility(View.VISIBLE);
+                                                             fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
                                                          }
 
                                                      }
@@ -826,9 +845,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mTxtMonitorStatus = (TextView) findViewById(R.id.status_monitor);
         Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
-        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
             mCapturedPassengersIDs.add(0);
-        }
+
+        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
+            mPassengerFaces.add(new PassengerFace());
 
         if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 )
             findViewById(R.id.passenger4).setVisibility(View.GONE);
@@ -1089,6 +1110,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                     passengerPicture.setImageDrawable(drawable);
                 }
+
+                UUID _faceId  = (UUID)extras.getSerializable("faceid");
+
+                PassengerFace pf = mPassengerFaces.get(requestCode - 1);
+                if( pf != null )
+                    pf.setFaceId(_faceId.toString());
+
             }
 
             mCapturedPassengersIDs.set(requestCode -1, 1);
