@@ -1,6 +1,7 @@
 package com.labs.okey.freeride;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
@@ -34,7 +36,12 @@ import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.fastcv.FastCVCameraView;
 import com.labs.okey.freeride.fastcv.FastCVWrapper;
+import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IPictureURLUpdater;
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.projectoxford.face.FaceServiceClient;
 import com.microsoft.projectoxford.face.contract.Face;
 
@@ -53,6 +60,7 @@ import org.opencv.core.Scalar;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -336,7 +344,6 @@ public class CameraCVActivity extends Activity
                     faceMat.getNativeObjAddr(),
                     mCurrentOrientation) )
             {
-
                 final Mat eyeMat = new Mat();
                 boolean bEyeFound = mCVWrapper.DetectEye(mRgba.getNativeObjAddr(),
                                     faceMat.getNativeObjAddr(),
@@ -521,7 +528,8 @@ public class CameraCVActivity extends Activity
         new AsyncTask<InputStream, String, Face[]>(){
 
             // Toast popped up when communicating with server.
-            LoadToast lt;
+            //LoadToast lt;
+            ProgressDialog mProgressDialog;
 
             InputStream mInputStream;
 
@@ -533,21 +541,13 @@ public class CameraCVActivity extends Activity
             @Override
             protected void onPreExecute() {
 
-                lt = new LoadToast(CameraCVActivity.this);
-                lt.setText(getString(R.string.detection_send));
-                Display display = getWindow().getWindowManager().getDefaultDisplay();
-                android.graphics.Point size = new android.graphics.Point();
-                display.getSize(size);
-                lt.setTranslationY(size.y / 2);
-                lt.show();
+                mProgressDialog = ProgressDialog.show(CameraCVActivity.this, "", "");
             }
 
             @Override
             protected void onPostExecute(Face[] result) {
 
-                String strFormat = getString(R.string.detection_save);
-                String msg = String.format(strFormat, result.length);
-                Log.i(LOG_TAG, msg);
+                mProgressDialog.dismiss();
 
                 try {
 
@@ -556,21 +556,18 @@ public class CameraCVActivity extends Activity
 
                     if( result.length < 1) {
 
-                        lt.error();
-
                         new MaterialDialog.Builder(CameraCVActivity.this)
                                 .title(getString(R.string.detection_no_results))
                                 .content(getString(R.string.try_again))
                                 .positiveText(R.string.ok).callback(new MaterialDialog.ButtonCallback() {
                                     @Override
                                     public void onPositive(MaterialDialog dialog) {
+                                        mbSearchInitialized = false;
                                         mOpenCvCameraView.startPreview();
                                     }
                                 })
                                 .show();
                     } else {
-
-                        lt.success();
 
                         Face _face = result[0];
                         final UUID faceID = _face.faceId;
@@ -592,69 +589,6 @@ public class CameraCVActivity extends Activity
 
                         setResult(RESULT_OK, intent);
                         finish();
-
-//                        new MaterialDialog.Builder(CameraCVActivity.this)
-//                                .title(getString(R.string.detection_success))
-//                                .positiveText(R.string.ok)
-//                                .callback(new MaterialDialog.ButtonCallback() {
-//                                        @Override
-//                                        public void onPositive(MaterialDialog dialog) {
-//
-//                                            reportAnswer(1);
-//
-//                                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//                                            sampleBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-//                                            byte[] b = baos.toByteArray();
-//
-//                                            Intent intent = new Intent();
-//                                            intent.putExtra("face", b);
-//                                            intent.putExtra("faceid", faceID);
-//
-//                                            setResult(RESULT_OK, intent);
-//                                            finish();
-//                                        }
-//                                })
-//                                .show();
-
-//                        new MaterialDialog.Builder(CameraCVActivity.this)
-//                                .title(getString(R.string.detection_results))
-//                                .content(msg)
-//                                .positiveText(R.string.yes)
-//                                .negativeText(R.string.no)
-//                                .callback(new MaterialDialog.ButtonCallback() {
-//                                    @Override
-//                                    public void onPositive(MaterialDialog dialog) {
-//
-//                                        try {
-//                                            File outputDir = getApplicationContext().getCacheDir();
-//                                            String photoFileName = getTempFileName();
-//
-//                                            File photoFile = File.createTempFile(photoFileName, ".jpg", outputDir);
-//                                            FileOutputStream fos = new FileOutputStream(photoFile);
-//                                            sampleBitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
-//
-//                                            fos.flush();
-//                                            fos.close();
-//
-//                                            MediaStore.Images.Media.insertImage(getContentResolver(),
-//                                                    photoFile.getAbsolutePath(),
-//                                                    photoFile.getName(),
-//                                                    photoFile.getName());
-//
-//                                            new wamsBlobUpload(CameraCVActivity.this).execute(photoFile);
-//
-//                                        } catch (IOException ex) {
-//                                            Log.e(LOG_TAG, ex.getMessage());
-//                                        }
-//
-//                                    }
-//
-//                                    @Override
-//                                    public void onNegative(MaterialDialog dialog) {
-//                                        mOpenCvCameraView.startPreview();
-//                                    }
-//                                })
-//                                .show();
                     }
 
 
@@ -673,12 +607,47 @@ public class CameraCVActivity extends Activity
 
                 // Start detection.
                 try {
-                    return faceServiceClient.detect(
-                            mInputStream,  /* Input stream of image to detect */
-                            true,       /* Whether to analyzes facial landmarks */
-                            false,       /* Whether to analyzes age */
-                            false,       /* Whether to analyzes gender */
-                            true);      /* Whether to analyzes head pose */
+
+                    Face[] faces = faceServiceClient.detect(
+                                                mInputStream,  /* Input stream of image to detect */
+                                                true,       /* Whether to analyzes facial landmarks */
+                                                false,       /* Whether to analyzes age */
+                                                false,       /* Whether to analyzes gender */
+                                                true);      /* Whether to analyzes head pose */
+
+                    // Upload face image to blog (may be redundant, used here primarily for tests)
+                    if( faces.length > 0 ) {
+                        Face face = faces[0];
+
+                        File outputDir = getApplicationContext().getCacheDir();
+                        String photoFileName = getTempFileName();
+
+                        File photoFile = File.createTempFile(photoFileName, ".jpg", outputDir);
+                        FileOutputStream fos = new FileOutputStream(photoFile);
+                        sampleBitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos);
+
+                        fos.flush();
+                        fos.close();
+
+                        MediaStore.Images.Media.insertImage(getContentResolver(),
+                                                            photoFile.getAbsolutePath(),
+                                                            photoFile.getName(),
+                                                            photoFile.getName());
+
+                        String blogName = face.faceId.toString();
+
+                        CloudStorageAccount storageAccount = CloudStorageAccount.parse(Globals.storageConnectionString);
+                        CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
+                        CloudBlobContainer container = blobClient.getContainerReference("faces");
+                        String fileName = photoFile.getName();
+                        CloudBlockBlob blob = container.getBlockBlobReference(fileName);
+
+                        blob.upload(new FileInputStream(photoFile), photoFile.length());
+
+                        photoFile.delete();
+                    }
+
+                    return faces;
                 } catch (Exception e) {
 
                     if(Crashlytics.getInstance() != null )

@@ -270,7 +270,7 @@ public class Globals {
         }
     }
 
-    public static List<PassengerFace> passengerFaces = new ArrayList<>();
+    public static List<PassengerFace> passengerFaces;// = new ArrayList<>();
 
     // Identity matrix : ones on the main diagonal
     // and zeros elsewhere.
@@ -291,4 +291,10 @@ public class Globals {
 
     public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
     public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";
+
+    public static final String storageConnectionString =
+            "DefaultEndpointsProtocol=http;" +
+                    "AccountName=fastride;" +
+                    "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
+
 }

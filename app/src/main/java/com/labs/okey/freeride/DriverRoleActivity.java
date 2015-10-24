@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
@@ -22,7 +21,6 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
@@ -35,7 +33,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Display;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -62,12 +59,14 @@ import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
 import com.labs.okey.freeride.utils.IMessageTarget;
+import com.labs.okey.freeride.utils.IPictureURLUpdater;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
+import com.labs.okey.freeride.utils.faceapiUtils;
 import com.labs.okey.freeride.utils.wamsAddAppeal;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
@@ -100,12 +99,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         WifiP2pManager.ConnectionInfoListener,
         GoogleApiClient.ConnectionCallbacks,
         WAMSVersionTable.IVersionMismatchListener,
-        ResultCallback<Status> // for geofences' callback
+        IPictureURLUpdater,
+        ResultCallback<Status> // for geofences callback
 {
 
     private static final String LOG_TAG = "FR.Driver";
 
-    Uri uriPhotoAppeal;
+    Uri mUriPhotoAppeal;
     Ride mCurrentRide;
 
     PassengersAdapter mPassengersAdapter;
@@ -456,7 +456,66 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public void onButtonSubmitRidePics(View view){
 
+        Globals.passengerFaces = new ArrayList<>(mPassengerFaces);
+
+        // Will be continued on finish() from IPictureURLUpdater
+        new faceapiUtils(this).execute();
     }
+
+    AsyncTask updateCurrentRideTask = new AsyncTask<Void, Void, Void>() {
+
+        Exception mEx;
+        LoadToast lt;
+
+        @Override
+        protected void onPreExecute() {
+            lt = new LoadToast(DriverRoleActivity.this);
+            lt.setText(getString(R.string.processing));
+            Display display = getWindow().getWindowManager().getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+            lt.setTranslationY(size.y / 2);
+            lt.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            try {
+                mRidesTable.update(mCurrentRide).get();
+            } catch (InterruptedException | ExecutionException e) {
+                Log.e(LOG_TAG, e.getMessage());
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result){
+
+            CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
+            requestEvent.putCustomAttribute("User", getUser().getFullName());
+
+            if( mEx != null ) {
+
+                requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 0);
+
+                lt.error();
+                beepError.start();
+            }
+            else {
+
+                requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 1);
+
+                lt.success();
+                beepSuccess.start();
+
+                getHandler().postDelayed(thanksRunnable, 1500);
+
+            }
+
+            Answers.getInstance().logCustom(requestEvent);
+        }
+    };
 
     public void onButtonSubmitRide(View v) {
 
@@ -470,60 +529,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
 
-        new AsyncTask<Void, Void, Void>() {
+        updateCurrentRideTask.execute();
 
-            Exception mEx;
-            LoadToast lt;
-
-            @Override
-            protected void onPreExecute() {
-                lt = new LoadToast(DriverRoleActivity.this);
-                lt.setText(getString(R.string.processing));
-                Display display = getWindow().getWindowManager().getDefaultDisplay();
-                Point size = new Point();
-                display.getSize(size);
-                lt.setTranslationY(size.y / 2);
-                lt.show();
-            }
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-                try {
-                    mRidesTable.update(mCurrentRide).get();
-                } catch (InterruptedException | ExecutionException e) {
-                    Log.e(LOG_TAG, e.getMessage());
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void result){
-
-                CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
-                requestEvent.putCustomAttribute("User", getUser().getFullName());
-
-                if( mEx != null ) {
-
-                    requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 0);
-
-                    lt.error();
-                    beepError.start();
-                }
-                else {
-
-                    requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 1);
-
-                    lt.success();
-                    beepSuccess.start();
-
-                    getHandler().postDelayed(thanksRunnable, 1500);
-
-                }
-
-                Answers.getInstance().logCustom(requestEvent);
-            }
-        }.execute();
     }
 
     @Override
@@ -1002,9 +1009,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 Log.e(LOG_TAG, e.getMessage());
             }
 
-            if (uriPhotoAppeal != null) {
+            if (mUriPhotoAppeal != null) {
 
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhotoAppeal);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoAppeal);
                 startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
             }
         }
@@ -1065,7 +1072,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                             storageDir      /* directory */
                                             );
 
-        uriPhotoAppeal = Uri.fromFile(photoFile);
+        mUriPhotoAppeal = Uri.fromFile(photoFile);
     }
 
     @Override
@@ -1091,7 +1098,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 builder.customView(customDialog, false);
 
                 ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
-                imageViewAppeal.setImageURI(uriPhotoAppeal);
+                imageViewAppeal.setImageURI(mUriPhotoAppeal);
 
 
                 builder.callback(new MaterialDialog.ButtonCallback() {
@@ -1152,7 +1159,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public  void sendAppeal(){
         new wamsAddAppeal(DriverRoleActivity.this, "appeals", mCurrentRide.Id)
-                .execute(new File(uriPhotoAppeal.getPath()));
+                .execute(new File(mUriPhotoAppeal.getPath()));
     }
 
     //
@@ -1269,13 +1276,18 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    public void onDebug(View view) {
-//        LinearLayout layout = (LinearLayout) findViewById(R.id.debugLayout);
-//        int visibility = layout.getVisibility();
-//        if (visibility == View.VISIBLE)
-//            layout.setVisibility(View.GONE);
-//        else
-//            layout.setVisibility(View.VISIBLE);
+    //
+    // Implementation of IPictureURLUpdater
+    //
+    @Override
+    public void update(String url) {
+    }
+
+    @Override
+    public void finished(boolean success) {
+        mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+
+        updateCurrentRideTask.execute();
     }
 
 }

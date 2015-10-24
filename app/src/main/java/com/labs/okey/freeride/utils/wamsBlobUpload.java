@@ -35,10 +35,6 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
 
     ProgressDialog mProgressDialog;
 
-    public static final String storageConnectionString =
-            "DefaultEndpointsProtocol=http;" +
-                    "AccountName=fastride;" +
-                    "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
 
     public wamsBlobUpload(Context ctx, String containerName){
 
@@ -72,7 +68,7 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
         File photoFile = params[0];
 
         try {
-            CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
+            CloudStorageAccount storageAccount = CloudStorageAccount.parse(Globals.storageConnectionString);
             CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
             CloudBlobContainer container = blobClient.getContainerReference(mContainerName);
 
