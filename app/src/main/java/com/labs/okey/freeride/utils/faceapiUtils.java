@@ -1,79 +1,117 @@
 package com.labs.okey.freeride.utils;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Point;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.Display;
 
+import com.crashlytics.android.Crashlytics;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.microsoft.projectoxford.face.FaceServiceClient;
 import com.microsoft.projectoxford.face.contract.VerifyResult;
 import com.microsoft.projectoxford.face.rest.RESTException;
 
+import net.steamcrafted.loadtoast.LoadToast;
+
 /**
  * Created by Oleg Kleiman on 8/24/15.
  */
-public class faceapiUtils {
+public class faceapiUtils extends AsyncTask<Void, Void, Void> {
 
     private static final String LOG_TAG = "FR.FaceAPI";
 
+    Context mContext;
+    IPictureURLUpdater mUrlUpdater;
+    int mDepth;
+    LoadToast lt;
 
-    public static void Analyze(final Context ctx) {
+    public faceapiUtils(Context ctx) {
 
-        new AsyncTask<Void, Void, Void>() {
+        mContext = ctx;
 
-            int mDepth;
+        if(ctx instanceof IPictureURLUpdater)
+            mUrlUpdater=(IPictureURLUpdater)ctx;
+    }
 
-            @Override
-            protected void onPreExecute() {
-                mDepth = Globals.passengerFaces.size();
-            }
+    @Override
+    protected void onPreExecute() {
 
-            @Override
-            protected Void doInBackground(Void... params) {
+        lt = new LoadToast(mContext);
+        lt.setText(mContext.getString(R.string.processing));
+        if( mContext instanceof Activity) {
+            Display display = ((Activity)mContext).getWindow().getWindowManager().getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+            lt.setTranslationY(size.y / 2);
+        }
+        lt.show();
 
-                if( mDepth < 2 )
-                    return null;
+        mDepth = Globals.passengerFaces.size();
+    }
 
-                FaceServiceClient faceServiceClient = new FaceServiceClient(ctx.getString(R.string.oxford_subscription_key));
+    @Override
+    protected void onPostExecute(Void result){
+        lt.success();
 
-                try {
+        if( mUrlUpdater != null )
+            mUrlUpdater.finished(true);
+    }
 
-                    for (int i = 0; i < mDepth; i++) {
-                        for (int j = i; j < mDepth; j++) {
+    @Override
+    protected Void doInBackground(Void... params) {
 
-                            if (i == j)
-                                continue;
+        if( mDepth < 2 )
+            return null;
 
-                            PassengerFace _pf1 = Globals.passengerFaces.get(i);
-                            PassengerFace _pf2 = Globals.passengerFaces.get(j);
+        FaceServiceClient faceServiceClient = new FaceServiceClient(mContext.getString(R.string.oxford_subscription_key));
 
-                            float matValue = Globals.verificationMat.get(i, j);
-                            if (matValue == 0.0f) {
+        try {
 
-                                VerifyResult verifyResult = faceServiceClient.verify(_pf1.getFaceId(),
-                                                                                     _pf2.getFaceId());
+            for (int i = 0; i < mDepth; i++) {
+                for (int j = i; j < mDepth; j++) {
+
+                    if (i == j)
+                        continue;
+
+                    PassengerFace _pf1 = Globals.passengerFaces.get(i);
+                    PassengerFace _pf2 = Globals.passengerFaces.get(j);
+
+                    float matValue = Globals.verificationMat.get(i, j);
+                    if (matValue == 0.0f) {
 
 
-                                if( verifyResult.isIdentical ) {
-                                    Log.e(LOG_TAG, "The faces are identical");
-                                }
+                        String msg = String.format("Comparing %s and %s", _pf1.getFaceId(),
+                                                                          _pf2.getFaceId() );
+                        Log.i(LOG_TAG, msg);
 
-                                float confidence = (float)verifyResult.confidence;
-                                Globals.verificationMat.set(i, j, confidence);
-                                Globals.verificationMat.set(j, i, confidence);
-                            }
+                        VerifyResult verifyResult = faceServiceClient.verify(_pf1.getFaceId(),
+                                                                             _pf2.getFaceId());
+
+
+                        if( verifyResult.isIdentical ) {
+                            Log.e(LOG_TAG, "The faces are identical");
                         }
 
+                        float confidence = (float)verifyResult.confidence;
+                        Globals.verificationMat.set(i, j, confidence);
+                        Globals.verificationMat.set(j, i, confidence);
                     }
-                } catch(RESTException e) {
-                    e.printStackTrace();
                 }
 
-                return null;
             }
-        }.execute();
+        } catch(RESTException e) {
+            if(Crashlytics.getInstance() != null )
+                Crashlytics.logException(e);
+
+            Log.e(LOG_TAG, e.getMessage());
+        }
+
+        return null;
     }
+
 
     public static void dumpVerificationMatrix(int depth) {
         for(int i = 0; i < depth; i++) {
