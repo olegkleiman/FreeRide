@@ -9,17 +9,20 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
@@ -42,6 +45,8 @@ import com.labs.okey.freeride.utils.wamsBlobUpload;
 import com.labs.okey.freeride.utils.wamsPictureURLUpdater;
 import com.microsoft.projectoxford.face.FaceServiceClient;
 import com.microsoft.projectoxford.face.contract.Face;
+
+import net.steamcrafted.loadtoast.LoadToast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -84,16 +89,15 @@ public class CameraCVActivity extends Activity
     public Handler getHandler() { return handle; }
 
     private String mRideCode = "73373"; // TODO: get rid of this!
-    private UUID mFaceID;
 
     private Mat     mGray;
     private Mat     mRgba;
     private Mat     mMatTemplate;
-    private Bitmap  mFaceBitmap;
 
     Scalar mCameraFontColor = new Scalar(255, 255, 255);
     String mCameraDirective;
     String mCameraDirective2;
+    TextToSpeech mSpeechCommander;
 
     FastCVWrapper mCVWrapper;
 
@@ -151,9 +155,20 @@ public class CameraCVActivity extends Activity
 
                     if( mOpenCvCameraView != null) {
                         mOpenCvCameraView.enableView();
+                        mSpeechCommander = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener(){
+                            @Override
+                            public void onInit(int status) {
+                                if(status == TextToSpeech.ERROR) {
+                                    Log.e(LOG_TAG, "Can not init Speech Engine");
+                                    //t1.setLanguage(Locale.UK);
+                                }
+                            }
+                        });
                     }
 
-                } break;
+                }
+                break;
+
                 default:
                 {
                     super.onManagerConnected(status);
@@ -237,9 +252,16 @@ public class CameraCVActivity extends Activity
     @Override
     @CallSuper
     public void onPause() {
-        super.onPause();
+
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
+        if( mSpeechCommander != null ) {
+            mSpeechCommander.stop();
+            mSpeechCommander.shutdown();
+        }
+
+        super.onPause();
     }
 
 
@@ -327,7 +349,6 @@ public class CameraCVActivity extends Activity
                     faceMat.getNativeObjAddr(),
                     mCurrentOrientation) )
             {
-                //matToView(faceMat);
 
                 final Mat eyeMat = new Mat();
                 boolean bEyeFound = mCVWrapper.DetectEye(mRgba.getNativeObjAddr(),
@@ -341,6 +362,8 @@ public class CameraCVActivity extends Activity
                         if( ++initialEyesDetectedCounter >= INITIAL_EYES) {
                             mbSearchInitialized = true;
 
+                            matToView(faceMat, R.id.imageViewFace);
+
                             getHandler().post(new Runnable() {
 
                                 @Override
@@ -350,7 +373,7 @@ public class CameraCVActivity extends Activity
                                         Core.transpose(eyeMat, eyeMat);
                                     }
 
-                                    matToView(eyeMat);
+                                    matToView(eyeMat, R.id.imageViewTemplate);
 
                                 }
                             });
@@ -363,16 +386,26 @@ public class CameraCVActivity extends Activity
                         if( ++missedEyesCounter >= MISSED_EYES ) {
                             mOpenCvCameraView.stopPreview();
 
-                            if( mFaceBitmap != null ) {
-                                mFaceBitmap.recycle();
-                                mFaceBitmap = null;
-                            }
-
-                            mFaceBitmap = Bitmap.createBitmap(faceMat.cols(),
+                            final Bitmap faceBitmap = Bitmap.createBitmap(faceMat.cols(),
                                                             faceMat.rows(),
                                                             Bitmap.Config.ARGB_8888);
-                            Utils.matToBitmap(faceMat, mFaceBitmap);
-                            sendToDetect();
+                            Utils.matToBitmap(faceMat, faceBitmap);
+
+                            getHandler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    processFrame(faceBitmap);
+                                }
+                            });
+
+
+//                            getHandler().postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    // Will be continued in onPictureTaken() callback
+//                                    mOpenCvCameraView.takePicture(CameraCVActivity.this);
+//                                }
+//                            }, 2000); // delay for 2 sec. to let to open the eyes
                         }
 
                     }
@@ -395,7 +428,7 @@ public class CameraCVActivity extends Activity
     }
 
     @UiThread
-    private void matToView(final Mat mat){
+    private void matToView(final Mat mat, final int id){
 
         runOnUiThread(new Runnable() {
             @Override
@@ -405,49 +438,11 @@ public class CameraCVActivity extends Activity
                         Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(mat, bmp);
 
-                ImageView imgView = (ImageView) findViewById(R.id.imageViewTemplate);
+                ImageView imgView = (ImageView)findViewById(id);
                 imgView.setImageBitmap(bmp);
             }
         });
 
-
-    }
-
-    @UiThread
-    public void sendToDetect(){
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-                new MaterialDialog.Builder(CameraCVActivity.this)
-                        .title(getString(R.string.detection_success))
-                        .positiveText(R.string.ok)
-                        .callback(new MaterialDialog.ButtonCallback() {
-                            @Override
-                            public void onPositive(MaterialDialog dialog) {
-
-                                reportAnswer(1);
-
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                mFaceBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                                byte[] b = baos.toByteArray();
-
-                                Intent intent = new Intent();
-                                intent.putExtra("face", b);
-                                intent.putExtra("faceid", "4444444");
-
-                                setResult(RESULT_OK, intent);
-                                finish();
-                            }
-                        })
-                        .show();
-
-            }
-        });
-
-       // Will be continued in onPictureTaken() callback/
-       // mOpenCvCameraView.takePicture(CameraCVActivity.this);
     }
 
     public void restoreFromSendToDetect(View view){
@@ -481,7 +476,37 @@ public class CameraCVActivity extends Activity
             else if (mb > 3f)
                 options.inSampleSize = 2;
 
-            Bitmap _bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+            final Bitmap _bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    new MaterialDialog.Builder(CameraCVActivity.this)
+                            .title(getString(R.string.detection_success))
+                            .positiveText(R.string.ok)
+                            .callback(new MaterialDialog.ButtonCallback() {
+                                @Override
+                                public void onPositive(MaterialDialog dialog) {
+
+                                    reportAnswer(1);
+
+                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                    _bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                                    byte[] b = baos.toByteArray();
+
+                                    Intent intent = new Intent();
+                                    intent.putExtra("face", b);
+                                    intent.putExtra("faceid", "4444444");
+
+                                    setResult(RESULT_OK, intent);
+                                    finish();
+                                }
+                            })
+                            .show();
+
+                }
+            });
 
             processFrame(_bitmap);
 
@@ -503,8 +528,8 @@ public class CameraCVActivity extends Activity
 
         new AsyncTask<InputStream, String, Face[]>(){
 
-            // Progress dialog popped up when communicating with server.
-            ProgressDialog mProgressDialog;
+            // Toast popped up when communicating with server.
+            LoadToast lt;
 
             InputStream mInputStream;
 
@@ -515,9 +540,14 @@ public class CameraCVActivity extends Activity
 
             @Override
             protected void onPreExecute() {
-                mProgressDialog = ProgressDialog.show(CameraCVActivity.this,
-                        getString(R.string.detection_send),
-                        getString(R.string.detection_wait));
+
+                lt = new LoadToast(CameraCVActivity.this);
+                lt.setText(getString(R.string.detection_send));
+                Display display = getWindow().getWindowManager().getDefaultDisplay();
+                android.graphics.Point size = new android.graphics.Point();
+                display.getSize(size);
+                lt.setTranslationY(size.y / 2);
+                lt.show();
             }
 
             @Override
@@ -527,14 +557,15 @@ public class CameraCVActivity extends Activity
                 String msg = String.format(strFormat, result.length);
                 Log.i(LOG_TAG, msg);
 
-                mProgressDialog.dismiss();
-
                 try {
 
                     if( mInputStream != null)
                         mInputStream.close();
 
                     if( result.length < 1) {
+
+                        lt.error();
+
                         new MaterialDialog.Builder(CameraCVActivity.this)
                                 .title(getString(R.string.detection_no_results))
                                 .content(getString(R.string.try_again))
@@ -547,8 +578,10 @@ public class CameraCVActivity extends Activity
                                 .show();
                     } else {
 
+                        lt.success();
+
                         Face _face = result[0];
-                        mFaceID = _face.faceId;
+                        final UUID faceID = _face.faceId;
 
                         new MaterialDialog.Builder(CameraCVActivity.this)
                                 .title(getString(R.string.detection_success))
@@ -557,10 +590,18 @@ public class CameraCVActivity extends Activity
                                         @Override
                                         public void onPositive(MaterialDialog dialog) {
 
-                                        reportAnswer(1);
+                                            reportAnswer(1);
 
-                                        setResult(RESULT_OK);
-                                        finish();
+                                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                            sampleBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                                            byte[] b = baos.toByteArray();
+
+                                            Intent intent = new Intent();
+                                            intent.putExtra("face", b);
+                                            intent.putExtra("faceid", faceID);
+
+                                            setResult(RESULT_OK, intent);
+                                            finish();
                                         }
                                 })
                                 .show();
@@ -613,19 +654,12 @@ public class CameraCVActivity extends Activity
             }
 
             @Override
-            protected void onProgressUpdate(String... progress) {
-                mProgressDialog.setMessage(progress[0]);
-            }
-
-            @Override
             protected Face[] doInBackground(InputStream... params) {
 
                 mInputStream = params[0];
 
                 // Get an instance of face service client to detect faces in image.
                 FaceServiceClient faceServiceClient = new FaceServiceClient(getString(R.string.oxford_subscription_key));
-
-                publishProgress("Please wait..");
 
                 // Start detection.
                 try {
@@ -636,9 +670,11 @@ public class CameraCVActivity extends Activity
                             false,       /* Whether to analyzes gender */
                             true);      /* Whether to analyzes head pose */
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, e.getMessage());
 
-                    publishProgress(e.getMessage());
+                    if(Crashlytics.getInstance() != null )
+                        Crashlytics.logException(e);
+
+                    Log.e(LOG_TAG, e.getMessage());
                 }
 
                 return null;
@@ -656,9 +692,20 @@ public class CameraCVActivity extends Activity
         Answers.getInstance().logCustom(confirmEvent);
     }
 
+    //
+    // Implementation of Handler.Callback
+    //
+    @Override
+    public boolean handleMessage(Message msg) {
+        return true;
+    }
+
+    //
+    // Implementation of IPictureURLUpdater
+    //
     @Override
     public void update(String url) {
-        new wamsPictureURLUpdater(this).execute(url, mRideCode, mFaceID.toString());
+        //new wamsPictureURLUpdater(this).execute(url, mRideCode, mFaceID.toString());
     }
 
     @Override
@@ -669,8 +716,4 @@ public class CameraCVActivity extends Activity
             finish();
     }
 
-    @Override
-    public boolean handleMessage(Message msg) {
-        return true;
-    }
 }

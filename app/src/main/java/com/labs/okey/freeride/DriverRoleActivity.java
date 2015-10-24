@@ -66,6 +66,7 @@ import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
+import com.labs.okey.freeride.utils.wamsAddAppeal;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import net.steamcrafted.loadtoast.LoadToast;
@@ -239,19 +240,21 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mCapturedPassengersIDs =
                         savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_CAPTURED_PASSENGERS_IDS);
 
-                for(int i = 0; i < mCapturedPassengersIDs.size(); i++) {
+                if( mCapturedPassengersIDs != null ) {
+                    for (int i = 0; i < mCapturedPassengersIDs.size(); i++) {
 
-                    int nCaptured = mCapturedPassengersIDs.get(i);
+                        int nCaptured = mCapturedPassengersIDs.get(i);
 
-                    int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
-                            "id", this.getPackageName());
+                        int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
+                                "id", this.getPackageName());
 
-                    ImageView fab = (ImageView)findViewById(fabID);
-                    if( fab != null) {
-                        if( nCaptured == 1 )
-                            fab.setImageResource(R.drawable.ic_action_done);
-                        else
-                            fab.setImageResource(R.drawable.ic_action_camera);
+                        ImageView fab = (ImageView) findViewById(fabID);
+                        if (fab != null) {
+                            if (nCaptured == 1)
+                                fab.setImageResource(R.drawable.ic_action_done);
+                            else
+                                fab.setImageResource(R.drawable.ic_action_camera);
+                        }
                     }
                 }
             }
@@ -700,7 +703,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         List<String> _cars = new ArrayList<>();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Set<String> carsSet = sharedPrefs.getStringSet(Globals.CARS_PREF, new HashSet<String>());
-        if (carsSet != null) {
+        if (carsSet.size() > 0) {
             Iterator<String> iterator = carsSet.iterator();
             while (iterator.hasNext()) {
                 String carNumber = iterator.next();
@@ -1005,8 +1008,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         File photoFile = File.createTempFile(
                                         photoFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
+                                        ".jpg",         /* suffix */
+                                        storageDir      /* directory */
         );
 
         return Uri.fromFile(photoFile);
@@ -1073,17 +1076,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 Bundle extras = data.getExtras();
                 byte[] b = extras.getByteArray("face");
-                Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
-                Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
+                if( b != null) {
+                    Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
+                    Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
 
-                drawable = RoundedDrawable.fromDrawable(drawable);
-                ((RoundedDrawable) drawable)
-                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                        .setBorderColor(Color.WHITE)
-                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                        .setOval(true);
+                    drawable = RoundedDrawable.fromDrawable(drawable);
+                    ((RoundedDrawable) drawable)
+                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                            .setBorderColor(Color.WHITE)
+                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                            .setOval(true);
 
-                passengerPicture.setImageDrawable(drawable);
+                    passengerPicture.setImageDrawable(drawable);
+                }
             }
 
             mCapturedPassengersIDs.set(requestCode -1, 1);
@@ -1091,7 +1096,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     public  void sendAppeal(){
-        //TODO:  need implementation
+        new wamsAddAppeal(DriverRoleActivity.this, "appeals", mCurrentRide.Id)
+                .execute(new File(uriPhotoAppeal.getPath()));
     }
 
     //
@@ -1130,7 +1136,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo p2pInfo) {
-        Thread handler = null;
+        Thread handler;
 
         mWiFiUtil.requestPeers(this);
 
