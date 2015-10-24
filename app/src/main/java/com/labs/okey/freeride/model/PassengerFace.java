@@ -30,6 +30,10 @@ public class PassengerFace implements Parcelable {
 
     }
 
+    public boolean isInitialized(){
+        return ( faceId != null );
+    }
+
     //
     // Implementation of Parcelable
     //
