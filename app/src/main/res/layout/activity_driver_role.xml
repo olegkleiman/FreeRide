@@ -78,7 +78,8 @@
                 android:id="@+id/recyclerViewPeers"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
-                android:scrollbars="vertical"/>
+                android:scrollbars="vertical"
+                android:visibility="visible" />
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/submit_ride_button"
@@ -128,12 +129,12 @@
                 android:id="@+id/passengerLayout1"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
+                android:layout_marginLeft="21dp"
+                android:layout_marginStart="21dp"
+                android:layout_marginBottom="93dp"
                 android:layout_above="@+id/passengerLayout4"
                 android:layout_toRightOf="@+id/passengerLayout4"
-                android:layout_toEndOf="@+id/passengerLayout4"
-                android:layout_marginLeft="24dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginBottom="88dp">
+                android:layout_toEndOf="@+id/passengerLayout4">
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/passenger1"
@@ -160,10 +161,10 @@
                 android:id="@+id/passengerLayout2"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:layout_marginBottom="68dp"
+                android:layout_marginBottom="103dp"
                 android:layout_alignParentBottom="true"
-                android:layout_alignStart="@+id/passengerLayout1"
-                android:layout_alignLeft="@+id/passengerLayout1">
+                android:layout_alignLeft="@+id/passengerLayout1"
+                android:layout_alignStart="@+id/passengerLayout1">
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/passenger2"
@@ -191,7 +192,8 @@
                 android:id="@+id/passengerLayout4"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:layout_above="@+id/passengerLayout3"
+                android:layout_marginBottom="37dp"
+                android:layout_alignBottom="@+id/passengerLayout2"
                 android:layout_centerHorizontal="true">
 
                 <android.support.design.widget.FloatingActionButton
@@ -243,6 +245,32 @@
                     android:scaleType="fitXY" />
 
             </FrameLayout>
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/submit_ride_button_pics"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:src="@drawable/ic_action_done"
+                app:elevation="4dp"
+
+                android:layout_gravity="center"
+                app:fabSize="normal"
+
+                app:backgroundTint="@color/ColorAccent"
+                app:borderWidth="0dp"
+
+                android:onClick="onButtonSubmitRidePics"
+
+                android:visibility="gone"
+                android:layout_alignTop="@+id/passengerLayout1"
+                android:layout_alignLeft="@+id/passengerLayout3"
+                android:layout_alignStart="@+id/passengerLayout3"
+                android:layout_alignBottom="@+id/passengerLayout1"
+                android:layout_toLeftOf="@+id/passengerLayout4"
+                android:layout_toStartOf="@+id/passengerLayout4">
+
+            </android.support.design.widget.FloatingActionButton>
+
 
         </RelativeLayout>
 
