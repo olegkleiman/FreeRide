@@ -322,6 +322,7 @@ public class CameraCVActivity extends Activity
     private int INITIAL_EYES = 3;
     private int missedEyesCounter = 0;
     private int MISSED_EYES = 3;
+    private Mat mFinalFaceMat;
 
     private boolean bUploadingFrame = false;
 
@@ -356,7 +357,10 @@ public class CameraCVActivity extends Activity
                         if( ++initialEyesDetectedCounter >= INITIAL_EYES) {
                             mbSearchInitialized = true;
 
-                            matToView(faceMat, R.id.imageViewFace);
+                            mFinalFaceMat = new Mat();
+                            faceMat.copyTo(mFinalFaceMat);
+
+                            //matToView(mFinalFaceMat, R.id.imageViewFace);
 
                             getHandler().post(new Runnable() {
 
@@ -384,10 +388,12 @@ public class CameraCVActivity extends Activity
 
                                 bUploadingFrame = true;
 
-                                final Bitmap faceBitmap = Bitmap.createBitmap(faceMat.cols(),
-                                                                              faceMat.rows(),
+                                assert mFinalFaceMat != null;
+
+                                final Bitmap faceBitmap = Bitmap.createBitmap(mFinalFaceMat.cols(),
+                                                                              mFinalFaceMat.rows(),
                                                                               Bitmap.Config.ARGB_8888);
-                                Utils.matToBitmap(faceMat, faceBitmap);
+                                Utils.matToBitmap(mFinalFaceMat, faceBitmap);
 
                                 getHandler().post(new Runnable() {
                                     @Override
@@ -547,7 +553,15 @@ public class CameraCVActivity extends Activity
             @Override
             protected void onPostExecute(Face[] result) {
 
-                mProgressDialog.dismiss();
+                try {
+                    mProgressDialog.dismiss();
+                } catch(Exception ex) {
+
+                    if(Crashlytics.getInstance() != null)
+                        Crashlytics.logException(ex);
+
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
 
                 try {
 
@@ -620,7 +634,7 @@ public class CameraCVActivity extends Activity
                         Face face = faces[0];
 
                         File outputDir = getApplicationContext().getCacheDir();
-                        String photoFileName = getTempFileName();
+                        String photoFileName = face.faceId.toString(); //getTempFileName();
 
                         File photoFile = File.createTempFile(photoFileName, ".jpg", outputDir);
                         FileOutputStream fos = new FileOutputStream(photoFile);
@@ -630,11 +644,9 @@ public class CameraCVActivity extends Activity
                         fos.close();
 
                         MediaStore.Images.Media.insertImage(getContentResolver(),
-                                                            photoFile.getAbsolutePath(),
-                                                            photoFile.getName(),
-                                                            photoFile.getName());
-
-                        String blogName = face.faceId.toString();
+                                photoFile.getAbsolutePath(),
+                                photoFile.getName(),
+                                photoFile.getName());
 
                         CloudStorageAccount storageAccount = CloudStorageAccount.parse(Globals.storageConnectionString);
                         CloudBlobClient blobClient = storageAccount.createCloudBlobClient();

@@ -22,6 +22,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.renderscript.Matrix4f;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
@@ -272,6 +273,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mPassengerFaces = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
             }
 
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
+                bInitializedBeforeRotation = true;
+
+                String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI);
+                mUriPhotoAppeal = Uri.parse(str);
+            }
+
             if( !bInitializedBeforeRotation )
                 setupNetwork();
 
@@ -305,6 +313,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             outState.putIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
 
             outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, mPassengerFaces);
+
+            if( mUriPhotoAppeal != null)
+                outState.putString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI, mUriPhotoAppeal.toString());
         }
 
         super.onSaveInstanceState(outState);
@@ -462,7 +473,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         new faceapiUtils(this).execute();
     }
 
-    AsyncTask updateCurrentRideTask = new AsyncTask<Void, Void, Void>() {
+    AsyncTask<Void, Void, Void> updateCurrentRideTask = new AsyncTask<Void, Void, Void>() {
 
         Exception mEx;
         LoadToast lt;
@@ -552,9 +563,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        if( id == R.id.action_appeal_camera )
-            onAppealCamera();
 
         return super.onOptionsItemSelected(item);
     }
@@ -1004,7 +1012,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if (intent.resolveActivity(getPackageManager()) != null) {
 
             try {
-                createImageFile();
+                mUriPhotoAppeal = createImageFile();
             } catch (IOException e) {
                 Log.e(LOG_TAG, e.getMessage());
             }
@@ -1059,7 +1067,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    private void createImageFile() throws IOException {
+    private Uri createImageFile() throws IOException {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String photoFileName = "AppealJPEG_" + timeStamp + "_";
@@ -1072,7 +1080,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                             storageDir      /* directory */
                                             );
 
-        mUriPhotoAppeal = Uri.fromFile(photoFile);
+        return Uri.fromFile(photoFile);
     }
 
     @Override
@@ -1093,13 +1101,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         .negativeText(R.string.appeal_cancel)
                         .neutralText(R.string.appeal_another_picture);
 
-
                 View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal_answer, null);
                 builder.customView(customDialog, false);
 
                 ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
                 imageViewAppeal.setImageURI(mUriPhotoAppeal);
-
 
                 builder.callback(new MaterialDialog.ButtonCallback() {
                     @Override
@@ -1285,9 +1291,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void finished(boolean success) {
-        mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
 
-        updateCurrentRideTask.execute();
+        Globals.verificationMat.loadIdentity(); // restore Matrix
+        //Globals.verificationMat = new Matrix4f();
+
+        if( success ) {
+            mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+            updateCurrentRideTask.execute();
+        } else {
+            onAppealCamera();
+        }
     }
 
 }
