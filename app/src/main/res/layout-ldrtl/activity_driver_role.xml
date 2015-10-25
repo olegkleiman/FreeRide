@@ -292,7 +292,7 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/white"
                 android:text="@string/geofence_outside_title"
-                android:gravity="left|center_vertical|fill_vertical|start|center_horizontal" />
+                android:gravity="start|center_vertical|fill_vertical|center_horizontal" />
 
         </LinearLayout>
 
