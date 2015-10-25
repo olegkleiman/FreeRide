@@ -23,7 +23,7 @@
             android:background="?attr/colorPrimary"
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
-            android:visibility="gone">
+            android:visibility="visible">
             <TextView
                 android:id="@+id/code_label_caption"
                 android:textColor="@color/white"
@@ -58,7 +58,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/card_backpanel_height"
             android:background="?attr/colorPrimary"
-            android:visibility="gone" />
+            android:visibility="visible" />
 
         <RelativeLayout
             android:id="@+id/drive_internal_layout"
@@ -72,7 +72,7 @@
             android:layout_marginRight="@dimen/card_horizontal_margin"
             android:layout_marginBottom="@dimen/card_horizontal_margin"
             android:layout_marginTop="@dimen/negativeActionBarSize"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerViewPeers"
@@ -108,13 +108,14 @@
         </RelativeLayout>
 
         <RelativeLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layoutDirection="locale"
+            android:layout_gravity="end"
+
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/ColorBackground"
             android:id="@+id/cabin_background_layout"
-            android:visibility="visible"
+            android:visibility="gone"
             android:clickable="false">
             <ImageView
                 android:layout_width="match_parent"
@@ -129,10 +130,12 @@
                 android:id="@+id/passengerLayout1"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:layout_marginTop="98dp"
-                android:layout_marginRight="52dp"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentRigth="true">
+                android:layout_marginLeft="21dp"
+                android:layout_marginStart="21dp"
+                android:layout_marginBottom="93dp"
+                android:layout_above="@+id/passengerLayout4"
+                android:layout_toRightOf="@+id/passengerLayout4"
+                android:layout_toEndOf="@+id/passengerLayout4">
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/passenger1"
@@ -141,6 +144,8 @@
                     android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
                     app:elevation="4dp"
+
+                    app:layout_anchorGravity="bottom|end"
 
                     android:layout_gravity="center"
                     app:fabSize="mini"
@@ -151,6 +156,7 @@
                     android:scaleType="fitXY" />
 
             </FrameLayout>
+
 
             <FrameLayout
                 android:id="@+id/passengerLayout2"
@@ -216,9 +222,10 @@
                 android:id="@+id/passengerLayout3"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:layout_alignTop="@+id/passengerLayout2"
-                android:layout_toLeftOf="@+id/passengerLayout4">
 
+                android:layout_alignTop="@+id/passengerLayout2"
+                android:layout_toLeftOf="@+id/passengerLayout4"
+                android:layout_toStartOf="@+id/passengerLayout4">
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/passenger3"
                     android:tag="3"
@@ -227,6 +234,10 @@
                     android:src="@drawable/ic_action_camera"
                     app:elevation="4dp"
 
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="center"
                     app:fabSize="mini"
 
                     app:backgroundTint="@color/ColorAccent"
@@ -236,13 +247,40 @@
 
             </FrameLayout>
 
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/submit_ride_button_pics"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:src="@drawable/ic_action_done"
+                app:elevation="4dp"
+
+                android:layout_gravity="center"
+                app:fabSize="normal"
+
+                app:backgroundTint="@color/ColorAccent"
+                app:borderWidth="0dp"
+
+                android:onClick="onButtonSubmitRidePics"
+
+                android:visibility="gone"
+                android:layout_alignTop="@+id/passengerLayout1"
+                android:layout_alignLeft="@+id/passengerLayout3"
+                android:layout_alignStart="@+id/passengerLayout3"
+                android:layout_alignBottom="@+id/passengerLayout1"
+                android:layout_toLeftOf="@+id/passengerLayout4"
+                android:layout_toStartOf="@+id/passengerLayout4">
+
+            </android.support.design.widget.FloatingActionButton>
+
+
         </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/passenger_snackbar"
             android:layout_width="fill_parent"
             android:layout_height="@dimen/snackbar_height"
-            android:animateLayoutChanges="true">
+            android:animateLayoutChanges="true"
+            android:visibility="visible">
             <TextView
                 android:id="@+id/status_monitor"
                 android:layout_width="fill_parent"
