@@ -45,6 +45,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -864,6 +865,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
 
         } catch(Exception ex) {
+
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+
             Log.e(LOG_TAG, ex.getMessage());
         }
     }
