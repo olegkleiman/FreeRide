@@ -68,6 +68,8 @@ public class RegisterActivity extends FragmentActivity
 
     String mAccessToken;
 
+    private boolean mAddNewUser = true;
+
     private Session.StatusCallback callback = new Session.StatusCallback() {
         @Override
         public void call(Session session, SessionState state, Exception exception) {
@@ -188,38 +190,10 @@ public class RegisterActivity extends FragmentActivity
                                         usersTable.where().field("registration_id").eq(regID)
                                                 .execute().get();
 
-                                if (_users.getTotalCount() >= 1) {
-                                    User registeredUser = _users.get(0);
+                                saveFBUser(user);
 
-//                                    new AlertDialogWrapper.Builder(RegisterActivity.this)
-//                                            .setTitle(R.string.dialog_confirm_registration)
-//                                            .setMessage(R.string.registration_already_performed)
-//                                            .autoDismiss(true)
-//                                            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-//                                                @Override
-//                                                public void onClick(DialogInterface dialog, int which) {
-//                                                    //dialog.dismiss();
-//                                                }
-//                                            })
-//                                            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-//                                                @Override
-//                                                public void onClick(DialogInterface dialog, int which) {
-//                                                    //dialog.dismiss();
-//                                                }
-//                                            }).show();
-
-                                    //ConfirmRegistrationFragment dialog =
-                                    new ConfirmRegistrationFragment()
-                                            .setUser(registeredUser)
-                                            .show(getFragmentManager(), "RegistrationDialogFragment");
-
-                                    // Just prevent body execution with onPostExecute().
-                                    // Normal flow continues from positive button handler.
-                                    mEx = new Exception();
-                                } else {
-
-                                    saveFBUser(user);
-                                }
+                                if( _users.size() >= 1 )
+                                    mAddNewUser = false;
 
                             } catch (InterruptedException | ExecutionException ex) {
                                 mEx = ex;
@@ -317,11 +291,6 @@ public class RegisterActivity extends FragmentActivity
         if (pendingAction != PendingAction.NONE &&
                 (exception instanceof FacebookOperationCanceledException ||
                         exception instanceof FacebookAuthorizationException)) {
-//                new AlertDialog.Builder(RegisterActivity.this)
-//                    .setTitle(R.string.cancelled)
-//                    .setMessage(R.string.permission_not_granted)
-//                    .setPositiveButton(R.string.ok, null)
-//                    .show();
             pendingAction = PendingAction.NONE;
         } else if (state == SessionState.OPENED_TOKEN_UPDATED) {
             handlePendingAction();
@@ -419,7 +388,8 @@ public class RegisterActivity extends FragmentActivity
                             // 'Users' table is defined with 'Anybody with the Application Key'
                             // permissions for READ and INSERT operations, so no authentication is
                             // required for adding new user to it
-                            usersTable.insert(newUser).get();
+                            if( mAddNewUser )
+                                usersTable.insert(newUser).get();
 
                         } catch (InterruptedException | ExecutionException e) {
                             mEx = e;

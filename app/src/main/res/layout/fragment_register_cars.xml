@@ -43,13 +43,11 @@
             app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
 
+            android:visibility="visible"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginBottom="32dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:visibility="visible" />
+            android:layout_alignRight="@+id/carsListView"
+            android:layout_alignEnd="@+id/carsListView"
+            android:layout_marginBottom="40dp" />
 
     </RelativeLayout>
 
