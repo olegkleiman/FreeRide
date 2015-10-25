@@ -23,10 +23,11 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
 
     private static final String LOG_TAG = "FR.FaceAPI";
 
-    Context mContext;
-    IPictureURLUpdater mUrlUpdater;
-    int mDepth;
-    LoadToast lt;
+    Context             mContext;
+    IPictureURLUpdater  mUrlUpdater;
+    int                 mDepth;
+    LoadToast           lt;
+    Boolean             mComparisonResult = true;
 
     public faceapiUtils(Context ctx) {
 
@@ -57,7 +58,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
         lt.success();
 
         if( mUrlUpdater != null )
-            mUrlUpdater.finished(true);
+            mUrlUpdater.finished(mComparisonResult);
     }
 
     @Override
@@ -82,17 +83,17 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
                     float matValue = Globals.verificationMat.get(i, j);
                     if (matValue == 0.0f) {
 
-
-                        String msg = String.format("Comparing %s and %s", _pf1.getFaceId(),
-                                                                          _pf2.getFaceId() );
-                        Log.i(LOG_TAG, msg);
-
                         VerifyResult verifyResult = faceServiceClient.verify(_pf1.getFaceId(),
                                                                              _pf2.getFaceId());
 
 
                         if( verifyResult.isIdentical ) {
-                            Log.e(LOG_TAG, "The faces are identical");
+                            mComparisonResult = false;
+
+                            String msg = String.format("The faces %s and %s are identical",
+                                                       _pf1.getFaceId(),
+                                                       _pf2.getFaceId() );
+                            Log.i(LOG_TAG, msg);
                         }
 
                         float confidence = (float)verifyResult.confidence;

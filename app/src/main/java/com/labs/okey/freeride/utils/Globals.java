@@ -288,6 +288,7 @@ public class Globals {
     public static String PARCELABLE_KEY_APPEAL_SHOWN = "appeal_shown";
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
     public static String PARCELABLE_KEY_PASSENGERS_FACE_IDS = "face_ids";
+    public static String PARCELABLE_KEY_APPEAL_PHOTO_URI = "appeal_uri";
 
     public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
     public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";
