@@ -125,5 +125,7 @@
     <string name="offline_prompt">Подключите сеть</string>
     <string name="detection_success">Проверка завершена успешно. Спасибо.</string>
     <string name="selfie_desc_not_show_again">Я понял. Не показывать это сообщение снова.</string>
+    <string name="drive_details">Поездка</string>
+    <string name="list_of_passengers">Пассажиры</string>
 
 </resources>

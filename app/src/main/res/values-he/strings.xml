@@ -127,6 +127,8 @@
     <string name="appeal_send_success">הערעור נשלח</string>
     <string name="appeal_send_title">ערעור</string>
     <string name="appeal_take_picture">צלם\י תמונה עם הסימון הבא</string>
+    <string name="drive_details">נסיעה</string>
+    <string name="list_of_passengers">נוסעים</string>
 
 
 </resources>
