@@ -43,6 +43,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -252,11 +253,37 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         if( requestCode == MAKE_PICTURE_REQUEST) {
-            if( resultCode == RESULT_OK ) {
-                finish();
-            } else {    // Distinguish between successful connection
-                        // and just pressing back from there?
-                refresh();
+            switch( resultCode ) {
+
+                case RESULT_OK: {
+                    finish();
+                }
+                break;
+
+                case RESULT_CANCELED: { // Distinguishing between successful connection
+                                        // and just pressing back from there.
+                    refresh();
+                }
+                break;
+
+                case RESULT_FIRST_USER: { // Any exceptions were occurred inside CameraCV Activity
+
+                    if( data != null ) {
+                        Bundle extras = data.getExtras();
+                        String message = extras.getString(getString(R.string.detection_exception));
+                        if( message == null)
+                            message = getString(R.string.detection_general_exception);
+
+                        new MaterialDialog.Builder(this)
+                                .content(message)
+                                .title(R.string.detection_error)
+                                .icon(getResources().getDrawable(R.drawable.ic_exclamation))
+                                .positiveText(R.string.ok)
+                                .show();
+                    }
+                }
+                break;
+
             }
         }
     }

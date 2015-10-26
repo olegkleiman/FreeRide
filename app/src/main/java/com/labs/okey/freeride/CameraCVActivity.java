@@ -533,9 +533,10 @@ public class CameraCVActivity extends Activity
 
         new AsyncTask<InputStream, String, Face[]>(){
 
-            // Toast popped up when communicating with server.
-            //LoadToast lt;
+            // Progress popped up when communicating with server.
             ProgressDialog mProgressDialog;
+
+            Exception  mEx;
 
             InputStream mInputStream;
 
@@ -561,6 +562,16 @@ public class CameraCVActivity extends Activity
                         Crashlytics.logException(ex);
 
                     Log.e(LOG_TAG, ex.getMessage());
+                }
+
+                if( mEx != null) {
+
+                    Intent intent = new Intent();
+                    intent.putExtra(getString(R.string.detection_exception),
+                                    mEx.getMessage());
+
+                    setResult(RESULT_FIRST_USER, intent);
+                    finish();
                 }
 
                 try {
@@ -666,6 +677,8 @@ public class CameraCVActivity extends Activity
                         Crashlytics.logException(e);
 
                     Log.e(LOG_TAG, e.getMessage());
+                    mEx = e;
+
                 }
 
                 return null;
