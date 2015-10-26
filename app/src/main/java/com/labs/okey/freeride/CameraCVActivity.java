@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
@@ -323,6 +324,8 @@ public class CameraCVActivity extends Activity
     private int missedEyesCounter = 0;
     private int MISSED_EYES = 3;
     private Mat mFinalFaceMat;
+    private int FRAMES_WITH_NOFACES = 5;
+    private int nFramesWithNoFaces = 0;
 
     private boolean bUploadingFrame = false;
 
@@ -343,8 +346,8 @@ public class CameraCVActivity extends Activity
             if( mCVWrapper.DetectFace(mRgba.getNativeObjAddr(),
                     mGray.getNativeObjAddr(),
                     faceMat.getNativeObjAddr(),
-                    mCurrentOrientation) )
-            {
+                    mCurrentOrientation) ) {
+
                 final Mat eyeMat = new Mat();
                 boolean bEyeFound = mCVWrapper.DetectEye(mRgba.getNativeObjAddr(),
                                     faceMat.getNativeObjAddr(),
@@ -414,6 +417,20 @@ public class CameraCVActivity extends Activity
                         }
 
                     }
+                }
+          } else { // no face was detected
+                if( mbSearchInitialized ) {
+                    if( ++nFramesWithNoFaces >= FRAMES_WITH_NOFACES ) {
+                        mbSearchInitialized = false;
+                        initialEyesDetectedCounter = 0;
+                        nFramesWithNoFaces = 0;
+
+                        ImageView imgView = (ImageView)findViewById(R.id.imageViewTemplate);
+                        Drawable cameraDrawable = getResources().getDrawable(R.drawable.ic_action_camera,
+                                                                       getApplicationContext().getTheme());
+                        imgView.setImageDrawable(cameraDrawable);
+                    }
+
                 }
           }
         } catch( Exception ex) {

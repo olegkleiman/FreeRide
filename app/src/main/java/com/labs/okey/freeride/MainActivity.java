@@ -170,6 +170,7 @@ public class MainActivity extends BaseActivity
             new MaterialDialog.Builder(this)
                     .title(getString(R.string.new_version_title))
                     .content(getString(R.string.new_version_conent))
+                    .iconRes(R.drawable.ic_info)
                     .positiveText(R.string.yes)
                     .negativeText(R.string.no)
                     .callback(new MaterialDialog.ButtonCallback() {

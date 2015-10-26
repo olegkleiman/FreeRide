@@ -160,6 +160,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mOfflineDialog = new MaterialDialog.Builder(this)
                 .title(R.string.offline)
                 .content(R.string.offline_prompt)
+                .iconRes(R.drawable.ic_exclamation)
                 .autoDismiss(true)
                 .cancelable(false)
                 .positiveText(getString(R.string.try_again))
@@ -458,6 +459,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             new MaterialDialog.Builder(DriverRoleActivity.this)
                     .title(R.string.thanks)
                     .content(R.string.nofee_request_accepted)
+                    .iconRes(R.drawable.ic_info)
                     .cancelable(false)
                     .positiveText(R.string.ok)
                     .callback(new MaterialDialog.ButtonCallback() {
@@ -757,6 +759,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             new MaterialDialog.Builder(this)
                     .title(R.string.edit_car_dialog_caption2)
                     .content(R.string.edit_car_dialog_text)
+                    .iconRes(R.drawable.ic_exclamation)
                     .autoDismiss(true)
                     .cancelable(false)
                     .positiveText(getString(R.string.edit_car_button_title2))
@@ -773,6 +776,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             new MaterialDialog.Builder(this)
                     .title(R.string.edit_car_dialog_caption1)
+                    .iconRes(R.drawable.ic_info)
                     .autoDismiss(true)
                     .cancelable(false)
                     .items(cars)
@@ -1266,6 +1270,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             new MaterialDialog.Builder(getApplicationContext())
                     .title(getString(R.string.new_version_title))
                     .content(getString(R.string.new_version_conent))
+                    .iconRes(R.drawable.ic_info)
                     .positiveText(R.string.yes)
                     .negativeText(R.string.no)
                     .callback(new MaterialDialog.ButtonCallback() {

@@ -277,7 +277,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         new MaterialDialog.Builder(this)
                                 .content(message)
                                 .title(R.string.detection_error)
-                                .icon(getResources().getDrawable(R.drawable.ic_exclamation))
+                                .iconRes(R.drawable.ic_exclamation)
                                 .positiveText(R.string.ok)
                                 .show();
                     }
@@ -301,11 +301,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         public void onNegative(MaterialDialog dialog){
                             refresh();
                         }
+                        @Override
+                        public void onNeutral(MaterialDialog dialog){
+                            onCameraCV(dialog.getView());
+                        }
                     })
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
                     .positiveText(R.string.ok)
                     .negativeText(R.string.code_retry_action)
+                    .neutralText(R.string.make_selfie)
                     .contentColor(contentColor)
                     .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
                     .inputMaxLength(Globals.RIDE_CODE_INPUT_LENGTH)
@@ -338,6 +343,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             new MaterialDialog.Builder(this)
                     .title(getString(R.string.selfie))
                     .content(getString(R.string.selfie_content))
+                    .iconRes(R.drawable.ic_smart_selfie)
                     .positiveText(R.string.ok)
                     .negativeText(R.string.selfie_desc_not_show_again)
                     .callback(new MaterialDialog.ButtonCallback() {
@@ -443,8 +449,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 @Override
                 public void onClick(DialogInterface dialogInterface, int which) {
                     if (which == DialogInterface.BUTTON_POSITIVE) {
-
-                        findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
                         onSubmitCode();
                     }
                 }
@@ -689,6 +693,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             final MaterialDialog dialog = new MaterialDialog.Builder(this)
                     .title(R.string.passenger_progress_dialog)
                     .content(R.string.please_wait)
+                    .iconRes(R.drawable.ic_wait)
                     .cancelable(false)
                     .autoDismiss(false)
                     .progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, showMinMax)
