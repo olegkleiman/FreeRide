@@ -28,7 +28,6 @@ public class RideDetailsActivity extends BaseActivity
         implements IRecyclerClickListener {
 
     ImageView DriverImage;
-    ImageView SelfieImage;
     TextView carNumber;
     TextView created;
     TextView nameDriver;
@@ -48,7 +47,6 @@ public class RideDetailsActivity extends BaseActivity
         Ride ride = (Ride) getIntent().getSerializableExtra("ride");
 
         DriverImage = (ImageView) findViewById(R.id.imageDriver);
-        SelfieImage = (ImageView) findViewById(R.id.selfi);
         carNumber = (TextView) findViewById(R.id.txtCarNumber);
         nameDriver = (TextView) findViewById(R.id.txtNameDriver);
         created = (TextView) findViewById(R.id.txtCreated);
@@ -68,9 +66,6 @@ public class RideDetailsActivity extends BaseActivity
         //------
 
         if(boolPassengersList == true) {
-
-            SelfieImage.setVisibility(View.GONE);
-
 
             RecyclerView recycler = (RecyclerView) findViewById(R.id.recyclerPassengers);
             recycler.setHasFixedSize(true);
@@ -115,23 +110,23 @@ public class RideDetailsActivity extends BaseActivity
     private void getPassenger  (){
         lstPassenger = new ArrayList<User>();
 
-        User pass1 = new User();
-        pass1.setFirstName("aaaa");
-        pass1.setLastName("AAA");
-        //pass1.setPictureURL(R.drawable.passenger64);
-        lstPassenger.add(pass1);
-
-        User pass2 = new User();
-        pass2.setFirstName("bbb");
-        pass2.setLastName("BBB");
-        //pass2.setPictureURL(R.drawable.passenger64);
-        lstPassenger.add(pass2);
-
-        User pass3 = new User();
-        pass3.setFirstName("ccc");
-        pass3.setLastName("CCC");
-        //pass2.setPictureURL(R.drawable.passenger64);
-        lstPassenger.add(pass3);
+//        User pass1 = new User();
+//        pass1.setFirstName("aaaa");
+//        pass1.setLastName("AAA");
+//        //pass1.setPictureURL(R.drawable.passenger64);
+//        lstPassenger.add(pass1);
+//
+//        User pass2 = new User();
+//        pass2.setFirstName("bbb");
+//        pass2.setLastName("BBB");
+//        //pass2.setPictureURL(R.drawable.passenger64);
+//        lstPassenger.add(pass2);
+//
+//        User pass3 = new User();
+//        pass3.setFirstName("ccc");
+//        pass3.setLastName("CCC");
+//        //pass2.setPictureURL(R.drawable.passenger64);
+//        lstPassenger.add(pass3);
     }
 
     @Override
@@ -139,23 +134,4 @@ public class RideDetailsActivity extends BaseActivity
 
     }
 
-    public void onClickSendAppeal(View view) {
-
-        new MaterialDialog.Builder(this)
-                .title("")
-                .customView(R.layout.dialog_write_appeal, true)
-                .autoDismiss(true)
-                .cancelable(true)
-                .positiveText(R.string.add_car_button_add)
-                .negativeText(R.string.add_car_button_cancel)
-                .callback(new MaterialDialog.ButtonCallback() {
-                    @Override
-                    public void onPositive(MaterialDialog dialog) {
-                        Intent intent = new Intent(getApplicationContext(),
-                                SettingsActivity.class);
-                        startActivity(intent);
-                    }
-                })
-                .show();
-    }
 }
