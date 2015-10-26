@@ -51,30 +51,6 @@
 
             </FrameLayout>
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/join_ride_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
-
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="end|bottom"
-                app:fabSize="normal"
-
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-
-                android:onClick="onCameraCV"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginBottom="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginRight="16dp"
-                android:visibility="visible" />
-
         </RelativeLayout>
 
         <LinearLayout
