@@ -1,5 +1,6 @@
 package com.labs.okey.freeride;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,6 +17,7 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -180,6 +182,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         // Keep device awake when advertising for Wi-Fi Direct
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        forceLTR();
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
@@ -873,6 +877,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    private void forceLTR() {
+        if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 )
+            getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+    }
+
     @Override
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
@@ -911,8 +921,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
             mPassengerFaces.add(new PassengerFace());
 
-        if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 )
-            findViewById(R.id.passenger4).setVisibility(View.GONE);
+        if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 ) {
+            View view = findViewById(R.id.passenger4);
+            if( view != null )
+                view.setVisibility(View.GONE);
+        }
 
     }
 
