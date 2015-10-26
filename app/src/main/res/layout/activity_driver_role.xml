@@ -108,9 +108,6 @@
         </RelativeLayout>
 
         <RelativeLayout
-            android:layoutDirection="locale"
-            android:layout_gravity="end"
-
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/ColorBackground"
@@ -143,7 +140,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
-                    app:elevation="4dp"
 
                     app:layout_anchorGravity="bottom|end"
 
@@ -153,7 +149,8 @@
                     app:backgroundTint="@color/ColorAccent"
                     app:borderWidth="0dp"
                     android:onClick="onButtonPassengerCamera"
-                    android:scaleType="fitXY" />
+                    android:scaleType="fitXY"
+                    android:visibility="visible" />
 
             </FrameLayout>
 
@@ -173,7 +170,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
-                    app:elevation="4dp"
 
                     app:layout_anchor="@id/recyclerViewPeers"
                     app:layout_anchorGravity="bottom|right|end"
@@ -203,7 +199,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
-                    app:elevation="4dp"
 
                     app:layout_anchor="@id/recyclerViewPeers"
                     app:layout_anchorGravity="bottom|right|end"
@@ -232,7 +227,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
-                    app:elevation="4dp"
 
                     app:layout_anchor="@id/recyclerViewPeers"
                     app:layout_anchorGravity="bottom|right|end"
@@ -252,15 +246,16 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:src="@drawable/ic_action_done"
-                app:elevation="4dp"
+
+                app:layout_anchorGravity="bottom|right|end"
 
                 android:layout_gravity="center"
-                app:fabSize="normal"
+                app:fabSize="mini"
 
                 app:backgroundTint="@color/ColorAccent"
                 app:borderWidth="0dp"
-
                 android:onClick="onButtonSubmitRidePics"
+                android:scaleType="fitXY"
 
                 android:visibility="gone"
                 android:layout_alignTop="@+id/passengerLayout1"
