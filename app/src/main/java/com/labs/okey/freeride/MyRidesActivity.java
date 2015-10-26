@@ -223,16 +223,6 @@ public class MyRidesActivity extends BaseActivity
 
     }
 
-//    @Override
-//    public void clicked(View   view, int position) {
-//        Toast.makeText(this, "Yaaaa", Toast.LENGTH_LONG).show();
-//
-//
-//        Intent intent = new Intent(this, DriverRoleActivity.class);
-//        //intent.putExtra("aaa",);
-//        startActivity(intent);
-//
-//    }
 }
 
 
