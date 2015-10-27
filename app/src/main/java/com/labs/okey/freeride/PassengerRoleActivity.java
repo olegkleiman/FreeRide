@@ -44,6 +44,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -546,7 +547,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 if( mEx != null ) {
 
-                    confirmEvent.putCustomAttribute("Success", 0);
+                    confirmEvent.putCustomAttribute("Error", 0);
 
                     try{
                         MobileServiceException mse = (MobileServiceException)mEx.getCause();
@@ -588,6 +589,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 lt.error();
                                 beepError.start();
 
+                                break;
+
+                            default:
+                                lt.error();
+                                Toast.makeText(PassengerRoleActivity.this,
+                                                mEx.getMessage(),
+                                                Toast.LENGTH_LONG).show();
                                 break;
                         }
                     } catch( Exception ex) {
