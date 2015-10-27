@@ -24,7 +24,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.renderscript.Matrix4f;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
@@ -63,7 +62,7 @@ import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
 import com.labs.okey.freeride.utils.IMessageTarget;
-import com.labs.okey.freeride.utils.IPictureURLUpdater;
+import com.labs.okey.freeride.utils.IPicturesVerifier;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
@@ -78,6 +77,7 @@ import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -103,7 +103,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         WifiP2pManager.ConnectionInfoListener,
         GoogleApiClient.ConnectionCallbacks,
         WAMSVersionTable.IVersionMismatchListener,
-        IPictureURLUpdater,
+        IPicturesVerifier,
         ResultCallback<Status> // for geofences callback
 {
 
@@ -848,13 +848,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    private void addPassengerFace(int at, UUID faceID) {
+    private void addPassengerFace(int at, UUID faceID, String faceURI) {
 
         try {
 
             PassengerFace pFace = mPassengerFaces.get(at);
             if (pFace != null) {
                 pFace.setFaceId(faceID.toString());
+                pFace.setPictureUrl(faceURI);
 
                 int size = 0;
                 for (PassengerFace pf : mPassengerFaces) {
@@ -1163,7 +1164,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
 
                 Bundle extras = data.getExtras();
-                Bitmap bmp = extras.getParcelable("face");
+                Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
                 if( bmp != null) {
                     Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
 
@@ -1177,8 +1178,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     passengerPicture.setImageDrawable(drawable);
                 }
 
-                UUID _faceId  = (UUID)extras.getSerializable("faceid");
-                addPassengerFace(requestCode - 1, _faceId);
+                UUID _faceId  = (UUID)extras.getSerializable(getString(R.string.detection_face_id));
+                URI faceURI = (URI)extras.getSerializable(getString(R.string.detection_face_uri));
+                addPassengerFace(requestCode - 1, _faceId, faceURI.toString());
+
             }
 
             mCapturedPassengersIDs.set(requestCode -1, 1);
@@ -1316,7 +1319,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void finished(boolean success) {
 
         Globals.verificationMat.loadIdentity(); // restore Matrix
-        //Globals.verificationMat = new Matrix4f();
 
         if( success ) {
             mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());

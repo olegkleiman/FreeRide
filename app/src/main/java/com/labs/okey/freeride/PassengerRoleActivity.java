@@ -10,15 +10,19 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
@@ -28,22 +32,18 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.ColorInt;
 import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -52,7 +52,6 @@ import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.Join;
-import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.BLEUtil;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
@@ -61,6 +60,7 @@ import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
+import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
@@ -69,10 +69,11 @@ import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class PassengerRoleActivity extends BaseActivityWithGeofences
@@ -106,8 +107,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
-    private String mRideCode;
-
+    private String  mRideCode;
+    private URI     mPictureURI;
+    private UUID    mFaceId;
 
     @Override
     @CallSuper
@@ -256,7 +258,32 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             switch( resultCode ) {
 
                 case RESULT_OK: {
-                    finish();
+
+                    if( data != null ) {
+                        Bundle extras = data.getExtras();
+
+                        FloatingActionButton passengerPicture = (FloatingActionButton)this.findViewById(R.id.join_ride_button);
+                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
+
+                        Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
+                        if( bmp != null) {
+                            Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
+
+                            drawable = RoundedDrawable.fromDrawable(drawable);
+                            ((RoundedDrawable) drawable)
+                                    .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                                    .setBorderColor(Color.WHITE)
+                                    .setBorderWidth(0) //Globals.PICTURE_BORDER_WIDTH)
+                                    .setOval(true);
+
+                            passengerPicture.setImageDrawable(drawable);
+                        }
+
+                        mPictureURI = (URI)extras.getSerializable(getString(R.string.detection_face_uri));
+                        mFaceId  = (UUID)extras.getSerializable(getString(R.string.detection_face_id));
+                    }
+
+
                 }
                 break;
 
@@ -296,21 +323,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             String dialogContent = getString(contentStringResId);
 
             new MaterialDialog.Builder(this)
-                    .callback(new MaterialDialog.ButtonCallback(){
+                    .callback(new MaterialDialog.ButtonCallback() {
                         @Override
-                        public void onNegative(MaterialDialog dialog){
+                        public void onNegative(MaterialDialog dialog) {
                             refresh();
-                        }
-                        @Override
-                        public void onNeutral(MaterialDialog dialog){
-                            onCameraCV(dialog.getView());
                         }
                     })
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
                     .positiveText(R.string.ok)
                     .negativeText(R.string.code_retry_action)
-                    .neutralText(R.string.make_selfie)
                     .contentColor(contentColor)
                     .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
                     .inputMaxLength(Globals.RIDE_CODE_INPUT_LENGTH)
@@ -449,6 +471,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 @Override
                 public void onClick(DialogInterface dialogInterface, int which) {
                     if (which == DialogInterface.BUTTON_POSITIVE) {
+                        findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
                         onSubmitCode();
                     }
                 }
@@ -596,6 +619,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 try{
                     Join _join  = new Join();
                     _join.setWhenJoined(new Date());
+                    if( mPictureURI != null && !mPictureURI.toString().isEmpty() )
+                        _join.setPictureURL(mPictureURI.toString());
+                    if( mFaceId != null && !mFaceId.toString().isEmpty() )
+                        _join.setFaceId(mFaceId.toString() );
                     _join.setRideCode(mRideCode);
                     _join.setDeviceId(android_id);
 

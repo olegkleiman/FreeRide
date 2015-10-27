@@ -10,7 +10,6 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Join;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
-import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.net.MalformedURLException;
@@ -25,7 +24,7 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
     private static final String LOG_TAG = "FR.wamsUrlUpdater";
 
     Context mContext;
-    IPictureURLUpdater mUrlUpdater;
+    IPicturesVerifier mUrlUpdater;
 
     MobileServiceClient wamsClient;
     MobileServiceTable<Join> mJoinsTable;
@@ -38,8 +37,8 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
     public wamsPictureURLUpdater(Context ctx) {
         mContext = ctx;
 
-        if( ctx instanceof IPictureURLUpdater )
-            mUrlUpdater = (IPictureURLUpdater)ctx;
+        if( ctx instanceof IPicturesVerifier)
+            mUrlUpdater = (IPicturesVerifier)ctx;
     }
 
     @Override

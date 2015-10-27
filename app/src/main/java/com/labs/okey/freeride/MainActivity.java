@@ -24,8 +24,6 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.crashlytics.android.answers.LoginEvent;
-import com.crashlytics.android.answers.SignUpEvent;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
 import com.labs.okey.freeride.gcm.GCMHandler;
@@ -40,10 +38,6 @@ import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAut
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 
-import io.fabric.sdk.android.Fabric;
-import io.fabric.sdk.android.services.common.Crash;
-
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,11 +46,12 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener,
-                          IRecyclerClickListener {
+                   IRecyclerClickListener {
 
     static final int REGISTER_USER_REQUEST = 1;
     private static final String LOG_TAG = "FR.Main";
     public static MobileServiceClient wamsClient;
+    private boolean mWAMSLogedIn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -287,6 +282,10 @@ public class MainActivity extends BaseActivity
     }
 
     public void wamsInit(String accessToken){
+
+        if( mWAMSLogedIn )
+            return;
+
         try {
             wamsClient = new MobileServiceClient(
                     Globals.WAMS_URL,
@@ -316,7 +315,15 @@ public class MainActivity extends BaseActivity
                         MobileServiceUser mobileServiceUser =
                                 wamsClient.login(MobileServiceAuthenticationProvider.Facebook,
                                         body).get();
-                        saveUser(mobileServiceUser);
+                        if( mobileServiceUser != null ) {
+                            saveUser(mobileServiceUser);
+                            mWAMSLogedIn = true;
+
+                            if( Answers.getInstance() != null )
+                                Answers.getInstance().logLogin(new LoginEvent()
+                                                .putMethod(Globals.FB_PROVIDER)
+                                                .putSuccess(true));
+                        }
                     } catch(ExecutionException | InterruptedException ex ) {
                         mEx = ex;
                         if( Crashlytics.getInstance() != null)

@@ -4,25 +4,18 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
 import android.renderscript.Matrix4f;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.v7.app.ActionBar;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
-import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -91,6 +84,8 @@ public class Globals {
             Crashlytics.setUserEmail(user.getEmail());
 
             _monitorInitialized = true;
+
+
 
         } catch(Exception e) {
             String msg = e.getMessage();

@@ -41,7 +41,6 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
     String mRideID;
     Context mContext;
     String  mContainerName;
-    IPictureURLUpdater mUrlUpdater;
 
     Appeal mCurrentAppeal;
     private MobileServiceTable<Appeal> AppealTable;

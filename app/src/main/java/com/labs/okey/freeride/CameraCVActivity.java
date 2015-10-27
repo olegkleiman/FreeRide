@@ -8,20 +8,18 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
@@ -38,15 +36,13 @@ import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.fastcv.FastCVCameraView;
 import com.labs.okey.freeride.fastcv.FastCVWrapper;
 import com.labs.okey.freeride.utils.Globals;
-import com.labs.okey.freeride.utils.IPictureURLUpdater;
+import com.labs.okey.freeride.utils.IPicturesVerifier;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.projectoxford.face.FaceServiceClient;
 import com.microsoft.projectoxford.face.contract.Face;
-
-import net.steamcrafted.loadtoast.LoadToast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -65,6 +61,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -74,7 +71,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public class CameraCVActivity extends Activity
         implements CameraBridgeViewBase.CvCameraViewListener2,
                     Camera.PictureCallback,
-                    IPictureURLUpdater,
+        IPicturesVerifier,
                     Handler.Callback {
 
     private static final String LOG_TAG = "FR.CV";
@@ -425,10 +422,13 @@ public class CameraCVActivity extends Activity
                         initialEyesDetectedCounter = 0;
                         nFramesWithNoFaces = 0;
 
-                        ImageView imgView = (ImageView)findViewById(R.id.imageViewTemplate);
-                        Drawable cameraDrawable = getResources().getDrawable(R.drawable.ic_action_camera,
-                                                                       getApplicationContext().getTheme());
-                        imgView.setImageDrawable(cameraDrawable);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ImageView imgView = (ImageView) findViewById(R.id.imageViewTemplate);
+                                imgView.setImageResource(R.drawable.ic_smart_selfie);
+                            }
+                        });
                     }
 
                 }
@@ -551,11 +551,10 @@ public class CameraCVActivity extends Activity
         new AsyncTask<InputStream, String, Face[]>(){
 
             // Progress popped up when communicating with server.
-            ProgressDialog mProgressDialog;
-
-            Exception  mEx;
-
-            InputStream mInputStream;
+            ProgressDialog  mProgressDialog;
+            Exception       mEx;
+            InputStream     mInputStream;
+            URI             blobPublishedUri;
 
             private String getTempFileName() {
                 String timeStamp = new SimpleDateFormat("yyyyMMdd+HHmmss").format(new Date());
@@ -626,8 +625,9 @@ public class CameraCVActivity extends Activity
 //                        bmpHeight = thumbFace.getHeight();
 
                         Intent intent = new Intent();
-                        intent.putExtra("face", thumbFace);
-                        intent.putExtra("faceid", faceID);
+                        intent.putExtra(getString(R.string.detection_face_bitmap), thumbFace);
+                        intent.putExtra(getString(R.string.detection_face_id), faceID);
+                        intent.putExtra(getString(R.string.detection_face_uri), blobPublishedUri);
 
                         setResult(RESULT_OK, intent);
                         finish();
@@ -683,6 +683,7 @@ public class CameraCVActivity extends Activity
                         CloudBlockBlob blob = container.getBlockBlobReference(fileName);
 
                         blob.upload(new FileInputStream(photoFile), photoFile.length());
+                        blobPublishedUri = blob.getQualifiedUri();
 
                         photoFile.delete();
                     }
