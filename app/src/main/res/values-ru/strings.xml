@@ -91,7 +91,6 @@
     <string name="edit_phone_dialog_caption">Номер телефона</string>
     <string name="title_section_cars">Мои машины</string>
     <string name="detection_center_desc">Сохранять?</string>
-    <string name="detection_center_caption">Проверка изображения</string>
     <string name="detection_freeze">Нажмите чтобы сделать снимок</string>
     <string name="please_wait">Пожалуйста, подождите</string>
     <string name="passenger_progress_dialog">Поиск водителя</string>
@@ -127,5 +126,6 @@
     <string name="selfie_desc_not_show_again">Я понял. Не показывать это сообщение снова.</string>
     <string name="drive_details">Поездка</string>
     <string name="list_of_passengers">Пассажиры</string>
+    <string name="detection_error">Ошибка распознавания</string>
 
 </resources>

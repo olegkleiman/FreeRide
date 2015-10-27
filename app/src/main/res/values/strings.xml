@@ -33,7 +33,7 @@
     <string name="error_field_required">This field is required</string>
     <string name="action_register">Register</string>
     <string name="registration_add_title">Performing registration</string>
-    <string name="registration_add_status">Processing your account</string>
+    <string name="registration_add_status">Accessing your account</string>
     <string name="registration_add_status_wait">Just few seconds</string>
     <string name="default_value">no value</string>
 
@@ -236,13 +236,19 @@ limitations under the License.</string>
     <string name="detection_no_results">No face was verified</string>
     <string name="try_again">Try again</string>
     <string name="detection_save">Verified %d faces. Save this picture?</string>
-    <string name="detection_center_caption">Detect with central authority</string>
+    <string name="detection_error">Something goes wrong</string>
+    <string name="detection_exception">detection_exception</string>
+    <string name="detection_face_bitmap">face_bitmap</string>
+    <string name="detection_face_id">face_id</string>
+    <string name="detection_face_uri">face_uri</string>
+    <string name="detection_general_exception">Unknown</string>
     <string name="detection_center_desc">Upload and verify?</string>
     <string name="detection_send">Verifying picture</string>
     <string name="detection_wait">Please wait</string>
     <string name="detection_freeze">Click to snapshot</string>
     <string name="detection_store">Saving the picture</string>
     <string name="detection_update">Updating your data</string>
+
 
     <string name="geofence_outside">Remind you when getting inside?</string>
 
@@ -255,8 +261,8 @@ limitations under the License.</string>
     <string name="answer_sent_attribute">Sent</string>
     <string name="answer_success_attribute">Success</string>
 
-    <string name="selfie">Selfie</string>
-    <string name="selfie_content">You are about to make a self-picture. During a capturing, please look at camera lens while your face is shown on the screen and it is bounded by the rectangle</string>
+    <string name="selfie">Smart Selfie</string>
+    <string name="selfie_content">A smart self-picture will authorize you. During a capturing, please look at camera lens while your whole face is shown on the screen and it is bounded by the rectangle</string>
     <string name="selfie_desc_not_show_again">I understood. Don\'t show again.</string>
 
     <string name="title_activity_camera_appeal">Appeal Activity</string>

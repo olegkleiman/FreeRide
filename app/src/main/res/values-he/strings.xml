@@ -89,7 +89,6 @@
     <string name="edit_phone_dialog_caption">מספר טלפון</string>
     <string name="title_section_cars">רכבים</string>
     <string name="title_activity_ride_detail">פרטי נסיעה</string>
-    <string name="detection_center_caption">בדיקת התמונה</string>
     <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
     <string name="detection_center_desc">לשמור?</string>
     <string name="please_wait">נא להמתין</string>
@@ -129,6 +128,6 @@
     <string name="appeal_take_picture">צלם\י תמונה עם הסימון הבא</string>
     <string name="drive_details">נסיעה</string>
     <string name="list_of_passengers">נוסעים</string>
-
+    <string name="detection_error">שגיאה בזיהוי</string>
 
 </resources>
