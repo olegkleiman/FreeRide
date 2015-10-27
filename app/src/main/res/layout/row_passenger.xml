@@ -36,6 +36,18 @@
                 android:id="@+id/userPicture"
                 android:src="@drawable/ic_action_mobile_phone"/>
 
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imgStatus"
+                android:src="@drawable/ic_camera_blue"
+                android:layout_gravity="center_vertical"
+                android:layout_alignBottom="@+id/userPicture"
+                android:layout_toStartOf="@+id/linearLayout"
+                android:layout_toLeftOf="@+id/linearLayout"
+                android:layout_marginRight="-8dp"
+                android:layout_marginBottom="-2dp" />
+
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="fill_parent"
