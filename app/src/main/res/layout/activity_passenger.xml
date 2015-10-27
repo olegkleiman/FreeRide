@@ -57,7 +57,7 @@
 
                     app:layout_anchorGravity="bottom|right|end"
 
-                    android:layout_gravity="right|bottom"
+                    android:layout_gravity="end|bottom"
                     app:fabSize="mini"
 
                     app:backgroundTint="@color/ColorAccent"
