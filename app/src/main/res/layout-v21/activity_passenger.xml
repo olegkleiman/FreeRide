@@ -49,8 +49,27 @@
                     android:layout_width="match_parent"
                     android:scrollbars="vertical"/>
 
-            </FrameLayout>
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/join_ride_button"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
 
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="mini"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+
+                    android:onClick="onCameraCV"
+                    android:visibility="visible"
+                    android:layout_marginBottom="12dp"
+                    android:layout_marginRight="12dp" />
+
+            </FrameLayout>
 
         </RelativeLayout>
 
