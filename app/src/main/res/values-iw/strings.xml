@@ -119,4 +119,5 @@
     <string name="drive_details">נסיעה</string>
     <string name="list_of_passengers">נוסעים</string>
     <string name="detection_error">שגיאה בזיהוי</string>
+    <string name="processing">מתבצע</string>
 </resources>
