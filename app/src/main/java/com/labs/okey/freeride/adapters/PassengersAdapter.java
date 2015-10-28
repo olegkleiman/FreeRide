@@ -44,11 +44,11 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
                              int headerLayoutId,
                              int rowLayoutId,
                              List<User> objects){
-        mContext = context;
-        mManagerType = managerType;
+        mContext        = context;
+        mManagerType    = managerType;
         mHeaderLayoutId = headerLayoutId;
-        mRowLayoutId = rowLayoutId;
-        items = objects;
+        mRowLayoutId    = rowLayoutId;
+        items           = objects;
     }
 
     @Override
@@ -93,6 +93,11 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
             User passenger = items.get(nPosition);
 
             holder.txtDriverName.setText(passenger.getFullName());
+            if( !passenger.wasSelfPictured() ) {
+                holder.imageStatus.setVisibility(View.INVISIBLE);
+            } else {
+                holder.imageStatus.setVisibility(View.VISIBLE);
+            }
 
             String userId = passenger.getRegistrationId();
             String pictureURL = getUserPictureURL(userId);
@@ -171,13 +176,13 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
         int holderId;
 
         // Header views
-        ImageButton btnRefresh;
+        ImageButton     btnRefresh;
 
         // Row views
-        TextView txtDriverName;
-        ImageView userPicture;
-        RelativeLayout rowLayout;
-        ImageView imageStatus;
+        TextView        txtDriverName;
+        ImageView       userPicture;
+        RelativeLayout  rowLayout;
+        ImageView       imageStatus;
 
         Drawable drawableAvailable;
         Drawable drawableConnected;
@@ -196,10 +201,10 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
 
                 holderId = viewType;
 
-                txtDriverName = (TextView) itemLayoutView.findViewById(R.id.txt_peer_name);
-                userPicture = (ImageView) itemLayoutView.findViewById(R.id.userPicture);
-                rowLayout = (RelativeLayout)itemLayoutView.findViewById(R.id.device_row);
-                imageStatus = (ImageView) itemLayoutView.findViewById(R.id.imgStatus);
+                txtDriverName   = (TextView) itemLayoutView.findViewById(R.id.txt_peer_name);
+                userPicture     = (ImageView) itemLayoutView.findViewById(R.id.userPicture);
+                rowLayout       = (RelativeLayout)itemLayoutView.findViewById(R.id.device_row);
+                imageStatus     = (ImageView) itemLayoutView.findViewById(R.id.imgStatus);
 
                 drawableAvailable = context.getResources().getDrawable(R.drawable.ic_action_disconnected);
                 drawableConnected = context.getResources().getDrawable(R.drawable.accept_24);
