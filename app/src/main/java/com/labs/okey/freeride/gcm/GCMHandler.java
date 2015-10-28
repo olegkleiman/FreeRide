@@ -12,14 +12,12 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.freeride.DriverRoleActivity;
 import com.labs.okey.freeride.MainActivity;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
-import com.labs.okey.freeride.utils.faceapiUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
@@ -28,11 +26,7 @@ import com.microsoft.windowsazure.mobileservices.notifications.RegistrationCallb
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.net.MalformedURLException;
-import java.util.Queue;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.SynchronousQueue;
-
-import io.fabric.sdk.android.services.common.Crash;
 
 
 /**
@@ -107,7 +101,33 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         ctx = context;
         boolean bSend = false;
 
-        final String userId = bundle.getString("extras");
+        String extras = bundle.getString("extras");
+        if( extras == null || extras.isEmpty() ) {
+            Crashlytics.logException(new Throwable(ctx.getString(R.string.no_extra)));
+            return;
+        }
+
+        boolean _bUserSelfPictured = false;
+        String[] tokens = extras.split(";");
+        final String userId = tokens[0];
+
+        if( tokens.length > 1) { // FaceID is embedded
+
+            _bUserSelfPictured = true;
+
+            PassengerFace pf = new PassengerFace();
+            String faceID = tokens[1];
+            pf.setFaceId(faceID);
+
+            if( tokens.length > 2 ) {
+                String pictureURL = tokens[2];
+                pf.setPictureUrl(pictureURL);
+            }
+
+            Globals.passengerFaces.add(pf);
+        }
+        final boolean bUserSelfPictured = _bUserSelfPictured;
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
         String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
         if( userId != null
@@ -139,6 +159,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                                     usersTable.where().field("registration_id").eq(userId).execute().get();
                             if (users.size() > 0) {
                                 User passenger = users.get(0);
+                                passenger.setSelfPictured(bUserSelfPictured);
                                 Globals.addMyPassenger(passenger);
                             }
                         } catch(ExecutionException | InterruptedException ex ){
@@ -160,9 +181,6 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                 Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
             }
 
-
-        //User passenger =
-
         }
 //        String faceId  = bundle.getString("extras");
 //
@@ -178,7 +196,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 //        }
 
         String message = bundle.getString("message");
-        String[] tokens = message.split(";");
+        tokens = message.split(";");
         if( tokens.length > 1) {
             message = tokens[1];
 
@@ -187,7 +205,6 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
             bSend = ( flag >> 3 == 0) ? false : true;
         }
 
-        // TODO: DriverRoleActivity.mPassengersAdapter.add(message);
         if( bSend ) {
             String title = context.getResources().getString(R.string.app_label);
             sendNotification(message, title);
