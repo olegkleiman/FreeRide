@@ -72,6 +72,16 @@ public class User implements Parcelable {
     public String getDeviceId() { return deviceId; }
     public void setDeviceId(String value) { this.deviceId = value; }
 
+    // This is not persistent proprety
+    private boolean _wasSelfPictured = false;
+    public boolean wasSelfPictured() {
+        return _wasSelfPictured;
+    }
+    public void setSelfPictured(boolean value){
+        _wasSelfPictured = value;
+    }
+
+
     public User() {
 
     }
