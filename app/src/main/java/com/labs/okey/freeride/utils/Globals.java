@@ -125,8 +125,32 @@ public class Globals {
         }
     }
     public static void addMyPassenger(User passenger) {
+
         synchronized (lockPassengers) {
-            _passengers.add(passenger);
+
+            if( passenger.wasSelfPictured() ) {// Clear the passengers that have not been pictured
+                for (User p : _passengers) {
+                    if ( !p.wasSelfPictured() )
+                        _passengers.remove(p);
+                }
+
+                _passengers.add(passenger);
+            } else { // Reject the passenger without a picture
+                     // if there are already other passengers with pictures there
+                boolean bReject = false;
+                for(User p: _passengers) {
+                    if( p.wasSelfPictured() ) {
+                        bReject = true;
+                        continue;
+                    }
+                }
+
+                if( !bReject )
+                    _passengers.add(passenger);
+
+            }
+
+
         }
     }
     public static void clearMyPassengers() {
@@ -265,7 +289,13 @@ public class Globals {
         }
     }
 
-    public static List<PassengerFace> passengerFaces;// = new ArrayList<>();
+    private static Object lockPassengerFaces = new Object();
+    public static ArrayList<PassengerFace> passengerFaces = new ArrayList<>();
+    public static void clearPassengerFaces() {
+        synchronized (lockPassengerFaces) {
+            passengerFaces.clear();
+        }
+    }
 
     // Identity matrix : ones on the main diagonal
     // and zeros elsewhere.
