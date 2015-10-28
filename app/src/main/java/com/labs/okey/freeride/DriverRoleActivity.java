@@ -19,7 +19,6 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
@@ -53,7 +52,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.labs.okey.freeride.adapters.PassengersAdapter;
-import com.labs.okey.freeride.model.GlobalSettings;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
@@ -109,37 +107,30 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private static final String LOG_TAG = "FR.Driver";
 
-    Uri mUriPhotoAppeal;
-    Ride mCurrentRide;
-
-    PassengersAdapter mPassengersAdapter;
+    PassengersAdapter       mPassengersAdapter;
     private ArrayList<User> mPassengers = new ArrayList<>();
-    private int mLastPassengersLength;
+    private int             mLastPassengersLength;
 
-    private ArrayList<PassengerFace> mPassengerFaces = new ArrayList<>();
-
-    private ArrayList<Integer> mCapturedPassengersIDs = new ArrayList<>();
+    private ArrayList<Integer>                  mCapturedPassengersIDs = new ArrayList<>();
 
     WiFiUtil mWiFiUtil;
 
-    TextView mTxtMonitorStatus;
-    RecyclerView mPeersRecyclerView;
+    TextView                                    mTxtMonitorStatus;
+    RecyclerView                                mPeersRecyclerView;
+    ImageView                                   mImageTransmit;
 
-    String mCarNumber;
+    String                                      mCarNumber;
+    Uri                                         mUriPhotoAppeal;
+    Ride                                        mCurrentRide;
 
-    ImageView mImageTransmit;
+    private MobileServiceTable<Ride>            mRidesTable;
 
-    private MobileServiceTable<Ride> mRidesTable;
-    private MobileServiceTable<GlobalSettings> mSettingsTable;
-
-    CountDownTimer mDiscoveryTimer;
-    ScheduledExecutorService mCheckPasengersTimer =
-            Executors.newScheduledThreadPool(1);
+    ScheduledExecutorService    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
     AsyncTask<Void, Void, Void> mAdvertiseTask;
 
+    // codes handled in onActivityResult()
     final int WIFI_CONNECT_REQUEST = 100;// request code for starting WiFi connection
     final int REQUEST_IMAGE_CAPTURE = 1000;
-    // handled  in onActivityResult
 
     private Handler handler = new Handler(this);
 
@@ -148,7 +139,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     MaterialDialog mOfflineDialog;
-
     private Boolean mAppealShown = false;
 
     @Override
@@ -276,7 +266,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS) ) {
                 bInitializedBeforeRotation = true;
 
-                mPassengerFaces = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
+                Globals.passengerFaces = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
@@ -318,7 +308,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
 
-            outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, mPassengerFaces);
+            outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.passengerFaces);
 
             if( mUriPhotoAppeal != null)
                 outState.putString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI, mUriPhotoAppeal.toString());
@@ -335,40 +325,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         findViewById(R.id.cabin_background_layout).setVisibility(View.VISIBLE);
     }
-
-
-//    private void discoverPassengers() {
-//
-//        mWiFiUtil.startRegistrationAndDiscovery(this,
-//                "", "", "",
-//                getHandler(),
-//                500);
-//
-//        mDiscoveryTimer = new CountDownTimer(Globals.DRIVER_DISCOVERY_PERIOD * 1000, 1000){
-//
-//            @Override
-//            public void onTick(long millisUntilFinished) {
-//                int rest = (int) (millisUntilFinished / 1000);
-//                Log.i(LOG_TAG, String.format("Left %d sec. for discovering", rest));
-//                Log.i(LOG_TAG, String.format("Discovered %d passengers", passengers.size()));
-//
-//                if( passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
-//                    prepareLayoutForAdvertising();
-//
-//                    mAdvertiseTask.execute();
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onFinish() {
-//                mWiFiUtil.stopDiscovery();
-//
-//                mAdvertiseTask.execute();
-//
-//            }
-//        }.start();
-//    }
 
     private void startAdvertise(String userID,
                                 String userName,
@@ -423,6 +379,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
+        Globals.clearPassengerFaces();
 
         super.onPause();
     }
@@ -433,14 +390,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( mWiFiUtil != null )
             mWiFiUtil.removeGroup();
 
-        //mOfflineDialog = null;
-
         super.onStop();
     }
 
     public void onButtonPassengerCamera(View v) {
-        Intent intent = new Intent(this,
-                CameraCVActivity.class);
+
+        Intent intent = new Intent(this, CameraCVActivity.class);
 
         try {
             Object tag = v.getTag();
@@ -448,8 +403,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 int requestCode = Integer.valueOf((String) tag);
                 startActivityForResult(intent, requestCode);
             }
-        } catch(Exception e) {
-          Log.e(LOG_TAG, e.getMessage());
+        } catch(Exception ex) {
+
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+
+            Log.e(LOG_TAG, ex.getMessage());
         }
     }
 
@@ -472,9 +431,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     };
 
-    public void onButtonSubmitRidePics(View view){
-
-        Globals.passengerFaces = new ArrayList<>(mPassengerFaces);
+    public void onSubmitRidePics(View view){
 
         // Will be continued on finish() from IPictureURLUpdater
         new faceapiUtils(this).execute();
@@ -583,7 +540,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         wamsInit(true);
 
-        mSettingsTable = getMobileServiceClient().getTable("globalsettings", GlobalSettings.class);
         mRidesTable = getMobileServiceClient().getTable("rides", Ride.class);
     }
 
@@ -706,8 +662,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
                                                      @Override
                                                      public void run() {
-
-                                                         Log.d(LOG_TAG, "Passengers checker timer");
 
                                                          final List<User> passengers = Globals.getMyPassengers();
 
@@ -852,13 +806,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         try {
 
-            PassengerFace pFace = mPassengerFaces.get(at);
+            PassengerFace pFace = Globals.passengerFaces.get(at);
             if (pFace != null) {
                 pFace.setFaceId(faceID.toString());
                 pFace.setPictureUrl(faceURI);
 
                 int size = 0;
-                for (PassengerFace pf : mPassengerFaces) {
+                for (PassengerFace pf : Globals.passengerFaces) {
                     if (pf.isInitialized())
                         size++;
                 }
@@ -924,7 +878,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCapturedPassengersIDs.add(0);
 
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
-            mPassengerFaces.add(new PassengerFace());
+            Globals.passengerFaces.add(new PassengerFace());
 
         if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 ) {
             View view = findViewById(R.id.passenger4);
