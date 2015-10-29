@@ -120,6 +120,7 @@
     <string name="edit_car_button_save">Save</string>
     <string name="edit_car_button_delete">Delete</string>
     <string name="cancel">Cancel</string>
+    <string name="help">Help</string>
     <string name="add_car_hint">Car number</string>
     <string name="add_car_nick">Car nickname</string>
     <string name="car_number_validation_error">Type in a valid car number</string>
@@ -191,9 +192,9 @@ limitations under the License.</string>
     <string name="intro_tutorial_fragment">Introduction tutorial</string>
 
     <!-- Transition type strings -->
-    <string name="geofence_transition_entered">You\'ve entered the monitored area</string>
-    <string name="geofence_transition_dwell">You\'re riding in monitored area</string>
-    <string name="geofence_transition_exited">You exited geofences area</string>
+    <string name="geofence_transition_entered">You\'ve entered the monitored area: </string>
+    <string name="geofence_transition_dwell">You\'re riding in monitored area: </string>
+    <string name="geofence_transition_exited">You exited geofences area: </string>
     <string name="unknown_geofence_transition">Unknown Transition</string>
     <string name="geofence_outside_title">You are outside of monitored area</string>
     <string name="geofence_positive_answer">Yes, remind me</string>
@@ -267,9 +268,8 @@ limitations under the License.</string>
     <string name="selfie_desc_not_show_again">I understood. Don\'t show again.</string>
 
     <string name="title_activity_camera_appeal">Appeal Activity</string>
-    <string name="appeal">Your request is denied. You can submit an appeal</string>
-    <string name="appeal_take_picture">Take a picture with the next movement</string>
-    <string name="appeal_ok">Ok</string>
+    <string name="appeal">Appeal</string>
+    <string name="appeal_take_picture">Your request is denied, but you can submit an appeal. Take a picture with all passengers in a cabin, each showing this gesture</string>
     <string name="appeal_cancel">Cancel</string>
     <string name="appeal_another_picture">Try again</string>
     <string name="appeal_send_success">The appeal was sent successfully</string>

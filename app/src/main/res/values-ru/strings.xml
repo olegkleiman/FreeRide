@@ -128,5 +128,6 @@
     <string name="list_of_passengers">Пассажиры</string>
     <string name="detection_error">Ошибка распознавания</string>
     <string name="processing">Обработка</string>
+    <string name="help">Помощь</string>
 
 </resources>

@@ -117,18 +117,18 @@
     <string name="detection_success">אימות הצליח. תודה.</string>
     <string name="selfie_desc_not_show_again">הבנתי. אל תציגו שוב</string>
 
-    <string name="appeal">בקשתך לפטור נדחתה, הינך יכול\ה להגיש ערעור</string>
+    <string name="appeal">ערעור</string>
     <string name="appeal_another_picture">נסה שנית</string>
     <string name="appeal_answer">לשלוח ערעור?</string>
     <string name="appeal_cancel">ביטול</string>
-    <string name="appeal_ok">Ok</string>
     <string name="appeal_send">שלח</string>
     <string name="appeal_send_success">הערעור נשלח</string>
     <string name="appeal_send_title">ערעור</string>
-    <string name="appeal_take_picture">צלם\י תמונה עם הסימון הבא</string>
+    <string name="appeal_take_picture">בקשתך נדחתה. ניתן להגיש ערעור באמצעות צילום משותף של כל הנוסעים ברכב מציגים מחווה הבאה</string>
     <string name="drive_details">נסיעה</string>
     <string name="list_of_passengers">נוסעים</string>
     <string name="detection_error">שגיאה בזיהוי</string>
     <string name="processing">מתבצע</string>
+    <string name="help">עזרה</string>
 
 </resources>
