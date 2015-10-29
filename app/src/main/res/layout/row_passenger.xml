@@ -46,7 +46,8 @@
                 android:layout_toStartOf="@+id/linearLayout"
                 android:layout_toLeftOf="@+id/linearLayout"
                 android:layout_marginRight="-8dp"
-                android:layout_marginBottom="-2dp" />
+                android:layout_marginBottom="-2dp"
+                android:visibility="visible" />
 
             <LinearLayout
                 android:orientation="vertical"
