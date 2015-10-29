@@ -130,5 +130,6 @@
     <string name="detection_error">שגיאה בזיהוי</string>
     <string name="processing">מתבצע</string>
     <string name="help">עזרה</string>
+    <string name="code_try_later">אזין מאוחר יותר</string>
 
 </resources>

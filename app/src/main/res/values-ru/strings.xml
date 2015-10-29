@@ -129,5 +129,6 @@
     <string name="detection_error">Ошибка распознавания</string>
     <string name="processing">Обработка</string>
     <string name="help">Помощь</string>
+    <string name="code_try_later">Я введу код позже</string>
 
 </resources>

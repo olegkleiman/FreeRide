@@ -130,6 +130,7 @@
     <string name="appeal_send_title">ערעור</string>
     <string name="appeal_take_picture">בקשתך נדחתה. ניתן להגיש ערעור באמצעות צילום משותף של כל הנוסעים ברכב מציגים מחווה הבאה</string>
     <string name="help">עזרה</string>
+    <string name="code_try_later">אזין מאוחר יותר</string>
 
 
 </resources>
