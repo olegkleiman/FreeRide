@@ -2,14 +2,11 @@ package com.labs.okey.freeride;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.Outline;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -17,12 +14,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewOutlineProvider;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,8 +88,6 @@ public class SettingsActivity extends BaseActivity {
         } else if( id == R.id.action_debug_without_geofences) {
             Globals.DEBUG_WITHOUT_GEOFENCES = !Globals.DEBUG_WITHOUT_GEOFENCES;
             item.setChecked(Globals.DEBUG_WITHOUT_GEOFENCES);
-        } else if ( id == R.id.action_crash_test) {
-            throw new RuntimeException("FastRide test crah");
         }
 
         return super.onOptionsItemSelected(item);

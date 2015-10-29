@@ -18,9 +18,4 @@
         android:checked="true"
         app:showAsAction="never" />
 
-    <item android:id="@+id/action_crash_test"
-        android:title="Crash Test"
-        android:orderInCategory="400"
-        app:showAsAction="never" />
-
-</menu>
+ </menu>
