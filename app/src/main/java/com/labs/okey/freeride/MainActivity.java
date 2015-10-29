@@ -368,6 +368,8 @@ public class MainActivity extends BaseActivity
     }
 
     public void onDriverClicked(View v) {
+        Globals.clearPassengerFaces();
+
         Intent intent = new Intent(this, DriverRoleActivity.class);
         startActivity(intent);
     }

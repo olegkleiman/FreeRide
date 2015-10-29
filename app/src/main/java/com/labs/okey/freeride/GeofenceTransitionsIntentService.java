@@ -17,7 +17,6 @@ import com.google.android.gms.location.GeofencingEvent;
 import com.labs.okey.freeride.services.GeofenceErrorMessages;
 import com.labs.okey.freeride.utils.Globals;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +55,8 @@ public class GeofenceTransitionsIntentService extends IntentService {
         // Get the transition type.
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
+        String geofenceTransitionString = getTransitionString(geofenceTransition);
+
         // Test that the reported transition was of interest.
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
                 geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
@@ -64,12 +65,14 @@ public class GeofenceTransitionsIntentService extends IntentService {
             List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
 
             // Get the transition details as a String.
-            String geofenceTransitionDetails = getGeofenceTransitionDetails(
+            String geofenceName = getGeofenceTransitionDetails(
                     this,
                     geofenceTransition,
                     triggeringGeofences
             );
-            Globals.setMonitorStatus(geofenceTransitionDetails);
+            Globals.set_CurrentGeoFenceName(geofenceName);
+            geofenceTransitionString += " " + geofenceName;
+            Globals.setMonitorStatus(geofenceTransitionString);
 
             if( geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
                 Globals.setInGeofenceArea(true);
@@ -79,19 +82,22 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
             // Send notification and log the transition details.
             if( Globals.getRemindGeofenceEntrance() ) {
-                sendNotification(geofenceTransitionDetails);
+                sendNotification(geofenceTransitionString);
             }
 
-            Log.i(TAG, geofenceTransitionDetails);
+            Log.i(TAG, geofenceTransitionString);
         } else if( geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL ) {
             List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+
             // Get the transition details as a String.
-            String geofenceTransitionDetails = getGeofenceTransitionDetails(
+            String geofenceName = getGeofenceTransitionDetails(
                     this,
                     geofenceTransition,
                     triggeringGeofences
             );
-            Globals.setMonitorStatus(geofenceTransitionDetails);
+            Globals.set_CurrentGeoFenceName(geofenceName);
+            geofenceTransitionString += " " + geofenceName;
+            Globals.setMonitorStatus(geofenceTransitionString);
         } else {
             // Log the error.
             Log.e(TAG, getString(R.string.geofence_transition_invalid_type, geofenceTransition));
@@ -111,7 +117,6 @@ public class GeofenceTransitionsIntentService extends IntentService {
             Context context,
             int geofenceTransition,
             List<Geofence> triggeringGeofences) {
-        String geofenceTransitionString = getTransitionString(geofenceTransition);
 
         // Get the Ids of each geofence that was triggered.
         List<String> triggeringGeofencesIdsList = new ArrayList<String>();
@@ -123,9 +128,8 @@ public class GeofenceTransitionsIntentService extends IntentService {
             if( !triggeringGeofencesIdsList.contains(tokens[0]) )
                 triggeringGeofencesIdsList.add(tokens[0]);
         }
-        String triggeringGeofencesIdsString = TextUtils.join(", ", triggeringGeofencesIdsList);
+        return TextUtils.join(", ", triggeringGeofencesIdsList);
 
-        return geofenceTransitionString + ": " + triggeringGeofencesIdsString;
     }
 
     /**

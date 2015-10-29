@@ -129,7 +129,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     AsyncTask<Void, Void, Void> mAdvertiseTask;
 
     // codes handled in onActivityResult()
-    final int WIFI_CONNECT_REQUEST = 100;// request code for starting WiFi connection
+    final int WIFI_CONNECT_REQUEST  = 100;// request code for starting WiFi connection
     final int REQUEST_IMAGE_CAPTURE = 1000;
 
     private Handler handler = new Handler(this);
@@ -138,7 +138,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
-    MaterialDialog mOfflineDialog;
+    MaterialDialog  mOfflineDialog;
     private Boolean mAppealShown = false;
 
     @Override
@@ -266,7 +266,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS) ) {
                 bInitializedBeforeRotation = true;
 
-                Globals.passengerFaces = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
+                Globals.passengerFaces = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
@@ -379,7 +379,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
-        Globals.clearPassengerFaces();
+        //Globals.clearPassengerFaces();
 
         super.onPause();
     }
@@ -457,6 +457,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         protected Void doInBackground(Void... voids) {
 
             try {
+                String currentGeoFenceName = Globals.get_currentGeoFenceName();
+                mCurrentRide.setGFenceName(currentGeoFenceName);
                 mRidesTable.update(mCurrentRide).get();
             } catch (InterruptedException | ExecutionException e) {
                 Log.e(LOG_TAG, e.getMessage());
@@ -665,9 +667,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                                                          final List<User> passengers = Globals.getMyPassengers();
 
-                                                         if( mLastPassengersLength != passengers.size() ) {
+                                                         if( mLastPassengersLength != passengers.size()
+                                                                 || Globals.isPassengerListAlerted() ) {
 
                                                              mLastPassengersLength = passengers.size();
+                                                             Globals.setPassengerListAlerted(false);
 
                                                              // Update UI on UI thread
                                                              runOnUiThread(new Runnable() {
@@ -680,6 +684,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                                                                      if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
                                                                          FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
+
                                                                          Context ctx =  getApplicationContext();
                                                                          fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
                                                                      }
@@ -807,25 +812,25 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         try {
 
             PassengerFace pFace = Globals.passengerFaces.get(at);
-            if (pFace != null) {
-                pFace.setFaceId(faceID.toString());
-                pFace.setPictureUrl(faceURI);
 
-                int size = 0;
-                for (PassengerFace pf : Globals.passengerFaces) {
-                    if (pf.isInitialized())
-                        size++;
-                }
+            pFace.setFaceId(faceID.toString());
+            pFace.setPictureUrl(faceURI);
 
-                if( size >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            showSubmitPicsButton();
-                        }
-                    });
-                }
+            int size = 0;
+            for (PassengerFace pf : Globals.passengerFaces) {
+                if (pf.isInitialized())
+                    size++;
             }
+
+            if( size >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
+                getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showSubmitPicsButton();
+                    }
+                });
+            }
+
 
         } catch(Exception ex) {
 
@@ -877,8 +882,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
             mCapturedPassengersIDs.add(0);
 
-        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
-            Globals.passengerFaces.add(new PassengerFace());
+        if( Globals.passengerFaces.size() < Globals.REQUIRED_PASSENGERS_NUMBER) {
+            for (int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+                Globals.passengerFaces.add(new PassengerFace());
+            }
+        }
 
         if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 ) {
             View view = findViewById(R.id.passenger4);
@@ -1009,9 +1017,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         try {
 
             builder.title(R.string.appeal)
-                    .iconRes(R.drawable.ic_picture)
                     .positiveText(R.string.ok)
-                    .negativeText(R.string.cancel);
+                    .negativeText(R.string.cancel)
+                    .neutralText(R.string.help)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            AppealCamera();
+                        }
+
+                        @Override
+                        public void onNeutral(MaterialDialog dialog) {
+
+                        }
+                    });
 
             View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal, null);
             builder.customView(customDialog, false);
@@ -1024,13 +1043,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
             int imageResource = getResources().getIdentifier(uri, "id",  this.getPackageName());
             emoji.setImageResource(imageResource);
-
-            builder.callback(new MaterialDialog.ButtonCallback() {
-                @Override
-                public void onPositive(MaterialDialog dialog) {
-                    AppealCamera();
-                }
-            });
 
             builder.show();
 
@@ -1073,7 +1085,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
 
                 builder.title(R.string.appeal_answer)
-                        .iconRes(R.drawable.ic_picture)
+                        .iconRes(R.drawable.ic_info)
                         .positiveText(R.string.appeal_send)
                         .negativeText(R.string.appeal_cancel)
                         .neutralText(R.string.appeal_another_picture);
