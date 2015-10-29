@@ -81,8 +81,8 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
         new MaterialDialog.Builder(mContext)
                 .title(mContext.getString(R.string.appeal_send_title))
                 .content(mContext.getString(R.string.appeal_send_success))
-                .iconRes(R.drawable.ic_picture)
-                .positiveText(R.string.appeal_ok)
+                .iconRes(R.drawable.ic_info)
+                .positiveText(R.string.ok)
                 .show();
 //        mProgressDialog.dismiss();
 

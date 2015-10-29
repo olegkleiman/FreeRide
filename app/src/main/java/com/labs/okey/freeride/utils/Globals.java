@@ -100,6 +100,14 @@ public class Globals {
 
     public static int RIDE_CODE_INPUT_LENGTH = 6;
 
+    private static boolean _passengerListAlerted = false;
+    public static boolean isPassengerListAlerted() {
+        return _passengerListAlerted;
+    }
+    public static void setPassengerListAlerted(boolean value){
+        _passengerListAlerted = value;
+    }
+
     private static List<String> _passengersIds = new ArrayList<>();
     public static boolean isPassengerIdJoined(String passengerId) {
 
@@ -117,7 +125,7 @@ public class Globals {
     }
     public static void clearMyPassengerIds() { _passengersIds.clear(); }
 
-    private static Object lockPassengers = new Object();
+    private static final Object lockPassengers = new Object();
     private static List<User> _passengers = new ArrayList<>();
     public static List<User> getMyPassengers() {
         synchronized (lockPassengers) {
@@ -130,8 +138,11 @@ public class Globals {
 
             if( passenger.wasSelfPictured() ) {// Clear the passengers that have not been pictured
                 for (User p : _passengers) {
-                    if ( !p.wasSelfPictured() )
+                    if ( !p.wasSelfPictured() ) {
                         _passengers.remove(p);
+
+                        _passengerListAlerted = true;
+                    }
                 }
 
                 _passengers.add(passenger);
@@ -203,7 +214,7 @@ public class Globals {
     public static final String WAMSTOKENPREF = "wamsToken";
     public static final String SHOW_SELFIE_DESC = "selfieDesc";
 
-    private static Object lock2 = new Object();
+    private static final Object lock2 = new Object();
     private static String MONITOR_STATUS;
     public static String getMonitorStatus() {
         synchronized (lock2) {
@@ -216,6 +227,14 @@ public class Globals {
         }
     }
 
+    private static String _currentGeoFenceName;
+    public static void set_CurrentGeoFenceName(String value){
+        _currentGeoFenceName = value;
+    }
+    public static String get_currentGeoFenceName(){
+        return _currentGeoFenceName;
+    }
+
     // Driver/passenger 'chat' messages
     public static final int MESSAGE_READ = 0x400 + 1;
     public static final int MY_HANDLE = 0x400 + 2;
@@ -226,7 +245,7 @@ public class Globals {
     //    static {
 //        FWY_AREA_LANDMARKS.put("GOOGLE", new LatLng(32.080341,34.780639));
 //    }
-    public static ArrayList<Geofence> GEOFENCES = new ArrayList<Geofence>();
+    public static ArrayList<Geofence> GEOFENCES = new ArrayList<>();
     public static PendingIntent GeofencePendingIntent;
 
     public static final long GEOFENCE_EXPIRATION_IN_HOURS = 2;
@@ -254,7 +273,7 @@ public class Globals {
         }
     }
 
-    private static Object lock3 = new Object();
+    private static final Object lock3 = new Object();
     private static boolean _REMIND_GEOFENCE_ENTRANCE;
     public static void setRemindGeofenceEntrance() {
         synchronized ( lock3 ) {
@@ -289,7 +308,7 @@ public class Globals {
         }
     }
 
-    private static Object lockPassengerFaces = new Object();
+    private static final Object lockPassengerFaces = new Object();
     public static ArrayList<PassengerFace> passengerFaces = new ArrayList<>();
     public static void clearPassengerFaces() {
         synchronized (lockPassengerFaces) {
