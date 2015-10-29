@@ -252,8 +252,8 @@
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/submit_ride_button_pics"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:src="@drawable/ic_action_done"
             app:elevation="4dp"
 
@@ -263,19 +263,12 @@
             app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
 
-            android:onClick="onButtonSubmitRidePics"
+            android:onClick="onSubmitRidePics"
 
-            android:visibility="gone"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginLeft="63dp"
-            android:layout_marginStart="63dp"
-            android:layout_marginTop="94dp"
-            android:layout_toLeftOf="@+id/passengerLayout4"
-            android:layout_toStartOf="@+id/passengerLayout4">
-
-        </android.support.design.widget.FloatingActionButton>
+            android:visibility="invisible"
+            android:layout_alignBottom="@+id/passengerLayout1"
+            android:layout_alignRight="@+id/passengerLayout3"
+            android:layout_alignEnd="@+id/passengerLayout3" />
 
     </RelativeLayout>
 

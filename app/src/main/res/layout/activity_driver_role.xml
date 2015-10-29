@@ -63,7 +63,7 @@
         <RelativeLayout
             android:id="@+id/drive_internal_layout"
             android:layout_width="fill_parent"
-            android:layout_height="220dp"
+            android:layout_height="fill_parent"
             android:layout_gravity="center_horizontal"
             android:background="@color/ColorBackground"
             android:layout_weight="0.5"
@@ -254,10 +254,10 @@
 
                 app:backgroundTint="@color/ColorAccent"
                 app:borderWidth="0dp"
-                android:onClick="onButtonSubmitRidePics"
+                android:onClick="onSubmitRidePics"
                 android:scaleType="fitXY"
 
-                android:visibility="gone"
+                android:visibility="invisible"
                 android:layout_alignTop="@+id/passengerLayout1"
                 android:layout_alignLeft="@+id/passengerLayout3"
                 android:layout_alignStart="@+id/passengerLayout3"

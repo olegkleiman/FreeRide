@@ -258,7 +258,7 @@
                 app:backgroundTint="@color/ColorAccent"
                 app:borderWidth="0dp"
 
-                android:onClick="onButtonSubmitRidePics"
+                android:onClick="onSubmitRidePics"
 
                 android:visibility="gone"
                 android:layout_below="@+id/passengerLayout4"
