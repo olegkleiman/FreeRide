@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -264,7 +263,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         Bundle extras = data.getExtras();
 
                         FloatingActionButton passengerPicture = (FloatingActionButton)this.findViewById(R.id.join_ride_button);
-                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
+                        //passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
 
                         Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
                         if( bmp != null) {
@@ -329,10 +328,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         public void onNegative(MaterialDialog dialog) {
                             refresh();
                         }
+
+                        @Override
+                        public void onNeutral(MaterialDialog dialog) {
+
+                        }
                     })
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
                     .positiveText(R.string.ok)
+                    .neutralText(R.string.code_try_later)
                     .negativeText(R.string.code_retry_action)
                     .contentColor(contentColor)
                     .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)

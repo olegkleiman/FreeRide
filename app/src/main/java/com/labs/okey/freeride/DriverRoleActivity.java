@@ -12,6 +12,7 @@ import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -52,6 +53,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.labs.okey.freeride.adapters.PassengersAdapter;
+import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
@@ -107,13 +109,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private static final String LOG_TAG = "FR.Driver";
 
-    PassengersAdapter       mPassengersAdapter;
-    private ArrayList<User> mPassengers = new ArrayList<>();
-    private int             mLastPassengersLength;
+    PassengersAdapter                           mPassengersAdapter;
+    private ArrayList<User>                     mPassengers = new ArrayList<>();
+    private int                                 mLastPassengersLength;
 
     private ArrayList<Integer>                  mCapturedPassengersIDs = new ArrayList<>();
 
-    WiFiUtil mWiFiUtil;
+    WiFiUtil                                    mWiFiUtil;
 
     TextView                                    mTxtMonitorStatus;
     RecyclerView                                mPeersRecyclerView;
@@ -432,7 +434,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     };
 
     public void onSubmitRidePics(View view){
-
+        // Process the Faces with Oxford FaceAPI
         // Will be continued on finish() from IPictureURLUpdater
         new faceapiUtils(this).execute();
     }
@@ -1285,6 +1287,59 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void finished(boolean success) {
 
         Globals.verificationMat.loadIdentity(); // restore Matrix
+
+        // Upload pictures as joins
+        new AsyncTask<Void, Void, Void>() {
+
+            Exception mEx;
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+                    MobileServiceTable<Join> joinsTable =
+                            getMobileServiceClient().getTable("joins", Join.class);
+
+                    for (PassengerFace pf: Globals.passengerFaces) {
+
+                        Join _join = new Join();
+                        _join.setWhenJoined(new Date());
+                        String pictureURI = pf.getPictureUrl();
+                        if (pictureURI != null && !pictureURI.isEmpty())
+                            _join.setPictureURL(pictureURI);
+
+                        String faceId = pf.getFaceId().toString();
+                        if( !faceId.isEmpty() )
+                            _join.setFaceId(faceId );
+                        _join.setRideCode(mCurrentRide.getRideCode());
+
+                        // AndroidId is meanless in this situation: it's only a picture of passenger
+                        //_join.setDeviceId(android_id);
+
+                        try {
+                            Location loc = getCurrentLocation();
+                            if (loc != null) {
+                                _join.setLat((float) loc.getLatitude());
+                                _join.setLon((float) loc.getLongitude());
+                            }
+                        } catch (Exception e) {
+                            Log.e(LOG_TAG, e.getMessage());
+                        }
+
+                        joinsTable.insert(_join).get();
+                    }
+
+                } catch( ExecutionException | InterruptedException ex ) {
+                    mEx = ex;
+                    if(Crashlytics.getInstance() != null)
+                        Crashlytics.logException(ex);
+
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
+
+                return null;
+            }
+        }.execute();
 
         if( success ) {
             mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
