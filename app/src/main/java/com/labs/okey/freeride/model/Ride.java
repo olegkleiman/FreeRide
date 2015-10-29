@@ -4,9 +4,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
-import com.labs.okey.freeride.utils.Globals;
-
-import org.opencv.ml.Boost;
 
 import java.io.Serializable;
 import java.text.ParseException;
@@ -83,6 +80,16 @@ public class Ride implements Serializable, Parcelable {
         isPictureRequiredByDriver = value;
     }
 
+    @Expose
+    @com.google.gson.annotations.SerializedName("gfencename")
+    private String gfencename;
+    public String getGFenceName() {
+        return gfencename;
+    }
+    public void setGFenceName(String value){
+        gfencename = value;
+    }
+
     //
     // Implementation of Parcelable
     //
@@ -104,6 +111,7 @@ public class Ride implements Serializable, Parcelable {
         setRideCode( in.readString() );
         //setApproved(in.readInt());
         isPictureRequired  = in.readByte() != 0;
+        setGFenceName( in.readString() );
     }
 
     @Override
@@ -126,6 +134,7 @@ public class Ride implements Serializable, Parcelable {
         parcel.writeString(getRideCode());
         //parcel.writeInt(getApproved());
         parcel.writeByte((byte) (isPictureRequired() ? 1: 0) );
+        parcel.writeString(getGFenceName());
     }
 
     public static final Parcelable.Creator<Ride> CREATOR = new Parcelable.Creator<Ride>() {
