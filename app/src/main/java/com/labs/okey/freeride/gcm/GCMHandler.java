@@ -124,7 +124,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                 pf.setPictureUrl(pictureURL);
             }
 
-            Globals.passengerFaces.add(pf);
+            Globals.add_PassengerFace(pf);
         }
         final boolean bUserSelfPictured = _bUserSelfPictured;
 
