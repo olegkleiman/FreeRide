@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -263,7 +264,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         Bundle extras = data.getExtras();
 
                         FloatingActionButton passengerPicture = (FloatingActionButton)this.findViewById(R.id.join_ride_button);
-                        //passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
+                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
 
                         Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
                         if( bmp != null) {
@@ -273,7 +274,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             ((RoundedDrawable) drawable)
                                     .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
                                     .setBorderColor(Color.WHITE)
-                                    .setBorderWidth(0) //Globals.PICTURE_BORDER_WIDTH)
+                                    .setBorderWidth(0)
                                     .setOval(true);
 
                             passengerPicture.setImageDrawable(drawable);

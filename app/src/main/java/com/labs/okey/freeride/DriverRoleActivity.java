@@ -268,7 +268,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS) ) {
                 bInitializedBeforeRotation = true;
 
-                Globals.passengerFaces = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+                // See the explanation of covarinace in Java here
+                // http://stackoverflow.com/questions/6951306/cannot-cast-from-arraylistparcelable-to-arraylistclsprite
+                ArrayList<PassengerFace> _temp = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+                Globals.set_PassengerFaces(_temp);
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
@@ -310,7 +313,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
 
-            outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.passengerFaces);
+            outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.get_PassengerFaces());
 
             if( mUriPhotoAppeal != null)
                 outState.putString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI, mUriPhotoAppeal.toString());
@@ -813,13 +816,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         try {
 
-            PassengerFace pFace = Globals.passengerFaces.get(at);
+            PassengerFace pFace = Globals.get_PassengerFace(at);
 
             pFace.setFaceId(faceID.toString());
             pFace.setPictureUrl(faceURI);
 
             int size = 0;
-            for (PassengerFace pf : Globals.passengerFaces) {
+            for (PassengerFace pf : Globals.get_PassengerFaces()) {
                 if (pf.isInitialized())
                     size++;
             }
@@ -884,9 +887,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
             mCapturedPassengersIDs.add(0);
 
-        if( Globals.passengerFaces.size() < Globals.REQUIRED_PASSENGERS_NUMBER) {
+        int passengerFacesSize = Globals.get_PassengerFaces().size();
+        if(  passengerFacesSize < Globals.REQUIRED_PASSENGERS_NUMBER) {
             for (int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
-                Globals.passengerFaces.add(new PassengerFace());
+                Globals.add_PassengerFace(new PassengerFace());
             }
         }
 
@@ -1140,7 +1144,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     ((RoundedDrawable) drawable)
                             .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
                             .setBorderColor(Color.WHITE)
-                            .setBorderWidth(0) //Globals.PICTURE_BORDER_WIDTH)
+                            .setBorderWidth(0)
                             .setOval(true);
 
                     passengerPicture.setImageDrawable(drawable);
@@ -1300,7 +1304,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     MobileServiceTable<Join> joinsTable =
                             getMobileServiceClient().getTable("joins", Join.class);
 
-                    for (PassengerFace pf: Globals.passengerFaces) {
+                    for (PassengerFace pf: Globals.get_PassengerFaces()) {
 
                         Join _join = new Join();
                         _join.setWhenJoined(new Date());
