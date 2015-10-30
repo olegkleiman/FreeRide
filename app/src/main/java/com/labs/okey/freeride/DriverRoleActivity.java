@@ -62,7 +62,7 @@ import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
 import com.labs.okey.freeride.utils.IMessageTarget;
-import com.labs.okey.freeride.utils.IPicturesVerifier;
+import com.labs.okey.freeride.utils.IUploader;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
@@ -103,7 +103,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         WifiP2pManager.ConnectionInfoListener,
         GoogleApiClient.ConnectionCallbacks,
         WAMSVersionTable.IVersionMismatchListener,
-        IPicturesVerifier,
+        IUploader,
         ResultCallback<Status> // for geofences callback
 {
 
@@ -124,6 +124,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     String                                      mCarNumber;
     Uri                                         mUriPhotoAppeal;
     Ride                                        mCurrentRide;
+    int                                         mEmojiID;
 
     private MobileServiceTable<Ride>            mRidesTable;
 
@@ -133,6 +134,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     // codes handled in onActivityResult()
     final int WIFI_CONNECT_REQUEST  = 100;// request code for starting WiFi connection
     final int REQUEST_IMAGE_CAPTURE = 1000;
+
+
 
     private Handler handler = new Handler(this);
 
@@ -268,7 +271,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS) ) {
                 bInitializedBeforeRotation = true;
 
-                // See the explanation of covarinace in Java here
+                // See the explanation of covariance in Java here
                 // http://stackoverflow.com/questions/6951306/cannot-cast-from-arraylistparcelable-to-arraylistclsprite
                 ArrayList<PassengerFace> _temp = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
                 Globals.set_PassengerFaces(_temp);
@@ -279,6 +282,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI);
                 mUriPhotoAppeal = Uri.parse(str);
+            }
+
+            if(  savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMOJIID) ) {
+                bInitializedBeforeRotation = true;
+
+                mEmojiID = savedInstanceState.getInt(Globals.PARCELABLE_KEY_EMOJIID);
             }
 
             if( !bInitializedBeforeRotation )
@@ -317,6 +326,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             if( mUriPhotoAppeal != null)
                 outState.putString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI, mUriPhotoAppeal.toString());
+
+            outState.putInt(Globals.PARCELABLE_KEY_EMOJIID, mEmojiID);
         }
 
         super.onSaveInstanceState(outState);
@@ -1041,14 +1052,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal, null);
             builder.customView(customDialog, false);
 
-            if(Globals.EMOJI_INDICATOR == 0){
-                Globals.EMOJI_INDICATOR  =  new Random().nextInt(Globals.NUM_OF_EMOJI);
+            if( mEmojiID == 0 ){
+                mEmojiID =  new Random().nextInt(Globals.NUM_OF_EMOJIS);
             }
 
-            ImageView emoji = (ImageView)customDialog.findViewById(R.id.appeal_emoji);
-            String uri = "@drawable/emoji_" + Integer.toString(Globals.EMOJI_INDICATOR);
+            String uri = "@drawable/emoji_" + Integer.toString(mEmojiID);
             int imageResource = getResources().getIdentifier(uri, "id",  this.getPackageName());
-            emoji.setImageResource(imageResource);
+            ImageView emojiImageView = (ImageView)customDialog.findViewById(R.id.appeal_emoji);
+            emojiImageView.setImageResource(imageResource);
 
             builder.show();
 
@@ -1161,7 +1172,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     public  void sendAppeal(){
-        new wamsAddAppeal(DriverRoleActivity.this, "appeals", mCurrentRide.Id)
+        new wamsAddAppeal(DriverRoleActivity.this,
+                            "appeals",
+                            mCurrentRide.Id,
+                            mEmojiID)
                 .execute(new File(mUriPhotoAppeal.getPath()));
     }
 
@@ -1288,68 +1302,90 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
-    public void finished(boolean success) {
+    public void finished(int task_tag, boolean success) {
 
-        Globals.verificationMat.loadIdentity(); // restore Matrix
+        switch( task_tag ) {
 
-        // Upload pictures as joins
-        new AsyncTask<Void, Void, Void>() {
+            case Globals.FACE_VERIFY_TASK_TAG: {
 
-            Exception mEx;
+                Globals.verificationMat.loadIdentity(); // restore Matrix
 
-            @Override
-            protected Void doInBackground(Void... voids) {
+                // Upload pictures as joins
+                new AsyncTask<Void, Void, Void>() {
 
-                try {
-                    MobileServiceTable<Join> joinsTable =
-                            getMobileServiceClient().getTable("joins", Join.class);
+                    Exception mEx;
 
-                    for (PassengerFace pf: Globals.get_PassengerFaces()) {
+                    @Override
+                    protected void onPreExecute() {
 
-                        Join _join = new Join();
-                        _join.setWhenJoined(new Date());
-                        String pictureURI = pf.getPictureUrl();
-                        if (pictureURI != null && !pictureURI.isEmpty())
-                            _join.setPictureURL(pictureURI);
-
-                        String faceId = pf.getFaceId().toString();
-                        if( !faceId.isEmpty() )
-                            _join.setFaceId(faceId );
-                        _join.setRideCode(mCurrentRide.getRideCode());
-
-                        // AndroidId is meanless in this situation: it's only a picture of passenger
-                        //_join.setDeviceId(android_id);
-
-                        try {
-                            Location loc = getCurrentLocation();
-                            if (loc != null) {
-                                _join.setLat((float) loc.getLatitude());
-                                _join.setLon((float) loc.getLongitude());
-                            }
-                        } catch (Exception e) {
-                            Log.e(LOG_TAG, e.getMessage());
-                        }
-
-                        joinsTable.insert(_join).get();
                     }
 
-                } catch( ExecutionException | InterruptedException ex ) {
-                    mEx = ex;
-                    if(Crashlytics.getInstance() != null)
-                        Crashlytics.logException(ex);
+                    @Override
+                    protected Void doInBackground(Void... voids) {
 
-                    Log.e(LOG_TAG, ex.getMessage());
+                        MobileServiceTable<Join> joinsTable = getMobileServiceClient().getTable("joins", Join.class);
+
+                        try {
+                            Iterator<PassengerFace> iterator = Globals.get_PassengerFacesIterator();
+                            while (iterator.hasNext()) {
+
+                                PassengerFace pf = iterator.next();
+
+                                Join _join = new Join();
+                                _join.setWhenJoined(new Date());
+                                String pictureURI = pf.getPictureUrl();
+                                if (pictureURI != null && !pictureURI.isEmpty())
+                                    _join.setPictureURL(pictureURI);
+
+                                String faceId = pf.getFaceId().toString();
+                                if (!faceId.isEmpty())
+                                    _join.setFaceId(faceId);
+                                _join.setRideCode(mCurrentRide.getRideCode());
+
+                                // AndroidId is meaningless in this situation: it's only a picture of passenger
+                                //_join.setDeviceId(android_id);
+
+                                try {
+                                    Location loc = getCurrentLocation();
+                                    if (loc != null) {
+                                        _join.setLat((float) loc.getLatitude());
+                                        _join.setLon((float) loc.getLongitude());
+                                    }
+                                } catch (Exception e) {
+                                    Log.e(LOG_TAG, e.getMessage());
+                                }
+
+                                String msg = String.format("Inserting join for user with FaceID %s", faceId);
+                                Log.d(LOG_TAG, msg);
+
+                                joinsTable.insert(_join, (List) null).get();
+                            }
+
+                        } catch (Exception ex) { // ExecutionException | InterruptedException ex ) {
+                            mEx = ex;
+                            if (Crashlytics.getInstance() != null)
+                                Crashlytics.logException(ex);
+
+                            Log.e(LOG_TAG, ex.getMessage());
+                        }
+
+                        return null;
+                    }
+                }.execute();
+
+                if (success) {
+                    mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+                    updateCurrentRideTask.execute();
+                } else {
+                    onAppealCamera();
                 }
-
-                return null;
             }
-        }.execute();
+            break;
 
-        if( success ) {
-            mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
-            updateCurrentRideTask.execute();
-        } else {
-            onAppealCamera();
+            case Globals.APPEAL_UPLOAD_TASK_TAG: {
+                finish();
+            }
+            break;
         }
     }
 
