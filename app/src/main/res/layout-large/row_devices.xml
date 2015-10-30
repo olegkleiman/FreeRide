@@ -33,7 +33,7 @@
                 android:layout_marginLeft="2dip"
                 android:layout_marginStart="2dip"
                 android:id="@+id/userPicture"
-                android:src="@drawable/ic_launcher"/>
+                android:src="@mipmap/ic_launcher2"/>
 
             <ImageView
                 android:layout_width="wrap_content"
