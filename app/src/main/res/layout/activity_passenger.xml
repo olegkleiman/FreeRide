@@ -36,7 +36,7 @@
             android:id="@+id/passenger_internal_layout"
             android:visibility="visible">
 
-            <FrameLayout
+            <RelativeLayout
                 android:id="@+id/ride_transmitter_layout"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
@@ -48,28 +48,33 @@
                     android:layout_width="match_parent"
                     android:scrollbars="vertical"/>
 
-                <android.support.design.widget.FloatingActionButton
-                    android:id="@+id/join_ride_button"
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:src="@drawable/ic_action_camera"
-                    app:elevation="4dp"
 
-                    app:layout_anchorGravity="bottom|right|end"
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true">>
 
-                    android:layout_gravity="end|bottom"
-                    app:fabSize="mini"
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/join_ride_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_action_camera"
 
-                    app:backgroundTint="@color/ColorAccent"
-                    app:borderWidth="0dp"
+                        app:fabSize="normal"
+                        app:elevation="4dp"
+                        app:backgroundTint="@color/ColorAccent"
+                        app:borderWidth="0dp"
 
-                    android:onClick="onCameraCV"
-                    android:layout_marginBottom="12dp"
-                    android:layout_marginRight="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:visibility="visible" />
+                        android:onClick="onCameraCV"
+                        android:visibility="visible"
+                        android:layout_marginBottom="0dp"
+                        android:layout_marginRight="0dp"
+                        android:layout_marginEnd="0dp"/>
+                </FrameLayout>
 
-            </FrameLayout>
+            </RelativeLayout>
 
         </RelativeLayout>
 
