@@ -101,6 +101,9 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         ctx = context;
         boolean bSend = false;
 
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
+
         String extras = bundle.getString("extras");
         if( extras == null || extras.isEmpty() ) {
             Crashlytics.logException(new Throwable(ctx.getString(R.string.no_extra)));
@@ -110,6 +113,10 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         boolean _bUserSelfPictured = false;
         String[] tokens = extras.split(";");
         final String userId = tokens[0];
+
+        if( userId != null
+                && userId.equalsIgnoreCase(userRegistrationId))
+            return;
 
         if( tokens.length > 1) { // FaceID is embedded
 
@@ -126,13 +133,8 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
             Globals.add_PassengerFace(pf);
         }
-        final boolean bUserSelfPictured = _bUserSelfPictured;
 
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
-        if( userId != null
-                && userId.equalsIgnoreCase(userRegistrationId))
-            return;
+        final boolean bUserSelfPictured = _bUserSelfPictured;
 
         if( userId != null
             && !Globals.isPassengerIdJoined(userId) ) {
