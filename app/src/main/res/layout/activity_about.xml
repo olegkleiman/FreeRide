@@ -23,7 +23,7 @@
                 android:layout_width="145dp"
                 android:layout_height="112dp"
                 android:id="@+id/imageView3"
-                android:src="@drawable/logo_transparent_en" />
+                android:src="@mipmap/ic_launcher2" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -110,6 +110,12 @@
                     style="@style/SubCaptionStyle"
                     android:text="This product includes the Azure SDK libraries software from Microsoft, Inc. distributed under Apache License, Version 2.0 "
                     android:id="@+id/textView13"
+                    android:layout_marginTop="10dp" />
+
+                <TextView
+                    style="@style/SubCaptionStyle"
+                    android:text="This product includes software from Intel, Corp. distributed under Intel License Agreement For Open Source Computer Vision Library. Copyright (&#169;) 2000, Intel Corporation"
+                    android:id="@+id/textViewIntelLicense"
                     android:layout_marginTop="10dp" />
 
                 <TextView
