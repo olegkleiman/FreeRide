@@ -241,32 +241,38 @@
 
             </FrameLayout>
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/submit_ride_button_pics"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:src="@drawable/ic_action_done"
-
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="center"
-                app:fabSize="mini"
-
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onSubmitRidePics"
-                android:scaleType="fitXY"
-
-                android:visibility="invisible"
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignTop="@+id/passengerLayout1"
                 android:layout_alignLeft="@+id/passengerLayout3"
                 android:layout_alignStart="@+id/passengerLayout3"
                 android:layout_alignBottom="@+id/passengerLayout1"
                 android:layout_toLeftOf="@+id/passengerLayout4"
-                android:layout_toStartOf="@+id/passengerLayout4"
-                android:layout_margin="0dp">
+                android:layout_toStartOf="@+id/passengerLayout4">
 
-            </android.support.design.widget.FloatingActionButton>
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/submit_ride_button_pics"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_action_done"
+
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="center"
+                    app:fabSize="normal"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onSubmitRidePics"
+                    android:scaleType="fitXY"
+
+                    android:visibility="invisible"
+
+                    android:layout_margin="0dp">
+
+                </android.support.design.widget.FloatingActionButton>
+            </FrameLayout>
 
 
         </RelativeLayout>
