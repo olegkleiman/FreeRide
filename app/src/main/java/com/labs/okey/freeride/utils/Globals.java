@@ -50,8 +50,7 @@ public class Globals {
         LINEAR_LAYOUT_MANAGER
     }
 
-    public static int EMOJI_INDICATOR = 1;
-    public static int NUM_OF_EMOJI = 7;
+    public static int NUM_OF_EMOJIS = 7;
 
     private static class DManClassFactory {
 
@@ -323,6 +322,9 @@ public class Globals {
             return _passengerFaces;
         }
     }
+    public static Iterator<PassengerFace> get_PassengerFacesIterator(){
+        return _passengerFaces.iterator();
+    }
     public static void set_PassengerFaces(ArrayList<PassengerFace> faces) {
         _passengerFaces = faces;
     }
@@ -357,6 +359,7 @@ public class Globals {
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
     public static String PARCELABLE_KEY_PASSENGERS_FACE_IDS = "face_ids";
     public static String PARCELABLE_KEY_APPEAL_PHOTO_URI = "appeal_uri";
+    public static String PARCELABLE_KEY_EMOJIID = "emoji_id";
 
     public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
     public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";
@@ -366,4 +369,6 @@ public class Globals {
                     "AccountName=fastride;" +
                     "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
 
+    public static final int FACE_VERIFY_TASK_TAG = 1;
+    public static final int APPEAL_UPLOAD_TASK_TAG = 2;
 }

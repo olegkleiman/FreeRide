@@ -24,7 +24,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
     private static final String LOG_TAG = "FR.FaceAPI";
 
     Context             mContext;
-    IPicturesVerifier   mUrlUpdater;
+    IUploader mUrlUpdater;
     int                 mDepth;
     LoadToast           lt;
     Boolean             mComparisonResult = true;
@@ -33,8 +33,8 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
 
         mContext = ctx;
 
-        if(ctx instanceof IPicturesVerifier)
-            mUrlUpdater=(IPicturesVerifier)ctx;
+        if(ctx instanceof IUploader)
+            mUrlUpdater=(IUploader)ctx;
     }
 
     @Override
@@ -58,7 +58,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
         lt.success();
 
         if( mUrlUpdater != null )
-            mUrlUpdater.finished(mComparisonResult);
+            mUrlUpdater.finished(Globals.FACE_VERIFY_TASK_TAG, mComparisonResult);
     }
 
     @Override

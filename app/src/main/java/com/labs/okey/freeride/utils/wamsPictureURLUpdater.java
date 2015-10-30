@@ -24,7 +24,7 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
     private static final String LOG_TAG = "FR.wamsUrlUpdater";
 
     Context mContext;
-    IPicturesVerifier mUrlUpdater;
+    IUploader mUrlUpdater;
 
     MobileServiceClient wamsClient;
     MobileServiceTable<Join> mJoinsTable;
@@ -37,8 +37,8 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
     public wamsPictureURLUpdater(Context ctx) {
         mContext = ctx;
 
-        if( ctx instanceof IPicturesVerifier)
-            mUrlUpdater = (IPicturesVerifier)ctx;
+        if( ctx instanceof IUploader)
+            mUrlUpdater = (IUploader)ctx;
     }
 
     @Override
@@ -77,13 +77,13 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
                             if (mUrlUpdater != null)
-                                mUrlUpdater.finished(false);
+                                mUrlUpdater.finished(0, false);
                         }
                     })
                     .show();
         } else {
             if (mUrlUpdater != null)
-                mUrlUpdater.finished(true);
+                mUrlUpdater.finished(0, true);
         }
     }
 

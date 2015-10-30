@@ -36,7 +36,7 @@ import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.fastcv.FastCVCameraView;
 import com.labs.okey.freeride.fastcv.FastCVWrapper;
 import com.labs.okey.freeride.utils.Globals;
-import com.labs.okey.freeride.utils.IPicturesVerifier;
+import com.labs.okey.freeride.utils.IUploader;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
@@ -71,7 +71,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public class CameraCVActivity extends Activity
         implements CameraBridgeViewBase.CvCameraViewListener2,
                     Camera.PictureCallback,
-        IPicturesVerifier,
+        IUploader,
                     Handler.Callback {
 
     private static final String LOG_TAG = "FR.CV";
@@ -738,7 +738,7 @@ public class CameraCVActivity extends Activity
     }
 
     @Override
-    public void finished(boolean success) {
+    public void finished(int task_tag, boolean success) {
         if( !success )
             restoreFromSendToDetect(null);
         else

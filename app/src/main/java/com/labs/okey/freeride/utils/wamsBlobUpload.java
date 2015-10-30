@@ -31,7 +31,7 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
 
     Context mContext;
     String  mContainerName;
-    IPicturesVerifier mUrlUpdater;
+    IUploader mUrlUpdater;
 
     ProgressDialog mProgressDialog;
 
@@ -41,8 +41,8 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
         mContainerName = containerName;
 
         mContext = ctx;
-        if( ctx instanceof IPicturesVerifier)
-            mUrlUpdater = (IPicturesVerifier)ctx;
+        if( ctx instanceof IUploader)
+            mUrlUpdater = (IUploader)ctx;
     }
 
     @Override

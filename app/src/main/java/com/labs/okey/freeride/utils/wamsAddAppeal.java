@@ -1,13 +1,17 @@
 package com.labs.okey.freeride.utils;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.Display;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.labs.okey.freeride.DriverRoleActivity;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Appeal;
 import com.microsoft.azure.storage.CloudStorageAccount;
@@ -17,6 +21,8 @@ import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+
+import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,20 +42,19 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
 
     private static final String LOG_TAG = "FR.wamsAppeal";
 
-    URI publishedUri;
-    Exception error;
-    String mRideID;
-    Context mContext;
-    String  mContainerName;
+    URI                                 publishedUri;
+    Exception                           error;
+    String                              mRideID;
+    int                                 mEmojiID;
+    Context                             mContext;
+    String                              mContainerName;
+    IUploader                           mUploader;
+    Appeal                              mCurrentAppeal;
 
-    Appeal mCurrentAppeal;
-    private MobileServiceTable<Appeal> AppealTable;
-
-    private MobileServiceClient wamsClient;
+    private MobileServiceClient         wamsClient;
     public MobileServiceClient getMobileServiceClient() { return wamsClient; }
 
-
-    ProgressDialog mProgressDialog;
+    LoadToast                           lt;
 
     public static final String storageConnectionString =
             "DefaultEndpointsProtocol=http;" +
@@ -57,21 +62,28 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
                     "AccountName=fastride;" +
                     "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
 
-    public wamsAddAppeal(Context ctx, String containerName, String rideID){
+    public wamsAddAppeal(Context ctx, String containerName, String rideID, int emojiID){
 
         mContainerName = containerName;
         mRideID = rideID;
+        mEmojiID = emojiID;
 
         mContext = ctx;
-//        if( ctx instanceof IPictureURLUpdater )
-//            mUrlUpdater = (IPictureURLUpdater)ctx;
+        if( ctx instanceof IUploader )
+            mUploader = (IUploader)ctx;
     }
 
     @Override
     protected void onPreExecute() {
-//        mProgressDialog = ProgressDialog.show(mContext,
-//                mContext.getString(R.string.detection_store),
-//                mContext.getString(R.string.detection_wait));
+        lt = new LoadToast(mContext);
+        lt.setText(mContext.getString(R.string.processing));
+
+        Display display = ((Activity)mContext).getWindow().getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        lt.setTranslationY(size.y / 2);
+        lt.show();
+        lt.show();
     }
 
 
@@ -83,20 +95,21 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
                 .content(mContext.getString(R.string.appeal_send_success))
                 .iconRes(R.drawable.ic_info)
                 .positiveText(R.string.ok)
+                .callback(new MaterialDialog.ButtonCallback() {
+                              @Override
+                              public void onPositive(MaterialDialog dialog) {
+                                  mUploader.finished(Globals.APPEAL_UPLOAD_TASK_TAG, true);
+                              }
+                          }
+                    )
                 .show();
-//        mProgressDialog.dismiss();
 
-//        if( mUrlUpdater != null )
-//            mUrlUpdater.update(publishedUri.toString());
     }
-
 
     @Override
     protected Void doInBackground(File... params) {
 
         File photoFile = params[0];
-
-
 
         try {
             CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
@@ -113,55 +126,19 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
             Appeal appeal = new Appeal();
             appeal.setRideId(mRideID);
             appeal.setPictureUrl(publishedUri.toString());
-            appeal.setEmojiId(Integer.toString(Globals.EMOJI_INDICATOR));
+            appeal.setEmojiId(Integer.toString(mEmojiID));
 
             wamsClient = wamsUtils.init(mContext);
-            startAutoUpdate();
 
-            AppealTable = getMobileServiceClient().getTable("appeal", Appeal.class);
-            mCurrentAppeal = AppealTable.insert(appeal).get();
+            MobileServiceTable<Appeal>  wamsAppealTable = getMobileServiceClient().getTable("appeal", Appeal.class);
+            mCurrentAppeal = wamsAppealTable.insert(appeal).get();
 
-
-
-
-        } catch (URISyntaxException | InvalidKeyException
-                | IOException | StorageException e) {
+        } catch (Exception e) {
             error = e;
             Log.e(LOG_TAG, e.getMessage());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
         }
 
         return null;
     }
 
-    private WAMSVersionTable wamsVersionTable;
-
-    private void startAutoUpdate() {
-        try {
-
-            WAMSVersionTable.IVersionMismatchListener listener = null;
-            if (this instanceof WAMSVersionTable.IVersionMismatchListener) {
-                listener = (WAMSVersionTable.IVersionMismatchListener) this;
-            }
-            wamsVersionTable = new WAMSVersionTable(mContext, listener);
-            PackageInfo info = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
-            String packageVersionName = info.versionName;
-            if (!packageVersionName.isEmpty()) {
-
-                StringTokenizer tokens = new StringTokenizer(packageVersionName, ".");
-                if (tokens.countTokens() > 0) {
-                    int majorPackageVersion = Integer.parseInt(tokens.nextToken());
-                    int minorPackageVersion = Integer.parseInt(tokens.nextToken());
-                    wamsVersionTable.compare(majorPackageVersion, minorPackageVersion);
-                }
-            }
-
-        } catch (PackageManager.NameNotFoundException ex) {
-
-            Log.e(LOG_TAG, ex.getMessage());
-        }
-    }
 }
