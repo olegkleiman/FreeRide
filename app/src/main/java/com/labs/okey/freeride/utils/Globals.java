@@ -15,6 +15,7 @@ import com.labs.okey.freeride.model.User;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
@@ -137,15 +138,22 @@ public class Globals {
         synchronized (lockPassengers) {
 
             if( passenger.wasSelfPictured() ) {// Clear the passengers that have not been pictured
-                for (User p : _passengers) {
-                    if ( !p.wasSelfPictured() ) {
-                        _passengers.remove(p);
 
-                        _passengerListAlerted = true;
+                Iterator<User> iter = _passengers.iterator();
+
+                while (iter.hasNext()) {
+
+                    User _p = iter.next();
+
+                    if( !_p.wasSelfPictured() ) {
+                        iter.remove();
+
+                        _passengerListAlerted = true; // redundant for each item
                     }
                 }
 
                 _passengers.add(passenger);
+
             } else { // Reject the passenger without a picture
                      // if there are already other passengers with pictures there
                 boolean bReject = false;
@@ -309,10 +317,26 @@ public class Globals {
     }
 
     private static final Object lockPassengerFaces = new Object();
-    public static ArrayList<PassengerFace> passengerFaces = new ArrayList<>();
+    private static ArrayList<PassengerFace> _passengerFaces = new ArrayList<>();
+    public static ArrayList<PassengerFace> get_PassengerFaces() {
+        synchronized (lockPassengerFaces) {
+            return _passengerFaces;
+        }
+    }
+    public static void set_PassengerFaces(ArrayList<PassengerFace> faces) {
+        _passengerFaces = faces;
+    }
+    public static void add_PassengerFace(PassengerFace pf) {
+        _passengerFaces.add(pf);
+    }
+    public static PassengerFace get_PassengerFace(int at){
+        synchronized (lockPassengerFaces) {
+            return _passengerFaces.get(at);
+        }
+    }
     public static void clearPassengerFaces() {
         synchronized (lockPassengerFaces) {
-            passengerFaces.clear();
+            _passengerFaces.clear();
         }
     }
 

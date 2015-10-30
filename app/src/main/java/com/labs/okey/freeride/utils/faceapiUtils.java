@@ -50,7 +50,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
         }
         lt.show();
 
-        mDepth = Globals.passengerFaces.size();
+        mDepth = Globals.get_PassengerFaces().size();
     }
 
     @Override
@@ -77,8 +77,8 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
                     if (i == j)
                         continue;
 
-                    PassengerFace _pf1 = Globals.passengerFaces.get(i);
-                    PassengerFace _pf2 = Globals.passengerFaces.get(j);
+                    PassengerFace _pf1 = Globals.get_PassengerFace(i);
+                    PassengerFace _pf2 = Globals.get_PassengerFace(j);
 
                     float matValue = Globals.verificationMat.get(i, j);
                     if (matValue == 0.0f) {
