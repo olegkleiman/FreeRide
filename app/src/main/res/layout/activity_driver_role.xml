@@ -263,7 +263,8 @@
                 android:layout_alignStart="@+id/passengerLayout3"
                 android:layout_alignBottom="@+id/passengerLayout1"
                 android:layout_toLeftOf="@+id/passengerLayout4"
-                android:layout_toStartOf="@+id/passengerLayout4">
+                android:layout_toStartOf="@+id/passengerLayout4"
+                android:layout_margin="0dp">
 
             </android.support.design.widget.FloatingActionButton>
 
