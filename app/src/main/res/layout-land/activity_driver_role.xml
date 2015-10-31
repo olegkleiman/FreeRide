@@ -23,7 +23,7 @@
             android:background="?attr/colorPrimary"
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
-            android:visibility="gone">
+            android:visibility="visible">
             <TextView
                 android:id="@+id/code_label_caption"
                 android:textColor="@color/white"
