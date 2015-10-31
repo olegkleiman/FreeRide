@@ -318,6 +318,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
         String rideCode = txtRideCode.getText().toString();
@@ -403,10 +413,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.stopDiscovery();
         }
 
-        Globals.clearMyPassengerIds();
-        Globals.clearMyPassengers();
-        //Globals.clearPassengerFaces();
-
         super.onPause();
     }
 
@@ -417,6 +423,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.removeGroup();
 
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Globals.clearMyPassengerIds();
+        Globals.clearMyPassengers();
+        //Globals.clearPassengerFaces();
+
+        super.onDestroy();
     }
 
     public void onButtonPassengerCamera(View v) {
