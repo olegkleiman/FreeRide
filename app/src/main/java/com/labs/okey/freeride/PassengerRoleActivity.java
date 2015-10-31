@@ -478,7 +478,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 @Override
                 public void onClick(DialogInterface dialogInterface, int which) {
                     if (which == DialogInterface.BUTTON_POSITIVE) {
-                        findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
+
+                        //findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
+
+                        FloatingActionButton passengerPicture = (FloatingActionButton)findViewById(R.id.join_ride_button);
+                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.ColorAccent)));
+                        Drawable drawable = getDrawable(R.drawable.ic_action_camera);
+                        passengerPicture.setImageDrawable(drawable);
+
                         onSubmitCode();
                     }
                 }
@@ -510,7 +517,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
-                            finish();
+                            //finish();
                         }
                     })
                     .show();
