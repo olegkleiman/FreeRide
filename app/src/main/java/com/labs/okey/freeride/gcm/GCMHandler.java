@@ -114,6 +114,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         String[] tokens = extras.split(";");
         final String userId = tokens[0];
 
+        // Prevent to receive the notifications from myself
         if( userId != null
                 && userId.equalsIgnoreCase(userRegistrationId))
             return;
@@ -136,8 +137,8 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
         final boolean bUserSelfPictured = _bUserSelfPictured;
 
-        if( userId != null
-            && !Globals.isPassengerIdJoined(userId) ) {
+        if( (userId != null  && !Globals.isPassengerIdJoined(userId) )
+                || bUserSelfPictured ) {
 
             Globals.addMyPassengerId(userId);
 

@@ -37,6 +37,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
@@ -49,6 +50,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
+import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -112,6 +114,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private static final String LOG_TAG = "FR.Driver";
 
     PassengersAdapter                           mPassengersAdapter;
+    SwipeableRecyclerViewTouchListener          mSwipeTouchListener;
     private ArrayList<User>                     mPassengers = new ArrayList<>();
     private int                                 mLastPassengersLength;
 
@@ -145,6 +148,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     MaterialDialog                              mOfflineDialog;
     private Boolean                             mAppealShown = false;
+
+
 
     @Override
     @CallSuper
@@ -952,6 +957,36 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                             mPassengers);
         mPeersRecyclerView.setAdapter(mPassengersAdapter);
 
+        mSwipeTouchListener =
+                new SwipeableRecyclerViewTouchListener(mPeersRecyclerView,
+                        new SwipeableRecyclerViewTouchListener.SwipeListener() {
+                            @Override
+                            public boolean canSwipe(int position) {
+                                return true;
+                            }
+
+                            @Override
+                            public void onDismissedBySwipeLeft(RecyclerView recyclerView, int[] reverseSortedPositions) {
+//                                for (int position : reverseSortedPositions) {
+////                                    Toast.makeText(MainActivity.this, mItems.get(position) + " swiped left", Toast.LENGTH_SHORT).show();
+//                                    mItems.remove(position);
+//                                    mAdapter.notifyItemRemoved(position);
+//                                }
+//                                mAdapter.notifyDataSetChanged();
+                            }
+
+                            @Override
+                            public void onDismissedBySwipeRight(RecyclerView recyclerView, int[] reverseSortedPositions) {
+//                                for (int position : reverseSortedPositions) {
+////                                    Toast.makeText(MainActivity.this, mItems.get(position) + " swiped right", Toast.LENGTH_SHORT).show();
+//                                    mItems.remove(position);
+//                                    mAdapter.notifyItemRemoved(position);
+//                                }
+//                                mAdapter.notifyDataSetChanged();
+                            }
+                        });
+        mPeersRecyclerView.addOnItemTouchListener(mSwipeTouchListener);
+
         mTxtMonitorStatus = (TextView) findViewById(R.id.status_monitor);
         Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
@@ -971,6 +1006,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 view.setVisibility(View.GONE);
         }
 
+    }
+
+    private boolean handleTouchEvent(MotionEvent motionEvent){
+        switch( motionEvent.getActionMasked() ){
+
+            case MotionEvent.ACTION_MOVE:{
+                float deltaX = motionEvent.getRawX();// - mDownX;
+                float deltaY = motionEvent.getRawY();// - mDownY;
+            }
+            break;
+        }
+
+        return false;
     }
 
     //
