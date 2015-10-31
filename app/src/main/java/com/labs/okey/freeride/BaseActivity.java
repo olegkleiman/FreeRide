@@ -149,7 +149,7 @@ public class BaseActivity extends AppCompatActivity
     public boolean isConnectedToNetwork() {
         ConnectivityManager connManager = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        NetworkInfo info = connManager.getActiveNetworkInfo();
 
         return (info != null && info.isConnectedOrConnecting());
     }
