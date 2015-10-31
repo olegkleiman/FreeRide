@@ -1,21 +1,18 @@
 package com.labs.okey.freeride.utils;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.Display;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.labs.okey.freeride.DriverRoleActivity;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Appeal;
 import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
@@ -26,12 +23,7 @@ import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
-import java.util.StringTokenizer;
-import java.util.concurrent.ExecutionException;
 
 
 /**
@@ -45,6 +37,7 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
     URI                                 publishedUri;
     Exception                           error;
     String                              mRideID;
+    String                              mDriverName;
     int                                 mEmojiID;
     Context                             mContext;
     String                              mContainerName;
@@ -62,10 +55,14 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
                     "AccountName=fastride;" +
                     "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
 
-    public wamsAddAppeal(Context ctx, String containerName, String rideID, int emojiID){
+    public wamsAddAppeal(Context ctx, String driverName,
+                         String containerName,
+                         String rideID,
+                         int emojiID){
 
         mContainerName = containerName;
         mRideID = rideID;
+        mDriverName = driverName;
         mEmojiID = emojiID;
 
         mContext = ctx;
@@ -89,6 +86,11 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
 
     @Override
     protected void onPostExecute(Void result) {
+
+        CustomEvent requestEvent = new CustomEvent(mContext.getString(R.string.appeal_answer_name));
+        requestEvent.putCustomAttribute("User", mDriverName);
+
+        Answers.getInstance().logCustom(requestEvent);
 
         new MaterialDialog.Builder(mContext)
                 .title(mContext.getString(R.string.appeal_send_title))

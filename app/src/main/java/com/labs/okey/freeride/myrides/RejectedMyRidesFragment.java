@@ -9,7 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.RideDetailsActivity;
@@ -119,7 +118,7 @@ public class RejectedMyRidesFragment extends Fragment {
 
         for (Ride ride : mRides ){
 
-            if (ride.getApproved() == Globals.RIDE_STATUS.NOT_APPROVED.ordinal() &&
+            if (ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal() &&
                     ride.getDriverId().equals(userId)) {
                 tempList.add(ride);
             }
@@ -127,8 +126,6 @@ public class RejectedMyRidesFragment extends Fragment {
         mRides.clear();
         mRides.addAll(tempList);
     }
-
-
 
     private void sort(){
 

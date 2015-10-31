@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -40,9 +41,10 @@ public class Globals {
     public static boolean myrides_update_required = true;
 
     public enum RIDE_STATUS {
-        NOT_APPROVED,
-        APPROVED,
-        WAITING
+        WAIT, // = 0
+        APPROVED, // = 1
+        APPROVED_BY_SELFY, // = 2
+        DENIED // = 3
     }; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
 
     public enum LayoutManagerType {
@@ -316,20 +318,20 @@ public class Globals {
     }
 
     private static final Object lockPassengerFaces = new Object();
-    private static ArrayList<PassengerFace> _passengerFaces = new ArrayList<>();
-    public static ArrayList<PassengerFace> get_PassengerFaces() {
+    private static ConcurrentHashMap<Integer, PassengerFace> _passengerFaces = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Integer, PassengerFace> get_PassengerFaces() {
         synchronized (lockPassengerFaces) {
             return _passengerFaces;
         }
     }
-    public static Iterator<PassengerFace> get_PassengerFacesIterator(){
-        return _passengerFaces.iterator();
-    }
-    public static void set_PassengerFaces(ArrayList<PassengerFace> faces) {
+    public static void set_PassengerFaces(ConcurrentHashMap<Integer, PassengerFace> faces) {
         _passengerFaces = faces;
     }
     public static void add_PassengerFace(PassengerFace pf) {
-        _passengerFaces.add(pf);
+        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+            if( _passengerFaces.get(i) == null )
+                _passengerFaces.put(i, pf);
+        }
     }
     public static PassengerFace get_PassengerFace(int at){
         synchronized (lockPassengerFaces) {
@@ -371,4 +373,9 @@ public class Globals {
 
     public static final int FACE_VERIFY_TASK_TAG = 1;
     public static final int APPEAL_UPLOAD_TASK_TAG = 2;
+
+    public static final int TUTORIAL_Intro      = 1;
+    public static final int TUTORIAL_Driver     = 2;
+    public static final int TUTORIAL_Passenger  = 3;
+    public static final int TUTORIAL_Appeal     = 4;
 }

@@ -87,13 +87,13 @@
         <item>Start</item>
         <item>My rides</item>
         <item>Settings</item>
-        <item>Tutorial</item>
+        <item>Tutorials</item>
     </string-array>
     <string-array name="tutorial_titles">
         <item>Intro</item>
         <item>Driver</item>
         <item>Passenger</item>
-        <item>Re-claim</item>
+        <item>Appeal</item>
     </string-array>
     <string-array name="my_rides_titles">
         <item>General</item>
@@ -157,7 +157,7 @@
     <string name="stop">Stop</string>
     <string name="thanks">Thank you</string>
     <string name="confirmation_accepted">Your confirmation was accepted</string>
-    <string name="nofee_request_accepted">You request was accepted</string>
+    <string name="nofee_request_accepted">Your request was accepted</string>
     <string name="download_data">Initializing data</string>
     <string name="download_geofences_desc">Downloading geo-fences</string>
     <string name="download_classifiers_desc">Downloading classifiers</string>
@@ -190,8 +190,9 @@ limitations under the License.</string>
     <string name="action_camera_cv">Camera CV</string>
     <string name="passenger_tutorial_fragment">Passenger tutorial</string>
     <string name="driver_tutorial_fragment">Driver tutorial</string>
-    <string name="reclaim_tutorial_fragment">Re-claim tutorial</string>
+    <string name="reclaim_tutorial_fragment">Appeal tutorial</string>
     <string name="intro_tutorial_fragment">Introduction tutorial</string>
+    <string name="tutorial_id">tutorial_id</string>
 
     <!-- Transition type strings -->
     <string name="geofence_transition_entered">You\'ve entered the monitored area: </string>
@@ -261,8 +262,9 @@ limitations under the License.</string>
 
     <string name="passenger_confirmation_answer_name">Passenger Confirmation</string>
     <string name="no_fee_answer_name">No-fee request</string>
+    <string name="appeal_answer_name">No-fee request</string>
     <string name="registration_answer_name">Registration</string>
-    <string name="answer_sent_attribute">Sent</string>
+    <string name="answer_approved_attribute">Sent</string>
     <string name="answer_success_attribute">Success</string>
 
     <string name="selfie">Smart Selfie</string>

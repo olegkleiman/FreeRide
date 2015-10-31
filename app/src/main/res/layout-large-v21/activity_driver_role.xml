@@ -106,7 +106,7 @@
             app:backgroundTint="@color/ColorAccent"
             app:borderWidth="0dp"
 
-            android:onClick="onButtonSubmitRide"
+            android:onClick="onSubmitRide"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
             android:layout_marginBottom="16dp"

@@ -72,7 +72,7 @@ public class User implements Parcelable {
     public String getDeviceId() { return deviceId; }
     public void setDeviceId(String value) { this.deviceId = value; }
 
-    // This is not persistent proprety
+    // This is not persistent property
     private boolean _wasSelfPictured = false;
     public boolean wasSelfPictured() {
         return _wasSelfPictured;

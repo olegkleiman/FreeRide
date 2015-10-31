@@ -603,7 +603,13 @@ public class CameraCVActivity extends Activity
                                 .positiveText(R.string.ok).callback(new MaterialDialog.ButtonCallback() {
                                     @Override
                                     public void onPositive(MaterialDialog dialog) {
+
+                                        // Reset search results and restart camera preview
+
                                         mbSearchInitialized = false;
+                                        initialEyesDetectedCounter = 0;
+                                        nFramesWithNoFaces = 0;
+
                                         mOpenCvCameraView.startPreview();
                                     }
                                 })

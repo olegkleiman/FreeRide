@@ -62,10 +62,10 @@ import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
 import com.labs.okey.freeride.utils.IMessageTarget;
-import com.labs.okey.freeride.utils.IUploader;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
+import com.labs.okey.freeride.utils.IUploader;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
@@ -84,9 +84,11 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -128,14 +130,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private MobileServiceTable<Ride>            mRidesTable;
 
-    ScheduledExecutorService    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
-    AsyncTask<Void, Void, Void> mAdvertiseTask;
+    ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
+    AsyncTask<Void, Void, Void>                 mAdvertiseTask;
 
     // codes handled in onActivityResult()
     final int WIFI_CONNECT_REQUEST  = 100;// request code for starting WiFi connection
     final int REQUEST_IMAGE_CAPTURE = 1000;
-
-
 
     private Handler handler = new Handler(this);
 
@@ -143,8 +143,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
-    MaterialDialog  mOfflineDialog;
-    private Boolean mAppealShown = false;
+    MaterialDialog                              mOfflineDialog;
+    private Boolean                             mAppealShown = false;
 
     @Override
     @CallSuper
@@ -271,10 +271,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS) ) {
                 bInitializedBeforeRotation = true;
 
+                ConcurrentHashMap<Integer, PassengerFace> hash_map =
+                        (ConcurrentHashMap)savedInstanceState.getSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+
+                Globals.set_PassengerFaces(hash_map);
+
                 // See the explanation of covariance in Java here
                 // http://stackoverflow.com/questions/6951306/cannot-cast-from-arraylistparcelable-to-arraylistclsprite
-                ArrayList<PassengerFace> _temp = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
-                Globals.set_PassengerFaces(_temp);
+//                ArrayList<PassengerFace> _temp = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+//                Globals.set_PassengerFaces(_temp);
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
@@ -322,7 +327,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
 
-            outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.get_PassengerFaces());
+            outState.putSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.get_PassengerFaces());
 
             if( mUriPhotoAppeal != null)
                 outState.putString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI, mUriPhotoAppeal.toString());
@@ -453,6 +458,37 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         new faceapiUtils(this).execute();
     }
 
+    AsyncTask<Void, Void, Void> updateOnDeniedCurrentRideTask = new AsyncTask<Void, Void, Void>() {
+
+        Exception mEx;
+
+        @Override
+        protected Void doInBackground(Void... args) {
+
+            try {
+                String currentGeoFenceName = Globals.get_currentGeoFenceName();
+                mCurrentRide.setGFenceName(currentGeoFenceName);
+                mRidesTable.update(mCurrentRide).get();
+            } catch (InterruptedException | ExecutionException e) {
+                mEx = e;
+                Log.e(LOG_TAG, e.getMessage());
+            }
+
+            return null;
+
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+
+            CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
+            requestEvent.putCustomAttribute("User", getUser().getFullName());
+
+            requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 0);
+            Answers.getInstance().logCustom(requestEvent);
+        }
+    };
+
     AsyncTask<Void, Void, Void> updateCurrentRideTask = new AsyncTask<Void, Void, Void>() {
 
         Exception mEx;
@@ -470,13 +506,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        protected Void doInBackground(Void... args) {
 
             try {
                 String currentGeoFenceName = Globals.get_currentGeoFenceName();
                 mCurrentRide.setGFenceName(currentGeoFenceName);
                 mRidesTable.update(mCurrentRide).get();
             } catch (InterruptedException | ExecutionException e) {
+                mEx = e;
                 Log.e(LOG_TAG, e.getMessage());
             }
             return null;
@@ -490,14 +527,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             if( mEx != null ) {
 
-                requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 0);
-
                 lt.error();
                 beepError.start();
             }
             else {
-
-                requestEvent.putCustomAttribute(getString(R.string.answer_sent_attribute), 1);
 
                 lt.success();
                 beepSuccess.start();
@@ -506,11 +539,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             }
 
+            requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 1);
             Answers.getInstance().logCustom(requestEvent);
         }
     };
 
-    public void onButtonSubmitRide(View v) {
+    public void onSubmitRide(View v) {
 
         if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER ) {
             prepareLayoutForDriverPictures();
@@ -520,10 +554,23 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if (mCurrentRide == null)
             return;
 
-        mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+        boolean bRequestApprovalBySefies = false;
 
-        updateCurrentRideTask.execute();
+        for(User passenger: Globals.getMyPassengers() ){
+            if( passenger.wasSelfPictured() ) {
+                bRequestApprovalBySefies = true;
+                break;
+            }
 
+        }
+
+        if( bRequestApprovalBySefies )
+            onSubmitRidePics(v);
+        else {
+
+            mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+            updateCurrentRideTask.execute();
+        }
     }
 
     @Override
@@ -742,7 +789,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         @Override
                         public void onPositive(MaterialDialog dialog) {
                             Intent intent = new Intent(getApplicationContext(),
-                                    SettingsActivity.class);
+                                                       SettingsActivity.class);
                             startActivity(intent);
                         }
                     })
@@ -827,13 +874,26 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         try {
 
-            PassengerFace pFace = Globals.get_PassengerFace(at);
+            boolean bPFaceAdded = false;
 
+            PassengerFace pFace;
+            pFace = Globals.get_PassengerFace(at);
+            if( pFace == null ) {
+                pFace = new PassengerFace();
+
+                bPFaceAdded = true;
+            }
             pFace.setFaceId(faceID.toString());
             pFace.setPictureUrl(faceURI);
 
+            if( bPFaceAdded )
+                Globals.get_PassengerFaces().put(at, pFace);
+
             int size = 0;
-            for (PassengerFace pf : Globals.get_PassengerFaces()) {
+            for (Map.Entry<Integer,PassengerFace> entry : Globals.get_PassengerFaces().entrySet()) {
+
+                PassengerFace pf = entry.getValue();
+
                 if (pf.isInitialized())
                     size++;
             }
@@ -898,12 +958,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
             mCapturedPassengersIDs.add(0);
 
-        int passengerFacesSize = Globals.get_PassengerFaces().size();
-        if(  passengerFacesSize < Globals.REQUIRED_PASSENGERS_NUMBER) {
-            for (int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
-                Globals.add_PassengerFace(new PassengerFace());
-            }
-        }
+//        int passengerFacesSize = Globals.get_PassengerFaces().size();
+//        if(  passengerFacesSize < Globals.REQUIRED_PASSENGERS_NUMBER) {
+//            for (int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+//                Globals.add_PassengerFace(new PassengerFace());
+//            }
+//        }
 
         if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 ) {
             View view = findViewById(R.id.passenger4);
@@ -1044,8 +1104,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         }
 
                         @Override
-                        public void onNeutral(MaterialDialog dialog) {
+                        public void onNegative(MaterialDialog dialog) {
+                            finish();
+                        }
 
+                        @Override
+                        public void onNeutral(MaterialDialog dialog) {
+                            Intent intent = new Intent(getApplicationContext(),
+                                                        TutorialActivity.class);
+                            intent.putExtra(getString(R.string.tutorial_id), Globals.TUTORIAL_Appeal);
+                            startActivity(intent);
                         }
                     });
 
@@ -1173,6 +1241,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public  void sendAppeal(){
         new wamsAddAppeal(DriverRoleActivity.this,
+                            getUser().getFullName(),
                             "appeals",
                             mCurrentRide.Id,
                             mEmojiID)
@@ -1326,10 +1395,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         MobileServiceTable<Join> joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
                         try {
-                            Iterator<PassengerFace> iterator = Globals.get_PassengerFacesIterator();
-                            while (iterator.hasNext()) {
+                            for(Map.Entry<Integer, PassengerFace> entry : Globals.get_PassengerFaces().entrySet()) {
 
-                                PassengerFace pf = iterator.next();
+                                PassengerFace pf = entry.getValue();
 
                                 Join _join = new Join();
                                 _join.setWhenJoined(new Date());
@@ -1358,7 +1426,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 String msg = String.format("Inserting join for user with FaceID %s", faceId);
                                 Log.d(LOG_TAG, msg);
 
-                                joinsTable.insert(_join, (List) null).get();
+                                joinsTable.insert(_join).get();
                             }
 
                         } catch (Exception ex) { // ExecutionException | InterruptedException ex ) {
@@ -1374,9 +1442,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 }.execute();
 
                 if (success) {
-                    mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+                    mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED_BY_SELFY.ordinal());
                     updateCurrentRideTask.execute();
                 } else {
+
+                    mCurrentRide.setApproved(Globals.RIDE_STATUS.DENIED.ordinal());
+                    updateOnDeniedCurrentRideTask.execute();
+
                     onAppealCamera();
                 }
             }

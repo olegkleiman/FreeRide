@@ -132,5 +132,6 @@
     <string name="help">עזרה</string>
     <string name="code_try_later">אזין מאוחר יותר</string>
     <string name="uploading"></string>
+    <string name="detection_no_results">לא זוהו פנים בתמונה</string>
 
 </resources>
