@@ -34,6 +34,7 @@ import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -483,7 +484,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         FloatingActionButton passengerPicture = (FloatingActionButton)findViewById(R.id.join_ride_button);
                         passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.ColorAccent)));
-                        Drawable drawable = getDrawable(R.drawable.ic_action_camera);
+                        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_action_camera, null);
                         passengerPicture.setImageDrawable(drawable);
 
                         onSubmitCode();
