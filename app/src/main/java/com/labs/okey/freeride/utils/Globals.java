@@ -329,8 +329,10 @@ public class Globals {
     }
     public static void add_PassengerFace(PassengerFace pf) {
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
-            if( _passengerFaces.get(i) == null )
+            if( _passengerFaces.get(i) == null ) {
                 _passengerFaces.put(i, pf);
+                break;
+            }
         }
     }
     public static PassengerFace get_PassengerFace(int at){
