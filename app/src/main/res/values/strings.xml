@@ -281,4 +281,9 @@ limitations under the License.</string>
     <string name="appeal_answer">Send request appeal?</string>
     <string name="appeal_send">Send</string>
 
+    <string name="instruction_make_additional_selfies">You can make photos of other passengers</string>
+    <string name="instruction_not_enought_passengers">Not enough passengers to submit no-fee request</string>
+    <string name="instruction_can_submit_no_fee">Now you can submit no-fee request</string>
+    <string name="instruction_advanced_mode">Each passenger should make a self-picture</string>
+
 </resources>

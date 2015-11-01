@@ -102,6 +102,8 @@ public class Globals {
 
     public static int RIDE_CODE_INPUT_LENGTH = 6;
 
+    public static int CABIN_PICTURES_BUTTON_SHOW_INTERVAL = 5 * 1000;
+
     private static boolean _passengerListAlerted = false;
     public static boolean isPassengerListAlerted() {
         return _passengerListAlerted;
@@ -359,11 +361,12 @@ public class Globals {
     public static String PARCELABLE_KEY_PASSENGERS = "passengers_key";
     public static String PARCELABLE_KEY_DRIVERS = "drivers_key";
     public static String PARCELABLE_KEY_CURRENT_RIDE = "current_ride";
-    public static String PARCELABLE_KEY_APPEAL_SHOWN = "appeal_shown";
+    public static String PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN = "cabin_button_shown";
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
     public static String PARCELABLE_KEY_PASSENGERS_FACE_IDS = "face_ids";
     public static String PARCELABLE_KEY_APPEAL_PHOTO_URI = "appeal_uri";
     public static String PARCELABLE_KEY_EMOJIID = "emoji_id";
+    public static String PARCELABLE_KEY_DRIVER_CABIN_SHOWN = "cabin_shown";
 
     public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
     public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";

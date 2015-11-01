@@ -86,19 +86,42 @@
             android:weightSum="10"
             android:visibility="visible">
 
-            <TextView
-                android:id="@+id/status_monitor"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:paddingStart="@dimen/snackbar_leftpadding"
-                android:paddingEnd="@dimen/snackbar_rightpadding"
-                android:background="@color/ColorPrimary"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/white"
-                android:text="@string/geofence_outside_title"
+            <TextSwitcher
+                android:id="@+id/monitor_text_switcher"
                 android:layout_weight="10"
-                android:gravity="center_vertical|fill_vertical|start|center_horizontal" />
+                android:layout_width="0dp"
+                android:layout_height="fill_parent">
 
+                <TextView
+                    android:id="@+id/status_monitor"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+
+                    android:paddingStart="@dimen/snackbar_leftpadding"
+                    android:paddingEnd="@dimen/snackbar_rightpadding"
+                    android:background="@color/ColorPrimary"
+
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="@color/white"
+                    android:text="@string/geofence_outside_title"
+
+                    android:gravity="center_vertical|fill_vertical|start|center_horizontal" />
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+
+                    android:paddingStart="@dimen/snackbar_leftpadding"
+                    android:paddingEnd="@dimen/snackbar_rightpadding"
+                    android:background="@color/ColorPrimary"
+
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="@color/white"
+                    android:text="@string/geofence_outside_title"
+
+                    android:gravity="center_vertical|fill_vertical|start|center_horizontal" />
+
+            </TextSwitcher>
 
         </LinearLayout>
 

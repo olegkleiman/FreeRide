@@ -40,9 +40,12 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -122,7 +125,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     WiFiUtil                                    mWiFiUtil;
 
-    TextView                                    mTxtMonitorStatus;
+    TextSwitcher                                mTextSwitcher;
     RecyclerView                                mPeersRecyclerView;
     ImageView                                   mImageTransmit;
 
@@ -134,6 +137,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private MobileServiceTable<Ride>            mRidesTable;
 
     ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
+    ScheduledExecutorService                    mCheckGeoFencesTimer = Executors.newScheduledThreadPool(1);
     AsyncTask<Void, Void, Void>                 mAdvertiseTask;
 
     // codes handled in onActivityResult()
@@ -147,7 +151,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     MaterialDialog                              mOfflineDialog;
-    private Boolean                             mAppealShown = false;
+    private Boolean                             mCabinPictureButtonShown = false;
+    private Boolean                             mCabinShown = false;
 
 
 
@@ -238,11 +243,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             }
 
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_SHOWN) ) {
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN) ) {
                 bInitializedBeforeRotation = true;
 
-                mAppealShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_APPEAL_SHOWN);
-                if( mAppealShown )
+                mCabinPictureButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN);
+                if(mCabinPictureButtonShown)
                     findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
                 else
                     findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
@@ -300,6 +305,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mEmojiID = savedInstanceState.getInt(Globals.PARCELABLE_KEY_EMOJIID);
             }
 
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN) ) {
+                mCabinShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN);
+
+                if( mCabinShown )
+                    showCabinView();
+            }
+
             if( !bInitializedBeforeRotation )
                 setupNetwork();
 
@@ -338,7 +350,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE, mCurrentRide);
 
-            outState.putBoolean(Globals.PARCELABLE_KEY_APPEAL_SHOWN, mAppealShown);
+            outState.putBoolean(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN, mCabinPictureButtonShown);
 
             outState.putIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
 
@@ -348,18 +360,33 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 outState.putString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI, mUriPhotoAppeal.toString());
 
             outState.putInt(Globals.PARCELABLE_KEY_EMOJIID, mEmojiID);
+
+            outState.putBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN, mCabinShown);
         }
 
         super.onSaveInstanceState(outState);
     }
 
-    private void prepareLayoutForDriverPictures() {
+    private void showCabinView() {
 
         findViewById(R.id.drive_internal_layout).setVisibility(View.GONE);
         findViewById(R.id.driver_status_layout).setVisibility(View.GONE);
         findViewById(R.id.status_strip).setVisibility(View.GONE);
 
         findViewById(R.id.cabin_background_layout).setVisibility(View.VISIBLE);
+
+        mCabinShown = true;
+    }
+
+    public void hideCabinView(View v){
+
+        findViewById(R.id.cabin_background_layout).setVisibility(View.GONE);
+
+        findViewById(R.id.status_strip).setVisibility(View.VISIBLE);
+        findViewById(R.id.driver_status_layout).setVisibility(View.VISIBLE);
+        findViewById(R.id.drive_internal_layout).setVisibility(View.VISIBLE);
+
+        mCabinShown = false;
     }
 
     private void startAdvertise(String userID,
@@ -567,7 +594,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onSubmitRide(View v) {
 
         if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER ) {
-            prepareLayoutForDriverPictures();
+            showCabinView();
             return;
         }
 
@@ -709,10 +736,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
                                 fab.setVisibility(View.VISIBLE);
 
-                                mAppealShown = true;
+                                mTextSwitcher.setText(getString(R.string.instruction_not_enought_passengers));
+
+                                mCabinPictureButtonShown = true;
 
                             }
-                        }, 5 * 1000);
+                        }, Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
                     }
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
@@ -763,6 +792,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                                      mPassengers.clear();
                                                                      mPassengers.addAll(passengers);
 
+                                                                     for(User passenger: mPassengers) {
+                                                                         if( passenger.wasSelfPictured() ) {
+                                                                             mTextSwitcher.setText(getString(R.string.instruction_advanced_mode));
+                                                                             break;
+                                                                         }
+                                                                     }
+
                                                                      mPassengersAdapter.notifyDataSetChanged();
 
                                                                      if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
@@ -770,6 +806,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                                                                          Context ctx =  getApplicationContext();
                                                                          fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+
+                                                                         mTextSwitcher.setText(getString(R.string.instruction_can_submit_no_fee));
                                                                      }
 
                                                                  }
@@ -845,37 +883,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCarNumber = cars[0];
         }
 
-
-        new Thread() {
+        mCheckGeoFencesTimer.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
+                String message = Globals.isInGeofenceArea() ?
+                        Globals.getMonitorStatus() :
+                        getString(R.string.geofence_outside);
 
-                try {
-
-                    while (true) {
-
-                        runOnUiThread(new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                String message = Globals.isInGeofenceArea() ?
-                                        Globals.getMonitorStatus() :
-                                        getString(R.string.geofence_outside);
-
-                                mTxtMonitorStatus.setText(message);
-
-                            }
-                        });
-
-                        Thread.sleep(1000);
-                    }
-                } catch (InterruptedException ex) {
-                    Log.e(LOG_TAG, ex.getMessage());
-                }
-
+                String currentGeoStatus = Globals.getMonitorStatus();
+                if( !currentGeoStatus.equals(message) )
+                    mTextSwitcher.setText(message);
             }
-        }.start();
+        },
+        0, // Start immediately
+        1, TimeUnit.SECONDS );
 
     }
 
@@ -887,6 +908,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( fab != null) {
             fab.setVisibility(View.VISIBLE);
             fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+
+            mTextSwitcher.setText(getString(R.string.instruction_can_submit_no_fee));
         }
     }
 
@@ -1002,7 +1025,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         });
         mPeersRecyclerView.addOnItemTouchListener(mSwipeTouchListener);
 
-        mTxtMonitorStatus = (TextView) findViewById(R.id.status_monitor);
+        mTextSwitcher = (TextSwitcher) findViewById(R.id.monitor_text_switcher);
+        Animation in = AnimationUtils.loadAnimation(this, R.anim.push_up_in);
+        Animation out = AnimationUtils.loadAnimation(this, R.anim.push_up_out);
+        mTextSwitcher.setInAnimation(in);
+        mTextSwitcher.setOutAnimation(out);
+        // Set the initial text without an animation
+        String currentMonitorStatus = getString(R.string.geofence_outside_title);
+        mTextSwitcher.setCurrentText(currentMonitorStatus);
+
         Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)

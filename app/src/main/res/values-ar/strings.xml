@@ -63,4 +63,5 @@
     <string name="passenger_progress_dialog"></string>
     <string name="code_retry_action">حاول مرة أخرى</string>
     <string name="cancel">إلغاء</string>
+    <string name="help">مساعدة</string>
 </resources>

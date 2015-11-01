@@ -133,5 +133,9 @@
     <string name="code_try_later">אזין מאוחר יותר</string>
     <string name="uploading"></string>
     <string name="detection_no_results">לא זוהו פנים בתמונה</string>
+    <string name="instruction_make_additional_selfies">ניתן לצלם נוסעים נוספים</string>
+    <string name="instruction_not_enought_passengers">לא זוהו מספיק נוסעים להגשת בקשת פטור</string>
+    <string name="instruction_can_submit_no_fee">עכשיו אפשר להגיש בקשה לפטור</string>
+    <string name="instruction_advanced_mode">כל אחד מהנוסעים צריך להצטלם</string>
 
 </resources>

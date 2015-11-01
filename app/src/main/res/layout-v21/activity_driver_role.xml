@@ -114,6 +114,7 @@
         android:id="@+id/cabin_background_layout"
         android:visibility="gone"
         android:clickable="false">
+
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -122,8 +123,13 @@
             android:src="@drawable/cabin_portrait"
             android:scaleType="fitXY"
             android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/close_circle"
+            android:onClick="hideCabinView" />
 
         <FrameLayout
             android:id="@+id/passengerLayout1"
@@ -267,17 +273,38 @@
         android:layout_width="fill_parent"
         android:layout_height="@dimen/snackbar_height"
         android:animateLayoutChanges="true">
-        <TextView
-            android:id="@+id/status_monitor"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:paddingStart="@dimen/snackbar_leftpadding"
-            android:paddingEnd="@dimen/snackbar_rightpadding"
-            android:background="@color/ColorPrimary"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@color/white"
-            android:text="@string/geofence_outside_title"
-            android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
+
+        <TextSwitcher
+            android:id="@+id/monitor_text_switcher"
+            android:layout_weight="10"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent">
+
+            <TextView
+                android:id="@+id/status_monitor"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:paddingStart="@dimen/snackbar_leftpadding"
+                android:paddingEnd="@dimen/snackbar_rightpadding"
+                android:background="@color/ColorPrimary"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/white"
+                android:text="@string/geofence_outside_title"
+                android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:paddingStart="@dimen/snackbar_leftpadding"
+                android:paddingEnd="@dimen/snackbar_rightpadding"
+                android:background="@color/ColorPrimary"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/white"
+                android:text="@string/geofence_outside_title"
+                android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
+
+
+        </TextSwitcher>
 
     </LinearLayout>
 

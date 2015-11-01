@@ -42,8 +42,11 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -95,13 +98,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     final int MAKE_PICTURE_REQUEST = 1;
     // handled  in onActivityResult
 
-    Boolean mDriversShown;
-    TextView mTxtMonitorStatus;
+    Boolean                             mDriversShown;
+    TextSwitcher                        mTextSwitcher;
 
-    MobileServiceTable<Join> joinsTable;
+    MobileServiceTable<Join>            joinsTable;
 
-    WiFiUtil mWiFiUtil;
-    WiFiPeersAdapter2 mDriversAdapter;
+    WiFiUtil                            mWiFiUtil;
+    WiFiPeersAdapter2                   mDriversAdapter;
     public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
 
     private Handler handler = new Handler(this);
@@ -109,9 +112,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         return handler;
     }
 
-    private String  mRideCode;
-    private URI     mPictureURI;
-    private UUID    mFaceId;
+    private String                      mRideCode;
+    private URI                         mPictureURI;
+    private UUID                        mFaceId;
 
     @Override
     @CallSuper
@@ -213,9 +216,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         mDriversShown = false;
 
-        mTxtMonitorStatus = (TextView)findViewById(R.id.status_monitor);
-        Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
+        mTextSwitcher = (TextSwitcher) findViewById(R.id.monitor_text_switcher);
+        Animation in = AnimationUtils.loadAnimation(this, R.anim.push_up_in);
+        Animation out = AnimationUtils.loadAnimation(this, R.anim.push_up_out);
+        mTextSwitcher.setInAnimation(in);
+        mTextSwitcher.setOutAnimation(out);
+        // Set the initial text without an animation
+        String currentMonitorStatus = getString(R.string.geofence_outside_title);
+        mTextSwitcher.setCurrentText(currentMonitorStatus);
 
+        Globals.setMonitorStatus(currentMonitorStatus);
     }
 
     @Override
@@ -283,6 +293,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         mPictureURI = (URI)extras.getSerializable(getString(R.string.detection_face_uri));
                         mFaceId  = (UUID)extras.getSerializable(getString(R.string.detection_face_id));
+
+                        mTextSwitcher.setText(getString(R.string.instruction_make_additional_selfies));
                     }
 
 
@@ -690,8 +702,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 getHandler(),
                 1000);
 
-        mTxtMonitorStatus.setText(R.string.passenger_adv_description);
-
+        mTextSwitcher.setText(getString(R.string.passenger_adv_description));
     }
 
 

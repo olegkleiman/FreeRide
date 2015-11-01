@@ -30,4 +30,13 @@ public class Appeal implements Serializable {
         return pictureUrl;
     }
     public void setPictureUrl(String value) { pictureUrl = value; }
+
+    @com.google.gson.annotations.SerializedName("driverid")
+    private String driverid;
+    public String getDriverId() {
+        return driverid;
+    }
+    public void setDriverId(String value){
+        driverid = value;
+    }
 }
