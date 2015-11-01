@@ -1309,24 +1309,25 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
 
                 Bundle extras = data.getExtras();
-                Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
-                if( bmp != null) {
-                    Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
+                if( extras != null ) {
+                    Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
+                    if (bmp != null) {
+                        Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
 
-                    drawable = RoundedDrawable.fromDrawable(drawable);
-                    ((RoundedDrawable) drawable)
-                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                            .setBorderColor(Color.WHITE)
-                            .setBorderWidth(0)
-                            .setOval(true);
+                        drawable = RoundedDrawable.fromDrawable(drawable);
+                        ((RoundedDrawable) drawable)
+                                .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                                .setBorderColor(Color.WHITE)
+                                .setBorderWidth(0)
+                                .setOval(true);
 
-                    passengerPicture.setImageDrawable(drawable);
+                        passengerPicture.setImageDrawable(drawable);
+                    }
+
+                    UUID _faceId = (UUID) extras.getSerializable(getString(R.string.detection_face_id));
+                    URI faceURI = (URI) extras.getSerializable(getString(R.string.detection_face_uri));
+                    addPassengerFace(requestCode - 1, _faceId, faceURI.toString());
                 }
-
-                UUID _faceId  = (UUID)extras.getSerializable(getString(R.string.detection_face_id));
-                URI faceURI = (URI)extras.getSerializable(getString(R.string.detection_face_uri));
-                addPassengerFace(requestCode - 1, _faceId, faceURI.toString());
-
             }
 
             mCapturedPassengersIDs.set(requestCode -1, 1);

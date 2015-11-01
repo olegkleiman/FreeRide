@@ -27,7 +27,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
@@ -533,9 +532,12 @@ public class CameraCVActivity extends Activity
             uploadFrame(_bitmap);
 
         } catch(Exception ex) {
-            String message = ex.getMessage();
-            Log.e(LOG_TAG, message);
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+
+            if(Crashlytics.getInstance() != null)
+                Crashlytics.logException(ex);
+
+            Log.e(LOG_TAG, ex.getMessage());
+
         }
     }
 
