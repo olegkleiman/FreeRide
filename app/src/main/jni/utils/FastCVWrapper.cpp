@@ -12,14 +12,12 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/objdetect.hpp>
 //#include <opencv2/gpu/gpu.hpp>
-#include <vector>
 
 #include "FastCVWrapper.h"
 
 #ifdef __ANDROID__
 
 #include <android/log.h>
-#include <android/bitmap.h>
 
 #endif
 
@@ -463,11 +461,11 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
         // Now detect open eyes
         vector<Rect> eyes;
         eyesCascade->detectMultiScale(tmpMat, eyes,
-                                      1.2, // How many different sizes of eye to look for
+                                      1.1, // How many different sizes of eye to look for
                                             // 1.1 is for good detection
                                             // 1.2 for faster detection
                                       3, // Neighbors : how sure the detector should be that has detected eye.
-                                            // Set to higher than 3 (default) if you want more reliable faces
+                                            // Set to higher than 3 (default) if you want more reliable matches
                                             // even if many faces are not included
                                       flags,
                                       Size(140, 140));
