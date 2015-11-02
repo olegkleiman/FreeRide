@@ -385,6 +385,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFa
                 yShift = _faceRect.y;
 
                 Rect faceRect = Rect(tl, br);
+
+                faceRect.width = faceRect.width /2;
+
                 rectangle(mRgbaChannel, faceRect,
                           FACE_RECT_COLOR, 2);
 
@@ -398,6 +401,9 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFa
                 yShift = _faceRect.y;
 
                 Rect faceRect = Rect(tl, br);
+
+                faceRect.height = faceRect.height /2;
+
                 rectangle(mRgbaChannel, faceRect,
                           FACE_RECT_COLOR, 2);
 
@@ -494,6 +500,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectEy
                       EYE_RECT_COLOR, 2);
 
             mFaceChannel(_eyeRect).copyTo(eyeMat);
+            //mRgbaChannel(_eyeRect).copyTo(eyeMat);
 
             return true;
         }
