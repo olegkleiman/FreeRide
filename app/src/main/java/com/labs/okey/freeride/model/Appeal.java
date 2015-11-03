@@ -1,6 +1,7 @@
 package com.labs.okey.freeride.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Created by eli max on 23/10/2015.
@@ -39,4 +40,11 @@ public class Appeal implements Serializable {
     public void setDriverId(String value){
         driverid = value;
     }
+
+    @com.google.gson.annotations.SerializedName("__createdAt")
+    private Date createdAt;
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+    public void setCreatedAt(Date value) { createdAt = value; }
 }
