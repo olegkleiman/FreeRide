@@ -46,16 +46,19 @@ public class PassengerListAdapter extends RecyclerView.Adapter<PassengerListAdap
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
 
+        if( items == null )
+            return;
+
         User user = items.get(position);
 
         holder.PassengerName.setText(user.getFirstName() + " " + user.getLastName());
-
-
-
     }
 
     @Override
     public int getItemCount() {
+        if( items == null )
+            return 0;
+
         return items.size();
     }
 
