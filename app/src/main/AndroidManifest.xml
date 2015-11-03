@@ -121,6 +121,10 @@
         <activity android:name=".AppealCameraActivity"
             android:label="@string/title_activity_camera_appeal" >
         </activity>
+        <activity android:name="AppealDetailsActivity"
+            android:label="">
+
+        </activity>
         <receiver
             android:name="com.microsoft.windowsazure.notifications.NotificationsBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
