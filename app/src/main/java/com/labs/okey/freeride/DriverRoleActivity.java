@@ -269,8 +269,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                         ImageView fab = (ImageView) findViewById(fabID);
                         if (fab != null) {
-                            if (nCaptured == 1)
+                            if (nCaptured == 1) {
+                                String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + i;
+                                if( savedInstanceState.containsKey(parcelableKey)) {
+                                    Bitmap passengerThumb = savedInstanceState.getParcelable(parcelableKey);
+                                    fab.setImageBitmap(passengerThumb);
+                                }
                                 fab.setImageResource(R.drawable.ic_action_done);
+                            }
                             else
                                 fab.setImageResource(R.drawable.ic_action_camera);
                         }
@@ -362,6 +368,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             outState.putInt(Globals.PARCELABLE_KEY_EMOJIID, mEmojiID);
 
             outState.putBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN, mCabinShown);
+
+            // Store passengers captured thumbnails, if any
+            View rootView = findViewById(R.id.cabin_background_layout);
+            for(int i = 1; i <= Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+                String tag = Integer.toString(i);
+                FloatingActionButton passengerPicture = (FloatingActionButton) rootView.findViewWithTag(tag);
+                if( passengerPicture != null) {
+
+                    String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + tag;
+
+                    Drawable drawableThumb = passengerPicture.getDrawable();
+                    if( drawableThumb instanceof BitmapDrawable ) {
+                        BitmapDrawable bmpDrawable = (BitmapDrawable) drawableThumb;
+
+                        outState.putParcelable(parcelableKey, bmpDrawable.getBitmap());
+                    }
+                }
+            }
         }
 
         super.onSaveInstanceState(outState);
