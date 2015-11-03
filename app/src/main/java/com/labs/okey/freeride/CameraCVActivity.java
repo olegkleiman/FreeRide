@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
@@ -301,27 +300,21 @@ public class CameraCVActivity extends Activity
         mMatTemplate.release();
     }
 
-    boolean bTemplateFound = false;
-    private boolean mbSearchInitialized = false;
-    int matchResult = 0; // Possible values: -1 - restart search (e.g. face is out of frame)
-                         //                  0 - no match
-                         //                  1 - match
-                         // Start with 'no match'
+    private boolean             mSearchInitialized = false;
 
-    ScheduledExecutorService mCheckMatchResultTimer =
-            Executors.newScheduledThreadPool(1);
-    private Boolean checkMatchRunning = false;
+    ScheduledExecutorService    mCheckMatchResultTimer = Executors.newScheduledThreadPool(1);
+    private Boolean             checkMatchRunning = false;
     boolean isCheckerMatchTimerRunning() {
         return checkMatchRunning;
     }
 
-    private int initialEyesDetectedCounter = 0;
-    private int INITIAL_EYES = 3;
-    private int missedEyesCounter = 0;
-    private int MISSED_EYES = 3;
-    private Mat mFinalFaceMat;
-    private int FRAMES_WITH_NOFACES = 5;
-    private int nFramesWithNoFaces = 0;
+    private int                 mInitialEyesDetectedCounter = 0;
+    private int                 INITIAL_EYES = 3;
+    private int                 mMissedEyesCounter = 0;
+    private int                 MISSED_EYES = 3;
+    private Mat                 mFinalFaceMat;
+    private int                 FRAMES_WITH_NOFACES = 5;
+    private int                 nFramesWithNoFaces = 0;
 
     private boolean bUploadingFrame = false;
 
@@ -350,11 +343,11 @@ public class CameraCVActivity extends Activity
                                     eyeMat.getNativeObjAddr(),
                                     mCurrentOrientation);
 
-                if( !mbSearchInitialized ) {
+                if( !mSearchInitialized) {
                     if( bEyeFound ) {
 
-                        if( ++initialEyesDetectedCounter >= INITIAL_EYES) {
-                            mbSearchInitialized = true;
+                        if( ++mInitialEyesDetectedCounter >= INITIAL_EYES) {
+                            mSearchInitialized = true;
 
                             mFinalFaceMat = new Mat();
                             faceMat.copyTo(mFinalFaceMat);
@@ -380,7 +373,7 @@ public class CameraCVActivity extends Activity
                 } else {
                     if( !bEyeFound ) {
 
-                        if( ++missedEyesCounter >= MISSED_EYES ) {
+                        if( ++mMissedEyesCounter >= MISSED_EYES ) {
                             mOpenCvCameraView.stopPreview();
 
                             if( !bUploadingFrame ) {
@@ -402,23 +395,15 @@ public class CameraCVActivity extends Activity
                                 });
                             }
 
-
-//                            getHandler().postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    // Will be continued in onPictureTaken() callback
-//                                    mOpenCvCameraView.takePicture(CameraCVActivity.this);
-//                                }
-//                            }, 2000); // delay for 2 sec. to let to open the eyes
                         }
 
                     }
                 }
           } else { // no face was detected
-                if( mbSearchInitialized ) {
+                if(mSearchInitialized) {
                     if( ++nFramesWithNoFaces >= FRAMES_WITH_NOFACES ) {
-                        mbSearchInitialized = false;
-                        initialEyesDetectedCounter = 0;
+                        mSearchInitialized = false;
+                        mInitialEyesDetectedCounter = 0;
                         nFramesWithNoFaces = 0;
 
                         runOnUiThread(new Runnable() {
@@ -481,64 +466,64 @@ public class CameraCVActivity extends Activity
 
     @Override
     public void onPictureTaken(byte[] data, Camera camera) {
-        try {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inTempStorage = new byte[16 * 1024];
-
-            Camera.Parameters parameters = camera.getParameters();
-            Camera.Size size = parameters.getPictureSize();
-
-            int height = size.height;
-            int width = size.width;
-            float mb = (width * height) / 1024000;
-
-            if (mb > 4f)
-                options.inSampleSize = 4;
-            else if (mb > 3f)
-                options.inSampleSize = 2;
-
-            final Bitmap _bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-
-                    new MaterialDialog.Builder(CameraCVActivity.this)
-                            .title(getString(R.string.detection_success))
-                            .positiveText(R.string.ok)
-                            .callback(new MaterialDialog.ButtonCallback() {
-                                @Override
-                                public void onPositive(MaterialDialog dialog) {
-
-                                    reportAnswer(1);
-
-                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                    _bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                                    byte[] b = baos.toByteArray();
-
-                                    Intent intent = new Intent();
-                                    intent.putExtra("face", b);
-                                    intent.putExtra("faceid", "4444444");
-
-                                    setResult(RESULT_OK, intent);
-                                    finish();
-                                }
-                            })
-                            .show();
-
-                }
-            });
-
-            uploadFrame(_bitmap);
-
-        } catch(Exception ex) {
-
-            if(Crashlytics.getInstance() != null)
-                Crashlytics.logException(ex);
-
-            Log.e(LOG_TAG, ex.getMessage());
-
-        }
+//        try {
+//            BitmapFactory.Options options = new BitmapFactory.Options();
+//            options.inTempStorage = new byte[16 * 1024];
+//
+//            Camera.Parameters parameters = camera.getParameters();
+//            Camera.Size size = parameters.getPictureSize();
+//
+//            int height = size.height;
+//            int width = size.width;
+//            float mb = (width * height) / 1024000;
+//
+//            if (mb > 4f)
+//                options.inSampleSize = 4;
+//            else if (mb > 3f)
+//                options.inSampleSize = 2;
+//
+//            final Bitmap _bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+//
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//
+//                    new MaterialDialog.Builder(CameraCVActivity.this)
+//                            .title(getString(R.string.detection_success))
+//                            .positiveText(R.string.ok)
+//                            .callback(new MaterialDialog.ButtonCallback() {
+//                                @Override
+//                                public void onPositive(MaterialDialog dialog) {
+//
+//                                    reportAnswer(1);
+//
+//                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//                                    _bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+//                                    byte[] b = baos.toByteArray();
+//
+//                                    Intent intent = new Intent();
+//                                    intent.putExtra("face", b);
+//                                    intent.putExtra("faceid", "4444444");
+//
+//                                    setResult(RESULT_OK, intent);
+//                                    finish();
+//                                }
+//                            })
+//                            .show();
+//
+//                }
+//            });
+//
+//            uploadFrame(_bitmap);
+//
+//        } catch(Exception ex) {
+//
+//            if(Crashlytics.getInstance() != null)
+//                Crashlytics.logException(ex);
+//
+//            Log.e(LOG_TAG, ex.getMessage());
+//
+//        }
     }
 
     private void uploadFrame(final Bitmap sampleBitmap) {
@@ -608,8 +593,10 @@ public class CameraCVActivity extends Activity
 
                                         // Reset search results and restart camera preview
 
-                                        mbSearchInitialized = false;
-                                        initialEyesDetectedCounter = 0;
+                                        mSearchInitialized = false;
+                                        checkMatchRunning = false;
+                                        mInitialEyesDetectedCounter = 0;
+                                        mMissedEyesCounter = 0;
                                         nFramesWithNoFaces = 0;
 
                                         mOpenCvCameraView.startPreview();

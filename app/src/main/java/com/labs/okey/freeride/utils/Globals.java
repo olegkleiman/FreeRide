@@ -238,6 +238,9 @@ public class Globals {
         }
     }
 
+    // TODO: synchronize with Geo0-Fences
+    public static boolean f_update_required;
+
     private static String _currentGeoFenceName;
     public static void set_CurrentGeoFenceName(String value){
         _currentGeoFenceName = value;

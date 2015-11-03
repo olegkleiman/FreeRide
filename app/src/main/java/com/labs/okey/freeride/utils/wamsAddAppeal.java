@@ -37,6 +37,7 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
     URI                                 publishedUri;
     Exception                           error;
     String                              mRideID;
+    String                              mDriverID;
     String                              mDriverName;
     int                                 mEmojiID;
     Context                             mContext;
@@ -58,10 +59,12 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
     public wamsAddAppeal(Context ctx, String driverName,
                          String containerName,
                          String rideID,
+                         String driverID,
                          int emojiID){
 
         mContainerName = containerName;
         mRideID = rideID;
+        mDriverID = driverID;
         mDriverName = driverName;
         mEmojiID = emojiID;
 
@@ -129,6 +132,7 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
             appeal.setRideId(mRideID);
             appeal.setPictureUrl(publishedUri.toString());
             appeal.setEmojiId(Integer.toString(mEmojiID));
+            appeal.setDriverId(mDriverID);
 
             wamsClient = wamsUtils.init(mContext);
 

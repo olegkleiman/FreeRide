@@ -3,11 +3,10 @@ package com.labs.okey.freeride;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,11 +14,13 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.labs.okey.freeride.adapters.MyRideTabAdapter;
+import com.labs.okey.freeride.model.Appeal;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.labs.okey.freeride.views.SlidingTabLayout;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
@@ -33,6 +34,7 @@ public class MyRidesActivity extends BaseActivity
 
     MyRideTabAdapter mTabAdapter;
     private String titles[];
+    List<Appeal> mAppeals;
     List<Ride> mRides;
     ViewPager mViewPager;
     SlidingTabLayout slidingTabLayout;
@@ -64,8 +66,10 @@ public class MyRidesActivity extends BaseActivity
 
         //TODO the array is empty, please implement with cache table
         mRides = new ArrayList<Ride>();
+        mAppeals = new ArrayList<Appeal>();
+
         mTabAdapter= new MyRideTabAdapter(getSupportFragmentManager(),
-                titles, mRides);
+                titles, mRides, mAppeals);
         mViewPager.setAdapter(mTabAdapter);
 
         slidingTabLayout.setViewPager(mViewPager);
@@ -98,7 +102,7 @@ public class MyRidesActivity extends BaseActivity
                 if (myRidesProgressRefresh.getVisibility() == View.VISIBLE) {
                     myRidesProgressRefresh.setVisibility(View.GONE);
                 }
-                mTabAdapter.updateRides(mRides);
+                mTabAdapter.updateRides(mRides, mAppeals);
             }
 
             @Override
@@ -117,17 +121,22 @@ public class MyRidesActivity extends BaseActivity
 
                     wamsUtils.sync(getMobileServiceClient(), "rides");
 
-
-                    Query pullQuery = getMobileServiceClient().getTable(Ride.class)
+                    Query pullQueryRides = getMobileServiceClient().getTable(Ride.class)
                             .where().field("driverid").eq(Globals.userID);
-                    mRidesSyncTable.pull(pullQuery).get();
+                    mRidesSyncTable.pull(pullQueryRides).get();
 
+                    final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQueryRides).get();
 
-                    final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQuery).get();
+                    MobileServiceTable<Appeal> appealsTable = getMobileServiceClient()
+                            .getTable("appeal", Appeal.class);
 
+                    final MobileServiceList<Appeal> appealsList =
+                            appealsTable.where().field("driverid").eq(Globals.userID).execute().get();
+
+                    mAppeals = appealsList;
                     mRides = ridesList;
 
-                    Globals.myrides_update_required = false;
+                    Globals.f_update_required = false;
 
                 } catch (Exception ex) {
                     Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
@@ -136,52 +145,6 @@ public class MyRidesActivity extends BaseActivity
                 return null;
             }
         }.execute();
-
-
-        // Read the rides from local cache
-//        new AsyncTask<Object, Void, Void>() {
-//
-//            @Override
-//            protected void onPostExecute(Void result){
-//                mViewPager.setAdapter(new MyRideTabAdapter(getSupportFragmentManager(),
-//                        titles, mRides));
-//            }
-//
-//            @Override
-//            protected Void doInBackground(Object... objects) {
-//
-//                try {
-//                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//                    String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
-//
-//                    Query pullQuery = getMobileServiceClient().getTable(Ride.class)
-//                            .where().field("driverid").eq(userID);
-//                    final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQuery).get();
-//                    mRides = ridesList;
-//
-//                } catch(InterruptedException | ExecutionException ex) {
-//                    Log.e(LOG_TAG, ex.getMessage());
-//                }
-//
-//                return null;
-//            }
-//        }.execute();
-
-
-
-//                   mTabAdapter.notifyDataSetChanged();
-
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            //mRidesAdapter.clear();
-//
-//                            for(Ride _ride : ridesList) {
-//                                Log.d(LOG_TAG, _ride.getRideCode());
-//                                //mRidesAdapter.add(_ride);
-//                            }
-//                        }
-//                    });
 
     }
 
