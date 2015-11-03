@@ -7,7 +7,7 @@
     <string name="service_id" translatable="false">com.maximum.fastride.service</string>
     <!-- Please refer to http://oxford-portal.azurewebsites.net/doc/general/subscription-key-mgmt to get your subscription key -->
     <!-- If you have one subscription key, you can add it here to use the service -->
-    <string name="oxford_subscription_key">f862259efc314bdbbef51000f399f168</string>
+    <string name="oxford_subscription_key" translatable="false">f862259efc314bdbbef51000f399f168</string>
 
     <string name="app_name" translatable="false">FastRide</string>
     <string name="app_label" translatable="false">Fast Ride</string>
@@ -152,7 +152,7 @@
     <string name="add_cars_caption">Add your cars</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="ok">OK</string>
+    <string name="ok" translatable="false">OK</string>
     <string name="close">Close</string>
     <string name="stop">Stop</string>
     <string name="thanks">Thank you</string>
@@ -273,6 +273,8 @@ limitations under the License.</string>
 
     <string name="title_activity_camera_appeal">Appeal Activity</string>
     <string name="appeal">Appeal</string>
+    <string name="appeal_image">Appeal Image</string>
+    <string name="title_activity_appeal_details">Appeal Details</string>
     <string name="appeal_take_picture">Your request is denied, but you can submit an appeal. Take a picture with all passengers in a cabin, each showing this gesture</string>
     <string name="appeal_cancel">Cancel</string>
     <string name="appeal_another_picture">Try again</string>

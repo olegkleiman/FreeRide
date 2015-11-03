@@ -128,7 +128,7 @@
     <string name="appeal_send">שלח</string>
     <string name="appeal_send_success">הערעור נשלח</string>
     <string name="appeal_send_title">ערעור</string>
-    <string name="appeal_take_picture">בקשתך נדחתה. ניתן להגיש ערעור באמצעות צילום משותף של כל הנוסעים ברכב מציגים מחווה הבאה</string>
+    <string name="appeal_take_picture">בקשתך נדחתה. ניתן להגיש ערעור באמצעות צילום משותף של כל הנוסעים ברכב מציגים כל אחד מחווה הבאה</string>
     <string name="help">עזרה</string>
     <string name="code_try_later">אזין מאוחר יותר</string>
     <string name="detection_no_results">לא זוהו פנים בתמונה</string>
