@@ -177,25 +177,25 @@ public class RideDetailsActivity extends BaseActivity
 
     //TODO after we have real data erase this method
     private void initPassenger  (){
-        lstPassenger = new ArrayList<User>();
-
-        User pass1 = new User();
-        pass1.setFirstName("aaaa");
-        pass1.setLastName("AAA");
-        //pass1.setPictureURL(R.drawable.passenger64);
-        lstPassenger.add(pass1);
-
-        User pass2 = new User();
-        pass2.setFirstName("bbb");
-        pass2.setLastName("BBB");
-        //pass2.setPictureURL(R.drawable.passenger64);
-        lstPassenger.add(pass2);
-
-        User pass3 = new User();
-        pass3.setFirstName("ccc");
-        pass3.setLastName("CCC");
-        //pass2.setPictureURL(R.drawable.passenger64);
-        lstPassenger.add(pass3);
+//        lstPassenger = new ArrayList<User>();
+//
+//        User pass1 = new User();
+//        pass1.setFirstName("aaaa");
+//        pass1.setLastName("AAA");
+//        //pass1.setPictureURL(R.drawable.passenger64);
+//        lstPassenger.add(pass1);
+//
+//        User pass2 = new User();
+//        pass2.setFirstName("bbb");
+//        pass2.setLastName("BBB");
+//        //pass2.setPictureURL(R.drawable.passenger64);
+//        lstPassenger.add(pass2);
+//
+//        User pass3 = new User();
+//        pass3.setFirstName("ccc");
+//        pass3.setLastName("CCC");
+//        //pass2.setPictureURL(R.drawable.passenger64);
+//        lstPassenger.add(pass3);
     }
 
     @Override
