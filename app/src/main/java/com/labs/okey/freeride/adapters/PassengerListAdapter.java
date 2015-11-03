@@ -9,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
@@ -23,13 +22,16 @@ public class PassengerListAdapter extends RecyclerView.Adapter<PassengerListAdap
 
     private List<User> items;
     Context mContext;
-
+    IRecyclerClickListener mClickListener;
 
     public PassengerListAdapter(Context context, List<User> objects) {
         items = objects;
         mContext = context;
     }
 
+    public void setOnClickListener(IRecyclerClickListener listener) {
+        mClickListener = listener;
+    }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
