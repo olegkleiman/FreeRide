@@ -263,7 +263,6 @@
 
             android:visibility="invisible"
             android:layout_alignBottom="@+id/passengerLayout1"
-            android:layout_alignRight="@+id/passengerLayout3"
             android:layout_alignEnd="@+id/passengerLayout3" />
 
     </RelativeLayout>

@@ -2,6 +2,7 @@ package com.labs.okey.freeride.utils;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.UiThread;
 import android.util.Log;
 
 import com.labs.okey.freeride.model.Version;
@@ -20,6 +21,7 @@ public class WAMSVersionTable extends AsyncTask<Void, Void, Void> {
 
     public interface IVersionMismatchListener{
 
+        @UiThread
         public void mismatch(int majorLast, int minorLast, String url);
         public void connectionFailure(Exception ex);
         public void match();

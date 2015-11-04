@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
@@ -151,8 +152,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     MaterialDialog                              mOfflineDialog;
+    MaterialDialog                              mAppealDialog;
     private Boolean                             mCabinPictureButtonShown = false;
     private Boolean                             mCabinShown = false;
+    private Boolean                             mSubmitButtonShown = false;
 
 
 
@@ -183,6 +186,25 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         } else {
                             setupNetwork();
                         }
+                    }
+                }).build();
+
+        mAppealDialog = new MaterialDialog.Builder(this)
+                .title(R.string.appeal_answer)
+                .iconRes(R.drawable.ic_info)
+                .positiveText(R.string.appeal_send)
+                .negativeText(R.string.appeal_cancel)
+                .neutralText(R.string.appeal_another_picture)
+                .customView(R.layout.dialog_appeal_answer, false) // do not wrap in scroll
+                .callback(new MaterialDialog.ButtonCallback() {
+                    @Override
+                    public void onPositive(MaterialDialog dialog) {
+                        sendAppeal();
+                    }
+
+                    @Override
+                    public void onNeutral(MaterialDialog dialog) {
+                        onAppealCamera();
                     }
                 }).build();
 
@@ -267,18 +289,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
                                 "id", this.getPackageName());
 
-                        ImageView fab = (ImageView) findViewById(fabID);
+                        FloatingActionButton fab = (FloatingActionButton)findViewById(fabID);
                         if (fab != null) {
                             if (nCaptured == 1) {
-                                String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + i;
+
+                                fab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
+
+                                String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + (i +1);
                                 if( savedInstanceState.containsKey(parcelableKey)) {
                                     Bitmap passengerThumb = savedInstanceState.getParcelable(parcelableKey);
                                     fab.setImageBitmap(passengerThumb);
-                                }
-                                fab.setImageResource(R.drawable.ic_action_done);
+                                } else
+                                    fab.setImageResource(R.drawable.ic_action_done);
                             }
                             else
                                 fab.setImageResource(R.drawable.ic_action_camera);
+                        } else {
+                            String msg = String.format("onCreate: Passenger FAB %d is not found", i+1);
+                            Log.e(LOG_TAG, msg);
                         }
                     }
                 }
@@ -312,10 +340,34 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN) ) {
+                bInitializedBeforeRotation = true;
+
                 mCabinShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN);
 
                 if( mCabinShown )
                     showCabinView();
+            }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN) ) {
+                bInitializedBeforeRotation = true;
+
+                mSubmitButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN);
+
+                if( mSubmitButtonShown )
+                    showSubmitPicsButton();
+
+            }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN) ) {
+                bInitializedBeforeRotation = true;
+
+                View view = mAppealDialog.getCustomView();
+                if( view != null ) {
+                    ImageView imageViewAppeal = (ImageView) view.findViewById(R.id.imageViewAppeal);
+                    if (imageViewAppeal != null)
+                        imageViewAppeal.setImageURI(mUriPhotoAppeal);
+                }
+                mAppealDialog.show();
             }
 
             if( !bInitializedBeforeRotation )
@@ -342,7 +394,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-
     }
 
     @Override
@@ -369,26 +420,60 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN, mCabinShown);
 
+            outState.putBoolean(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN, mSubmitButtonShown);
+
             // Store passengers captured thumbnails, if any
             View rootView = findViewById(R.id.cabin_background_layout);
-            for(int i = 1; i <= Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
-                String tag = Integer.toString(i);
-                FloatingActionButton passengerPicture = (FloatingActionButton) rootView.findViewWithTag(tag);
-                if( passengerPicture != null) {
+            try {
+                for (int i = 1; i <= Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+                    String tag = Integer.toString(i);
+                    FloatingActionButton passengerPictureButton = (FloatingActionButton) rootView.findViewWithTag(tag);
+                    if (passengerPictureButton != null) {
 
-                    String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + tag;
+                        String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + tag;
 
-                    Drawable drawableThumb = passengerPicture.getDrawable();
-                    if( drawableThumb instanceof BitmapDrawable ) {
-                        BitmapDrawable bmpDrawable = (BitmapDrawable) drawableThumb;
+                        Drawable drawableThumb = passengerPictureButton.getDrawable();
+                        if (drawableThumb instanceof BitmapDrawable) {
+                            BitmapDrawable bmpDrawable = (BitmapDrawable) drawableThumb;
 
-                        outState.putParcelable(parcelableKey, bmpDrawable.getBitmap());
+                            outState.putParcelable(parcelableKey, bmpDrawable.getBitmap());
+                        } else {
+                            Bitmap bmp = convertToBitmap(drawableThumb,
+                                    drawableThumb.getIntrinsicWidth(),
+                                    drawableThumb.getIntrinsicHeight());
+                            outState.putParcelable(parcelableKey, bmp);
+                        }
+
+                    } else {
+                        String msg = String.format("onSaveInstanceState: Passenger FAB %d is not found", i);
+                        Log.e(LOG_TAG, msg);
                     }
+
                 }
+            }
+            catch(Exception ex){
+
+                if( Crashlytics.getInstance() != null )
+                    Crashlytics.logException(ex);
+
+                Log.e(LOG_TAG, ex.getMessage());
+            }
+
+            if( mAppealDialog.isShowing() ) {
+                outState.putBoolean(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN, true);
             }
         }
 
         super.onSaveInstanceState(outState);
+    }
+
+    private Bitmap convertToBitmap(Drawable drawable, int widthPixels, int heighPixels) {
+        Bitmap mutableBitmap = Bitmap.createBitmap(widthPixels, heighPixels, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(mutableBitmap);
+        drawable.setBounds(0, 0, widthPixels, heighPixels);
+        drawable.draw(canvas);
+
+        return mutableBitmap;
     }
 
     private void showCabinView() {
@@ -647,7 +732,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Log.i(LOG_TAG, "onConfigurationChanged");
     }
 
     @Override
@@ -934,6 +1018,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
 
             mTextSwitcher.setText(getString(R.string.instruction_can_submit_no_fee));
+
+            mSubmitButtonShown = true;
         }
     }
 
@@ -1276,7 +1362,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
+    @CallSuper
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        super.onActivityResult(requestCode, resultCode, data);
 
         View rootView = findViewById(R.id.cabin_background_layout);
         String tag = Integer.toString(requestCode);
@@ -1285,34 +1374,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 && resultCode == RESULT_OK) {
 
             try {
-                MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
 
-                builder.title(R.string.appeal_answer)
-                        .iconRes(R.drawable.ic_info)
-                        .positiveText(R.string.appeal_send)
-                        .negativeText(R.string.appeal_cancel)
-                        .neutralText(R.string.appeal_another_picture);
+                View view = mAppealDialog.getCustomView();
+                ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewAppeal);
+                if( imageViewAppeal != null )
+                    imageViewAppeal.setImageURI(mUriPhotoAppeal);
 
-                View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal_answer, null);
-                builder.customView(customDialog, false);
-
-                ImageView imageViewAppeal =  (ImageView)customDialog.findViewById(R.id.imageViewAppeal);
-                imageViewAppeal.setImageURI(mUriPhotoAppeal);
-
-                builder.callback(new MaterialDialog.ButtonCallback() {
-                    @Override
-                    public void onPositive(MaterialDialog dialog) {
-                        sendAppeal();
-                    }
-
-
-                    @Override
-                    public void onNeutral(MaterialDialog dialog) {
-                        onAppealCamera();
-                    }
-                });
-
-                builder.show();
+                mAppealDialog.show();
 
             } catch (Exception e) {
                 Log.e(LOG_TAG, e.getMessage());

@@ -557,6 +557,8 @@ public class CameraCVActivity extends Activity
             @Override
             protected void onPostExecute(Face[] result) {
 
+                bUploadingFrame = false;
+
                 try {
                     mProgressDialog.dismiss();
                 } catch(Exception ex) {

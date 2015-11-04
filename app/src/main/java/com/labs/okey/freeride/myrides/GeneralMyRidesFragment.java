@@ -1,10 +1,7 @@
 package com.labs.okey.freeride.myrides;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Parcelable;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,8 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.RideDetailsActivity;
@@ -25,7 +20,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 
@@ -121,13 +115,10 @@ public class GeneralMyRidesFragment extends Fragment{
 
     private void sort(){
 
-        Collections.sort(mRides,new Comparator<Ride>() {
+        Collections.sort(mRides, Collections.reverseOrder(new Comparator<Ride>() {
             public int compare(Ride r1, Ride r2) {
                 return r1.getCreated().compareTo(r2.getCreated());
-            }
-        });
+            }}));
+
     }
-
-
-
 }

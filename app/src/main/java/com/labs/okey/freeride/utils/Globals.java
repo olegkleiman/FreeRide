@@ -370,6 +370,9 @@ public class Globals {
     public static String PARCELABLE_KEY_APPEAL_PHOTO_URI = "appeal_uri";
     public static String PARCELABLE_KEY_EMOJIID = "emoji_id";
     public static String PARCELABLE_KEY_DRIVER_CABIN_SHOWN = "cabin_shown";
+    public static String PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN = "submit_button_shown";
+    public static String PARCELABLE_KEY_PASSENGER_PREFIX = "thumb_";
+    public static String PARCELABLE_KEY_APPEAL_DIALOG_SHOWN = "appeak_shown";
 
     public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
     public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";

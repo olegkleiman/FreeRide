@@ -145,8 +145,8 @@
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/passenger1"
                     android:tag="1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
                     app:elevation="4dp"
 
@@ -154,7 +154,7 @@
                     app:layout_anchorGravity="bottom|right|end"
 
                     android:layout_gravity="end|bottom"
-                    app:fabSize="normal"
+                    app:fabSize="mini"
 
                     app:backgroundTint="@color/ColorAccent"
                     app:borderWidth="0dp"
@@ -172,9 +172,9 @@
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/passenger2"
-                    android:tag="1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:tag="2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
                     app:elevation="4dp"
 
@@ -182,7 +182,7 @@
                     app:layout_anchorGravity="bottom|right|end"
 
                     android:layout_gravity="end|bottom"
-                    app:fabSize="normal"
+                    app:fabSize="mini"
 
                     app:backgroundTint="@color/ColorAccent"
                     app:borderWidth="0dp"
@@ -202,9 +202,9 @@
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/passenger4"
-                    android:tag="1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="73dp"
+                    android:tag="4"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
                     android:src="@drawable/ic_action_camera"
                     app:elevation="4dp"
 
@@ -212,7 +212,7 @@
                     app:layout_anchorGravity="bottom|right|end"
 
                     android:layout_gravity="end|bottom"
-                    app:fabSize="normal"
+                    app:fabSize="mini"
 
                     app:backgroundTint="@color/ColorAccent"
                     app:borderWidth="0dp"
@@ -232,23 +232,23 @@
                 android:layout_alignLeft="@+id/passengerLayout4"
                 android:layout_alignStart="@+id/passengerLayout4">
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger3"
-                android:tag="1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger3"
+                    android:tag="3"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
 
-                app:layout_anchor="@id/recyclerViewPeers"
-                app:layout_anchorGravity="bottom|right|end"
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
 
-                android:layout_gravity="end|bottom"
-                app:fabSize="normal"
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="mini"
 
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera" />
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera" />
 
             </FrameLayout>
 
