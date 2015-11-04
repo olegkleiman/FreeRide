@@ -384,7 +384,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFa
 
                 Rect faceRect = Rect(tl, br);
 
-                faceRect.width = faceRect.width /2;
+                //faceRect.width = faceRect.width /2;
 
                 rectangle(mRgbaChannel, faceRect,
                           FACE_RECT_COLOR, 2);
@@ -400,7 +400,7 @@ JNIEXPORT bool JNICALL Java_com_labs_okey_freeride_fastcv_FastCVWrapper_detectFa
 
                 Rect faceRect = Rect(tl, br);
 
-                faceRect.height = faceRect.height /2;
+                //faceRect.height = faceRect.height /2;
 
                 rectangle(mRgbaChannel, faceRect,
                           FACE_RECT_COLOR, 2);
