@@ -145,15 +145,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                                 String message = Globals.isInGeofenceArea() ?
                                         Globals.getMonitorStatus() :
-                                        getString(R.string.geofence_outside);
+                                        getString(R.string.geofence_outside_title);
 
-                                Log.i(LOG_TAG, message);
-//                                mTxtMonitorStatus.setText(message);
+//                                String currentGeoStatus = Globals.getMonitorStatus();
+//                                if( !currentGeoStatus.equals(message) )
+                                    mTextSwitcher.setCurrentText(message);
 
                             }
                         });
 
-                        Thread.sleep(1000);
+                        Thread.sleep(2000);
                     }
                 }
                 catch(InterruptedException ex) {
@@ -377,6 +378,24 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     public void onCameraCV(View view) {
 
+        // Only allow participation request from monitored areas
+        if( !Globals.isInGeofenceArea() ) {
+            new MaterialDialog.Builder(this)
+                    .title(R.string.geofence_outside_title)
+                    .content(R.string.geofence_outside)
+                    .positiveText(R.string.geofence_positive_answer)
+                    .negativeText(R.string.geofence_negative_answer)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            Globals.setRemindGeofenceEntrance();
+                        }
+                    })
+                    .show();
+
+            return;
+        }
+
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean bShowSelfieDescription = sharedPrefs.getBoolean(Globals.SHOW_SELFIE_DESC, true);
 
@@ -467,7 +486,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     //
     @Override
     public void clicked(View view, int position) {
-        WifiP2pDeviceUser driverDevice = mDrivers.get(position);
 
         if( !Globals.isInGeofenceArea() ) {
             new MaterialDialog.Builder(this)
@@ -483,6 +501,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     })
                     .show();
         } else {
+
+            WifiP2pDeviceUser driverDevice = mDrivers.get(position);
 
             mRideCode = driverDevice.getRideCode();
 
@@ -538,6 +558,25 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     };
 
     public void onSubmitCode(){
+
+        // Only allow participation request from monitored areas
+        if( !Globals.isInGeofenceArea() ) {
+            new MaterialDialog.Builder(this)
+                    .title(R.string.geofence_outside_title)
+                    .content(R.string.geofence_outside)
+                    .positiveText(R.string.geofence_positive_answer)
+                    .negativeText(R.string.geofence_negative_answer)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            Globals.setRemindGeofenceEntrance();
+                        }
+                    })
+                    .show();
+
+            return;
+        }
+
         final String android_id = Settings.Secure.getString(this.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         final View v = findViewById(R.id.passenger_internal_layout);
@@ -583,8 +622,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                                 // 'Service Unavailable'.
                                                 // To this extent, we mean 'Connection lost'
                         } else {
+
                             responseCode = mse.getResponse().getStatus().getStatusCode();
-                        }
+                         }
 
                         switch( responseCode ) {
                             case 409: // HTTP 'Conflict'
@@ -628,7 +668,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         if( Crashlytics.getInstance() != null )
                             Crashlytics.logException(ex);
 
-                        Log.e(LOG_TAG, ex.getMessage());
+                         Log.e(LOG_TAG, ex.getMessage());
                     }
 
                 }
@@ -658,6 +698,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     if( mFaceId != null && !mFaceId.toString().isEmpty() )
                         _join.setFaceId(mFaceId.toString() );
                     _join.setRideCode(mRideCode);
+                    String currentGeoFenceName = Globals.get_currentGeoFenceName();
+                    _join.setGFenceName(currentGeoFenceName);
                     _join.setDeviceId(android_id);
 
                     try {
