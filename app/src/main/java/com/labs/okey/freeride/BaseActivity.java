@@ -25,6 +25,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.labs.okey.freeride.adapters.DrawerAccountAdapter;
@@ -43,6 +44,7 @@ public class BaseActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener{
 
     private static final String LOG_TAG = "FR.baseActivity";
+    static final int REQUEST_CODE_RECOVER_PLAY_SERVICES = 1001;
 
     protected String[] mDrawerTitles;
     protected int DRAWER_ICONS[] = {
@@ -106,6 +108,8 @@ public class BaseActivity extends AppCompatActivity
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
+        GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(),
+                                this, REQUEST_CODE_RECOVER_PLAY_SERVICES).show();
     }
 
     @Override
@@ -120,8 +124,7 @@ public class BaseActivity extends AppCompatActivity
     protected synchronized void buildGoogleApiClient() {
         try {
 
-            GoogleApiClient.OnConnectionFailedListener connectionFailedListener =
-                    (GoogleApiClient.OnConnectionFailedListener)this;
+            GoogleApiClient.OnConnectionFailedListener connectionFailedListener = this;
 
             GoogleApiClient.Builder builder =
                     new GoogleApiClient.Builder(this)
@@ -132,9 +135,8 @@ public class BaseActivity extends AppCompatActivity
                         (GoogleApiClient.ConnectionCallbacks)this;
                 builder.addConnectionCallbacks(callbacksImplementer);
             }
-            if( connectionFailedListener != null ) {
-                builder.addOnConnectionFailedListener(connectionFailedListener);
-            }
+
+            builder.addOnConnectionFailedListener(connectionFailedListener);
 
             mGoogleApiClient = builder.build();
 
@@ -277,5 +279,6 @@ public class BaseActivity extends AppCompatActivity
             Log.e(LOG_TAG, ex.getMessage());
         }
     }
+
 
 }
