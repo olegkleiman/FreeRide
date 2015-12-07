@@ -34,4 +34,9 @@ public class GFence {
     private Boolean _isActive;
     public boolean isActive() { return _isActive; }
 //    public void setActive(boolean value) { _isActive = value; }
+
+//    @com.google.gson.annotations.SerializedName("radius")
+//    private int radius;
+//    public int getRaius() { return radius; }
+//    public void setRadius(int value) { radius = value; }
 }
