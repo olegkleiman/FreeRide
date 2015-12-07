@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -35,6 +36,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -98,6 +100,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class DriverRoleActivity extends BaseActivityWithGeofences
@@ -138,7 +141,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private MobileServiceTable<Ride>            mRidesTable;
 
     ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
+    ScheduledFuture<?>                          mCheckPassengerTimerResult;
     ScheduledExecutorService                    mCheckGeoFencesTimer = Executors.newScheduledThreadPool(1);
+    ScheduledFuture<?>                          mGeoFencesTimerResult;
     AsyncTask<Void, Void, Void>                 mAdvertiseTask;
 
     // codes handled in onActivityResult()
@@ -158,6 +163,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private Boolean                             mSubmitButtonShown = false;
 
 
+    private Runnable                            mEnableCabinPictureButtonRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+
+            if( Globals.isInGeofenceArea() ) {
+                FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+                fab.setVisibility(View.VISIBLE);
+
+                mTextSwitcher.setText(getString(R.string.instruction_not_enought_passengers));
+
+                mCabinPictureButtonShown = true;
+            } else {
+                getHandler().postDelayed(mEnableCabinPictureButtonRunnable,
+                        Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
+            }
+        }
+    };
 
     @Override
     @CallSuper
@@ -215,165 +238,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
-        boolean bInitializedBeforeRotation = false;
-        if( savedInstanceState != null ) {
-
+        if (savedInstanceState != null) {
             wamsInit();
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
-                bInitializedBeforeRotation = true;
-
-                String rideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
-
-                TextView txtRideCode = (TextView)findViewById(R.id.txtRideCode);
-                txtRideCode.setVisibility(View.VISIBLE);
-                txtRideCode.setText(rideCode);
-
-                TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
-                txtRideCodeCaption.setText(R.string.ride_code_label);
-
-                ImageView imageTransmit = (ImageView)findViewById(R.id.img_transmit);
-                imageTransmit.setVisibility(View.VISIBLE);
-                AnimationDrawable animationDrawable = (AnimationDrawable) imageTransmit.getDrawable();
-                animationDrawable.start();
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CURRENT_RIDE) ) {
-                bInitializedBeforeRotation = true;
-                mCurrentRide = savedInstanceState.getParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE);
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS) ) {
-                bInitializedBeforeRotation = true;
-                ArrayList<User> passengers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
-                if( passengers != null ) {
-
-                    mPassengers.addAll(passengers);
-                    mPassengersAdapter.notifyDataSetChanged();
-
-                    for (User passenger : passengers) {
-                        Globals.addMyPassenger(passenger);
-                    }
-
-                    if (passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
-                        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
-                        Context ctx = getApplicationContext();
-                        fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
-                    }
-
-                }
-
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN) ) {
-                bInitializedBeforeRotation = true;
-
-                mCabinPictureButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN);
-                if(mCabinPictureButtonShown)
-                    findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
-                else
-                    findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS) ) {
-                bInitializedBeforeRotation = true;
-
-                mCapturedPassengersIDs =
-                        savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS);
-
-                if( mCapturedPassengersIDs != null ) {
-                    for (int i = 0; i < mCapturedPassengersIDs.size(); i++) {
-
-                        int nCaptured = mCapturedPassengersIDs.get(i);
-
-                        int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
-                                "id", this.getPackageName());
-
-                        FloatingActionButton fab = (FloatingActionButton)findViewById(fabID);
-                        if (fab != null) {
-                            if (nCaptured == 1) {
-
-                                fab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
-
-                                String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + (i +1);
-                                if( savedInstanceState.containsKey(parcelableKey)) {
-                                    Bitmap passengerThumb = savedInstanceState.getParcelable(parcelableKey);
-                                    fab.setImageBitmap(passengerThumb);
-                                } else
-                                    fab.setImageResource(R.drawable.ic_action_done);
-                            }
-                            else
-                                fab.setImageResource(R.drawable.ic_action_camera);
-                        } else {
-                            String msg = String.format("onCreate: Passenger FAB %d is not found", i+1);
-                            Log.e(LOG_TAG, msg);
-                        }
-                    }
-                }
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS) ) {
-                bInitializedBeforeRotation = true;
-
-                ConcurrentHashMap<Integer, PassengerFace> hash_map =
-                        (ConcurrentHashMap)savedInstanceState.getSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
-
-                Globals.set_PassengerFaces(hash_map);
-
-                // See the explanation of covariance in Java here
-                // http://stackoverflow.com/questions/6951306/cannot-cast-from-arraylistparcelable-to-arraylistclsprite
-//                ArrayList<PassengerFace> _temp = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
-//                Globals.set_PassengerFaces(_temp);
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
-                bInitializedBeforeRotation = true;
-
-                String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI);
-                mUriPhotoAppeal = Uri.parse(str);
-            }
-
-            if(  savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMOJIID) ) {
-                bInitializedBeforeRotation = true;
-
-                mEmojiID = savedInstanceState.getInt(Globals.PARCELABLE_KEY_EMOJIID);
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN) ) {
-                bInitializedBeforeRotation = true;
-
-                mCabinShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN);
-
-                if( mCabinShown )
-                    showCabinView();
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN) ) {
-                bInitializedBeforeRotation = true;
-
-                mSubmitButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN);
-
-                if( mSubmitButtonShown )
-                    showSubmitPicsButton();
-
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN) ) {
-                bInitializedBeforeRotation = true;
-
-                View view = mAppealDialog.getCustomView();
-                if( view != null ) {
-                    ImageView imageViewAppeal = (ImageView) view.findViewById(R.id.imageViewAppeal);
-                    if (imageViewAppeal != null)
-                        imageViewAppeal.setImageURI(mUriPhotoAppeal);
-                }
-                mAppealDialog.show();
-            }
-
-            if( !bInitializedBeforeRotation )
-                setupNetwork();
-
+            saveState(savedInstanceState);
         } else {
+
             if( isConnectedToNetwork() ) {
                 wamsInit();
                 setupNetwork();
@@ -382,9 +251,167 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if( mWiFiUtil == null ) {
             mWiFiUtil = new WiFiUtil(this);
-            mWiFiUtil.deletePersistentGroups();
         }
 
+        mWiFiUtil.deletePersistentGroups();
+
+    }
+
+    private void saveState(Bundle savedInstanceState) {
+        boolean bInitializedBeforeRotation = false;
+
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE)) {
+            bInitializedBeforeRotation = true;
+
+            String rideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+
+            TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+            txtRideCode.setVisibility(View.VISIBLE);
+            txtRideCode.setText(rideCode);
+
+            TextView txtRideCodeCaption = (TextView) findViewById(R.id.code_label_caption);
+            txtRideCodeCaption.setText(R.string.ride_code_label);
+
+            ImageView imageTransmit = (ImageView) findViewById(R.id.img_transmit);
+            imageTransmit.setVisibility(View.VISIBLE);
+            AnimationDrawable animationDrawable = (AnimationDrawable) imageTransmit.getDrawable();
+            animationDrawable.start();
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CURRENT_RIDE)) {
+            bInitializedBeforeRotation = true;
+            mCurrentRide = savedInstanceState.getParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS)) {
+            bInitializedBeforeRotation = true;
+            ArrayList<User> passengers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
+            if (passengers != null) {
+
+                mPassengers.addAll(passengers);
+                mPassengersAdapter.notifyDataSetChanged();
+
+                for (User passenger : passengers) {
+                    Globals.addMyPassenger(passenger);
+                }
+
+                if (passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
+                    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+                    Context ctx = getApplicationContext();
+                    fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+                }
+
+            }
+
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            mCabinPictureButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN);
+            if (mCabinPictureButtonShown)
+                findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
+            else
+                findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS)) {
+            bInitializedBeforeRotation = true;
+
+            mCapturedPassengersIDs =
+                    savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS);
+
+            if (mCapturedPassengersIDs != null) {
+                for (int i = 0; i < mCapturedPassengersIDs.size(); i++) {
+
+                    int nCaptured = mCapturedPassengersIDs.get(i);
+
+                    int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
+                            "id", this.getPackageName());
+
+                    FloatingActionButton fab = (FloatingActionButton) findViewById(fabID);
+                    if (fab != null) {
+                        if (nCaptured == 1) {
+
+                            fab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
+
+                            String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + (i + 1);
+                            if (savedInstanceState.containsKey(parcelableKey)) {
+                                Bitmap passengerThumb = savedInstanceState.getParcelable(parcelableKey);
+                                fab.setImageBitmap(passengerThumb);
+                            } else
+                                fab.setImageResource(R.drawable.ic_action_done);
+                        } else
+                            fab.setImageResource(R.drawable.ic_action_camera);
+                    } else {
+                        String msg = String.format("onCreate: Passenger FAB %d is not found", i + 1);
+                        Log.e(LOG_TAG, msg);
+                    }
+                }
+            }
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS)) {
+            bInitializedBeforeRotation = true;
+
+            ConcurrentHashMap<Integer, PassengerFace> hash_map =
+                    (ConcurrentHashMap) savedInstanceState.getSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+
+            Globals.set_PassengerFaces(hash_map);
+
+            // See the explanation of covariance in Java here
+            // http://stackoverflow.com/questions/6951306/cannot-cast-from-arraylistparcelable-to-arraylistclsprite
+//                ArrayList<PassengerFace> _temp = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+//                Globals.set_PassengerFaces(_temp);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
+            bInitializedBeforeRotation = true;
+
+            String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI);
+            mUriPhotoAppeal = Uri.parse(str);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMOJIID)) {
+            bInitializedBeforeRotation = true;
+
+            mEmojiID = savedInstanceState.getInt(Globals.PARCELABLE_KEY_EMOJIID);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            mCabinShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN);
+
+            if (mCabinShown)
+                showCabinView();
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            mSubmitButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN);
+
+            if (mSubmitButtonShown)
+                showSubmitPicsButton();
+
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            View view = mAppealDialog.getCustomView();
+            if (view != null) {
+                ImageView imageViewAppeal = (ImageView) view.findViewById(R.id.imageViewAppeal);
+                if (imageViewAppeal != null)
+                    imageViewAppeal.setImageURI(mUriPhotoAppeal);
+            }
+            mAppealDialog.show();
+        }
+
+        if( !bInitializedBeforeRotation )
+            setupNetwork();
     }
 
     @Override
@@ -502,10 +529,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 String userName,
                                 String rideCode) {
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            BLEUtil bleUtil = new BLEUtil(this);
-//            Boolean bleRes = bleUtil.startAdvertise();
-//        }
+        if( mWiFiUtil == null )
+            mWiFiUtil = new WiFiUtil(this);
 
         // This will publish the service in DNS-SD and start serviceDiscovery()
         mWiFiUtil.startRegistrationAndDiscovery(this,
@@ -529,7 +554,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
         else {
 
-            if( mOfflineDialog.isShowing() ) {
+            if( mOfflineDialog != null && mOfflineDialog.isShowing() ) {
                 mOfflineDialog.dismiss();
 
                 setupNetwork();
@@ -566,6 +591,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
         //Globals.clearPassengerFaces();
+
+        if( mCheckPassengerTimerResult != null )
+            mCheckPassengerTimerResult .cancel(true);
+        if( mGeoFencesTimerResult != null )
+            mGeoFencesTimerResult.cancel(true);
 
         super.onDestroy();
     }
@@ -609,6 +639,26 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     };
 
     public void onSubmitRidePics(View view){
+
+        // Only allow no-fee request from monitored area
+        if( !Globals.isInGeofenceArea() ) {
+
+            new MaterialDialog.Builder(this)
+                    .title(R.string.geofence_outside_title)
+                    .content(R.string.geofence_outside)
+                    .positiveText(R.string.geofence_positive_answer)
+                    .negativeText(R.string.geofence_negative_answer)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog){
+                            Globals.setRemindGeofenceEntrance();
+                        }
+                    })
+                    .show();
+
+            return;
+        }
+
         // Process the Faces with Oxford FaceAPI
         // Will be continued on finish() from IPictureURLUpdater
         new faceapiUtils(this).execute();
@@ -724,6 +774,25 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             onSubmitRidePics(v);
         else {
 
+            // Only allow no-fee request from monitored area
+            if( !Globals.isInGeofenceArea() ) {
+
+                new MaterialDialog.Builder(this)
+                        .title(R.string.geofence_outside_title)
+                        .content(R.string.geofence_outside)
+                        .positiveText(R.string.geofence_positive_answer)
+                        .negativeText(R.string.geofence_negative_answer)
+                        .callback(new MaterialDialog.ButtonCallback() {
+                            @Override
+                            public void onPositive(MaterialDialog dialog){
+                                Globals.setRemindGeofenceEntrance();
+                            }
+                        })
+                        .show();
+
+                return;
+            }
+
             mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
             updateCurrentRideTask.execute();
         }
@@ -764,6 +833,30 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     private void setupNetwork() {
+
+        int min = 100000;
+        int max = 1000000;
+
+        Random r = new Random();
+        int rideCode = r.nextInt(max - min + 1) + min;
+        final String _rideCode = Integer.toString(rideCode);
+
+        TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+        txtRideCodeCaption.setText(R.string.ride_code_label);
+        TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+        txtRideCode.setVisibility(View.VISIBLE);
+        txtRideCode.setText(_rideCode);
+
+        mImageTransmit.setVisibility(View.VISIBLE);
+        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+        animationDrawable.start();
+
+        startAdvertise(getUser().getRegistrationId(),
+                getUser().getFullName(),
+                _rideCode);
+
+        getHandler().postDelayed(mEnableCabinPictureButtonRunnable,
+                                 Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
 
 //        new AsyncTask<Void, Void, Void>(){
 //
@@ -809,47 +902,47 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Exception mEx;
             Boolean mRequestSelfie;
 
-            @Override
-            protected void onPreExecute() {
-                TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
-                txtRideCodeCaption.setText(R.string.generating_ride_code);
-            }
+//            @Override
+//            protected void onPreExecute() {
+//                TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+//                txtRideCodeCaption.setText(R.string.generating_ride_code);
+//            }
 
             @Override
             protected void onPostExecute(Void result) {
 
                 if (mEx == null) {
-                    TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
-                    txtRideCodeCaption.setText(R.string.ride_code_label);
-                    TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
-                    txtRideCode.setVisibility(View.VISIBLE);
+//                    TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+//                    txtRideCodeCaption.setText(R.string.ride_code_label);
+//                    TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+//                    txtRideCode.setVisibility(View.VISIBLE);
+//
+//                    String rideCode = mCurrentRide.getRideCode();
+//                    txtRideCode.setText(rideCode);
 
-                    String rideCode = mCurrentRide.getRideCode();
-                    txtRideCode.setText(rideCode);
-
-                    findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
+//                    findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
 
                     if (!mCurrentRide.isPictureRequired()) {
-                        mImageTransmit.setVisibility(View.VISIBLE);
-                        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
-                        animationDrawable.start();
+//                        mImageTransmit.setVisibility(View.VISIBLE);
+//                        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+//                        animationDrawable.start();
+//
+//                        startAdvertise(getUser().getRegistrationId(),
+//                                getUser().getFullName(),
+//                                rideCode);
 
-                        startAdvertise(getUser().getRegistrationId(),
-                                getUser().getFullName(),
-                                rideCode);
-
-                        getHandler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
-                                fab.setVisibility(View.VISIBLE);
-
-                                mTextSwitcher.setText(getString(R.string.instruction_not_enought_passengers));
-
-                                mCabinPictureButtonShown = true;
-
-                            }
-                        }, Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
+//                        getHandler().postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+//                                fab.setVisibility(View.VISIBLE);
+//
+//                                mTextSwitcher.setText(getString(R.string.instruction_not_enought_passengers));
+//
+//                                mCabinPictureButtonShown = true;
+//
+//                            }
+//                        }, Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
                     }
                 } else {
                     Toast.makeText(DriverRoleActivity.this,
@@ -865,14 +958,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Ride ride = new Ride();
                     ride.setCreated(new Date());
                     ride.setCarNumber(mCarNumber);
+                    ride.setRideCode(_rideCode);
                     ride.setPictureRequiredByDriver(mRequestSelfie);
                     if( mRidesTable != null ) {
-                        mCurrentRide = mRidesTable.insert(ride).get();
+                        List<Pair<String, String>> parameters = new ArrayList<>();
+                        parameters.add(new Pair<>("rideCodeGenerated", "true"));
+                        //mCurrentRide = mRidesTable.insert(ride).get();
+                        mCurrentRide = mRidesTable.insert(ride, parameters).get();
                     } else {
                         mEx = new Exception("No network");
                     }
 
                 } catch (ExecutionException | InterruptedException ex) {
+
+                    if( Crashlytics.getInstance() != null )
+                        Crashlytics.logException(ex);
+
                     mEx = ex;
                     Log.e(LOG_TAG, ex.getMessage());
                 }
@@ -881,6 +982,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
         }.execute();
 
+        mCheckPassengerTimerResult =
         mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
                                                      @Override
                                                      public void run() {
@@ -991,20 +1093,35 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCarNumber = cars[0];
         }
 
+        mGeoFencesTimerResult =
         mCheckGeoFencesTimer.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                String message = Globals.isInGeofenceArea() ?
-                        Globals.getMonitorStatus() :
-                        getString(R.string.geofence_outside);
 
-                String currentGeoStatus = Globals.getMonitorStatus();
-                if( !currentGeoStatus.equals(message) )
-                    mTextSwitcher.setText(message);
+                try {
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String message = Globals.isInGeofenceArea() ?
+                                    Globals.getMonitorStatus() :
+                                    getString(R.string.geofence_outside);
+
+                            String currentGeoStatus = Globals.getMonitorStatus();
+                            if (!currentGeoStatus.equals(message))
+                                mTextSwitcher.setText(message);
+                        }
+                    });
+
+
+                } catch(Exception ex){
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
             }
         },
-        0, // Start immediately
-        1, TimeUnit.SECONDS );
+        1, // 1-sec delay
+        2, // period between successive executions
+        TimeUnit.SECONDS );
 
     }
 
@@ -1079,6 +1196,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
+
+        // Prevent memory leak on ImageView
+        View v = findViewById(R.id.centerImage);
+        v.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
         mImageTransmit = (ImageView) findViewById(R.id.img_transmit);
 
@@ -1353,10 +1474,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         File storageDir = getExternalFilesDir(null);
 
         File photoFile = File.createTempFile(
-                                            photoFileName,  /* prefix */
-                                            ".jpg",         /* suffix */
-                                            storageDir      /* directory */
-                                            );
+                photoFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
 
         return Uri.fromFile(photoFile);
     }
@@ -1376,9 +1497,23 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             try {
 
                 View view = mAppealDialog.getCustomView();
+                if( view == null)
+                    return;
+
                 ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewAppeal);
-                if( imageViewAppeal != null )
-                    imageViewAppeal.setImageURI(mUriPhotoAppeal);
+                if( imageViewAppeal != null ) {
+
+                    Drawable drawable = imageViewAppeal.getDrawable();
+                    if( drawable != null ) {
+                        ((BitmapDrawable) drawable).getBitmap().recycle();
+                    }
+
+                    // Downsample the image to consume less memory
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = 2;
+                    Bitmap bitmap = BitmapFactory.decodeFile(mUriPhotoAppeal.getPath(), options);
+                    imageViewAppeal.setImageBitmap(bitmap);
+                }
 
                 mAppealDialog.show();
 
