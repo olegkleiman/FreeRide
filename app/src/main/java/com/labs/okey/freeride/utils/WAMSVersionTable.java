@@ -67,11 +67,11 @@ public class WAMSVersionTable extends AsyncTask<Void, Void, Void> {
             return;
         }
 
-        if( wamsVersionMajor != mPackageVersionMajor
-            || wamsVerisonMinor != mPackageVersionMinor) {
+        if( mPackageVersionMajor * 10 + mPackageVersionMinor <
+            wamsVersionMajor * 10 + wamsVerisonMinor ) {
                mMismatchListener.mismatch(wamsVersionMajor,
-                                            wamsVerisonMinor,
-                                            wamsURL);
+                                          wamsVerisonMinor,
+                                          wamsURL);
         } else {
                 mMismatchListener.match();
         }
