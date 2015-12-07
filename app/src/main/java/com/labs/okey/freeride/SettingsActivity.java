@@ -1,5 +1,6 @@
 package com.labs.okey.freeride;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -7,6 +8,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -29,6 +31,7 @@ import com.labs.okey.freeride.model.RegisteredCar;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.RoundedDrawable;
+import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
@@ -50,7 +53,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-public class SettingsActivity extends BaseActivity {
+public class SettingsActivity extends BaseActivity
+        implements WAMSVersionTable.IVersionMismatchListener{
 
     List<RegisteredCar> mCars;
     CarsAdapter mCarsAdapter;
@@ -71,9 +75,19 @@ public class SettingsActivity extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+
         getMenuInflater().inflate(R.menu.menu_settings, menu);
-        return true;
+
+        try {
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            sharedPrefs.getBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.DEBUG_WITHOUT_GEOFENCES);
+            MenuItem menuItem = menu.findItem(R.id.action_debug_without_geofences);
+            menuItem.setChecked(Globals.DEBUG_WITHOUT_GEOFENCES);
+        } catch(Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -88,9 +102,44 @@ public class SettingsActivity extends BaseActivity {
         } else if( id == R.id.action_debug_without_geofences) {
             Globals.DEBUG_WITHOUT_GEOFENCES = !Globals.DEBUG_WITHOUT_GEOFENCES;
             item.setChecked(Globals.DEBUG_WITHOUT_GEOFENCES);
+
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            SharedPreferences.Editor editor = sharedPrefs.edit();
+
+            editor.putBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.DEBUG_WITHOUT_GEOFENCES);
+            editor.apply();
+        } else if( id == R.id.action_debug_update_version ) {
+            WAMSVersionTable versionTable = new WAMSVersionTable(this, this);
+            versionTable.execute();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    //
+    // Implementation of IVersionMismatchListener
+    //
+    public void mismatch(int major, int minor, final String url) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(url));
+        //intent.setDataAndType(Uri.parse(url), "application/vnd.android.package-archive");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+
+    }
+
+    public void match() {
+
+    }
+
+    public void connectionFailure(Exception ex) {
+
+        if( ex != null ) {
+
+            View v = findViewById(R.id.drawer_layout);
+            Snackbar.make(v, ex.getMessage(), Snackbar.LENGTH_LONG);
+        }
+
     }
 
     private void displayUser() {
@@ -102,7 +151,7 @@ public class SettingsActivity extends BaseActivity {
         try {
 
             TextView txtView = (TextView)findViewById(R.id.textUserName);
-            txtView.setText(mUser.getFirstName() + " " + mUser.getLastName());
+            txtView.setText(String.format("%s %s", mUser.getFirstName(), mUser.getLastName()));
 
             txtView = (TextView)findViewById(R.id.textUserEmail);
             txtView.setText(mUser.getEmail());
