@@ -76,13 +76,14 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
             if( geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
                 Globals.setInGeofenceArea(true);
-            } else if( geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT ){
+            } else // if( geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT ){
                 Globals.setInGeofenceArea(false);
-            }
+
 
             // Send notification and log the transition details.
             if( Globals.getRemindGeofenceEntrance() ) {
                 sendNotification(geofenceTransitionString);
+                Globals.clearRemindGeofenceEntrance();
             }
 
             Log.i(TAG, geofenceTransitionString);
@@ -157,7 +158,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
         // Get a notification builder that's compatible with platform versions >= 4
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
-        String msg = getString(R.string.geofence_transition_notification_text);
+        String title = getString(R.string.app_label);
         // Define the notification settings.
         builder.setSmallIcon(R.mipmap.ic_launcher2)
                 // In a real app, you may want to use a library like Volley
@@ -165,10 +166,10 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(),
                         R.mipmap.ic_launcher2))
                 .setColor(Color.RED)
-                .setContentTitle(notificationDetails)
-                .setContentText(msg)
+                .setContentTitle(title)
+                .setContentText(notificationDetails)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(msg))
+                        .bigText(title))
                 .setContentIntent(notificationPendingIntent);
 
         // Dismiss notification once the user touches it.
