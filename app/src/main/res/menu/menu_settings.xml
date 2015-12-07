@@ -11,11 +11,18 @@
         android:orderInCategory="200"
         app:showAsAction="never" />
 
-    <item android:id="@+id/action_debug_without_geofences"
-        android:title="Run without GeoFences"
-        android:orderInCategory="300"
-        android:checkable="true"
-        android:checked="true"
-        app:showAsAction="never" />
+    <group>
+        <item android:id="@+id/action_debug_without_geofences"
+            android:title="Run without GeoFences"
+            android:orderInCategory="300"
+            android:checkable="true"
+            android:checked="false"
+            app:showAsAction="never" />
+
+        <item android:id="@+id/action_debug_update_version"
+            android:title="Download last version"
+            android:orderInCategory="400"
+            app:showAsAction="never" />
+    </group>
 
  </menu>
