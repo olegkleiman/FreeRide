@@ -125,7 +125,7 @@
     <string name="add_car_nick">Car nickname</string>
     <string name="car_number_validation_error">Type in a valid car number</string>
     <string name="enable_wifi_question">Enable Wi-Fi on your device?</string>
-    <string name="enable_location_question">Do you want to enable lotrycation services on the device?</string>
+    <string name="enable_location_question">Do you want to enable location services on this device?</string>
     <string name="code_retry_action">Try search again</string>
     <string name="code_try_later">I\'ll do this later</string>
     <string name="registration_finish">Finish</string>
@@ -200,6 +200,7 @@ limitations under the License.</string>
     <string name="geofence_transition_exited">You exited geofences area: </string>
     <string name="unknown_geofence_transition">Unknown Transition</string>
     <string name="geofence_outside_title">You are outside of monitored area</string>
+    <string name="out_of_gfs">Out of GFs</string>
     <string name="geofence_positive_answer">Yes, remind me</string>
     <string name="geofence_negative_answer">No, I\'ll try later</string>
 
@@ -255,6 +256,7 @@ limitations under the License.</string>
 
     <string name="no_extra">No extras was passed to received notification</string>
 
+    <string name="request_postponed">Your request is postponed</string>
     <string name="geofence_outside">Remind you when getting inside?</string>
 
     <string name="log_start">Application started</string>

@@ -137,5 +137,7 @@
     <string name="instruction_not_enought_passengers">לא זוהו מספיק נוסעים להגשת בקשת פטור</string>
     <string name="instruction_can_submit_no_fee">עכשיו אפשר להגיש בקשה לפטור</string>
     <string name="instruction_advanced_mode">כל אחד מהנוסעים צריך להצטלם</string>
+    <string name="request_postponed">אי אפשר להגיש את בקשתך</string>
+    <string name="enable_location_question">האם לאפשר שירותי מיקום במכשיר זה?</string>
 
 </resources>

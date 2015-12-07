@@ -135,5 +135,7 @@
     <string name="instruction_not_enought_passengers">Не обнаружено достаточно пассажиров для заявки на льготу</string>
     <string name="instruction_can_submit_no_fee">Сейчас вы можете подать заявку на льготную поездку</string>
     <string name="instruction_advanced_mode">Каждый пассажир должен сделать селфи</string>
+    <string name="request_postponed">Ваш запорос не может быть обслужен</string>
+    <string name="enable_location_question">Включить службы местоположения на этом устройстве?</string>
 
 </resources>
