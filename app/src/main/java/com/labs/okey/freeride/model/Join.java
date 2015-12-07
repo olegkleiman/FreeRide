@@ -59,5 +59,15 @@ public class Join {
     private String faceId;
     public String getFaceId() { return faceId; }
     public void setFaceId(String value) { faceId = value; }
+
+    @Expose
+    @com.google.gson.annotations.SerializedName("gfencename")
+    private String gfencename;
+    public String getGFenceName() {
+        return gfencename;
+    }
+    public void setGFenceName(String value){
+        gfencename = value;
+    }
 }
 
