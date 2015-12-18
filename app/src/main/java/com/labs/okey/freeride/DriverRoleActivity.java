@@ -1103,13 +1103,18 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            String message = Globals.isInGeofenceArea() ?
-                                    Globals.getMonitorStatus() :
-                                    getString(R.string.geofence_outside);
 
                             String currentGeoStatus = Globals.getMonitorStatus();
-                            if (!currentGeoStatus.equals(message))
-                                mTextSwitcher.setText(message);
+
+                            String message = Globals.isInGeofenceArea() ?
+                                    currentGeoStatus :
+                                    getString(R.string.geofence_outside_title);
+
+                            if( !mCabinPictureButtonShown ) { // do not override message on status bar
+                                                              // when cabin picture button is displayed
+                                if (!currentGeoStatus.equals(message))
+                                    mTextSwitcher.setText(message);
+                            }
                         }
                     });
 
@@ -1264,6 +1269,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // Set the initial text without an animation
         String currentMonitorStatus = getString(R.string.geofence_outside_title);
         mTextSwitcher.setCurrentText(currentMonitorStatus);
+
+        mTextSwitcher.setOnLongClickListener(new View.OnLongClickListener(){
+            @Override
+            public boolean onLongClick(View view){
+                Intent intent = new Intent(DriverRoleActivity.this,
+                                           GFActivity.class);
+                startActivity(intent);
+
+                return false;
+            }
+        });
 
         Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
