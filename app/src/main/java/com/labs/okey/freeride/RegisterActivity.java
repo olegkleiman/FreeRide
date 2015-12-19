@@ -34,7 +34,7 @@ import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 import com.labs.okey.freeride.fragments.ConfirmRegistrationFragment;
 import com.labs.okey.freeride.fragments.RegisterCarsFragment;
-import com.labs.okey.freeride.model.GFence;
+import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.wamsUtils;
@@ -59,21 +59,80 @@ public class RegisterActivity extends FragmentActivity
     private static final String LOG_TAG = "FR.Register";
 
     private final String PENDING_ACTION_BUNDLE_KEY = "com.labs.okey.freeride:PendingAction";
-    private final String fbProvider = "fb";
 
-    private UiLifecycleHelper uiHelper;
-    private LoginButton mFBLoginButton;
+    User                        mNewUser;
 
-    private GraphUser fbUser;
+    private UiLifecycleHelper   uiHelper;
+    private LoginButton         mFBLoginButton;
+    private GraphUser           fbUser;
 
-    String mAccessToken;
+//    DigitsAuthButton        mDigitsButton;
+//    private AuthCallback    mDigitsAuthCallback;
+//    public AuthCallback     getAuthCallback(){
+//        return mDigitsAuthCallback;
+//    }
+//    TwitterLoginButton      mTwitterloginButton;
 
-    private boolean mAddNewUser = true;
+    String                  mAccessToken;
+    String                  mAcessTokenSecret;
+    private boolean         mAddNewUser = true;
 
     private Session.StatusCallback callback = new Session.StatusCallback() {
         @Override
         public void call(Session session, SessionState state, Exception exception) {
             onSessionStateChange(session, state, exception);
+        }
+    };
+
+    private AsyncTask<User, Void, Void> mCheckUsersTask = new AsyncTask<User, Void, Void>() {
+
+        Exception mEx;
+        ProgressDialog progress;
+
+        @Override
+        protected void onPreExecute() {
+
+            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+            if (loginLayout != null)
+                loginLayout.setVisibility(View.GONE);
+
+            progress = ProgressDialog.show(RegisterActivity.this,
+                    getString(R.string.registration_add_status),
+                    getString(R.string.registration_add_status_wait));
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            progress.dismiss();
+
+            if (mEx == null)
+                showRegistrationForm();
+
+        }
+
+        @Override
+        protected Void doInBackground(User... params) {
+
+            User _user = params[0];
+
+            String regID = _user.getRegistrationId();
+            try {
+
+                MobileServiceList<User> _users =
+                        usersTable.where().field("registration_id").eq(regID)
+                                .execute().get();
+
+                if( _users.size() >= 1 )
+                    mAddNewUser = false;
+
+                saveProviderAccessToken(Globals.TWITTER_PROVIDER);
+
+            } catch (InterruptedException | ExecutionException ex) {
+                mEx = ex;
+                Log.e(LOG_TAG, ex.getMessage());
+            }
+
+            return null;
         }
     };
 
@@ -86,7 +145,6 @@ public class RegisterActivity extends FragmentActivity
 
             @Override
             protected void onPostExecute(Void result) {
-                saveFBUser(fbUser);
                 showRegistrationForm();
                 findViewById(R.id.btnRegistrationNext).setVisibility(View.VISIBLE);
             }
@@ -145,6 +203,72 @@ public class RegisterActivity extends FragmentActivity
         toolbar.setTitleTextColor(getResources().getColor(R.color.white));
         toolbar.setTitle(getString(R.string.title_activity_register));
 
+//        mDigitsAuthCallback = new AuthCallback() {
+//            @Override
+//            public void success(DigitsSession session, String phoneNumber) {
+////                SessionRecorder.recordSessionActive("Login: digits account active", session);
+//            }
+//
+//            @Override
+//            public void failure(DigitsException exception) {
+//                // Do something on failure
+//            }
+//        };
+
+        // Twitter Digits stuff
+//        try {
+//            mDigitsButton = (DigitsAuthButton) findViewById(R.id.digits_auth_button);
+//            //mDigitsButton.setAuthTheme(android.R.style.Theme_Material);
+//            mDigitsButton.setCallback(mDigitsAuthCallback);
+//        } catch(Exception ex) {
+//            Log.e(LOG_TAG, ex.getMessage());
+//        }
+//
+//        // Twitter stuff
+//        mTwitterloginButton = (TwitterLoginButton) findViewById(R.id.twitter_login_button);
+//        mTwitterloginButton.setCallback(new Callback<TwitterSession>() {
+//            @Override
+//            public void success(Result<TwitterSession> result) {
+//
+//                mAccessToken = result.data.getAuthToken().token;
+//                mAcessTokenSecret = result.data.getAuthToken().secret;
+//
+//                TwitterAuthClient authClient = new TwitterAuthClient();
+//
+//                TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+//                twitterApiClient.getAccountService().verifyCredentials(false, false, new Callback<com.twitter.sdk.android.core.models.User>(){
+//
+//                    @Override
+//                    public void success(Result<com.twitter.sdk.android.core.models.User> userResult) {
+//
+//                        mNewUser = new User();
+//                        mNewUser.setRegistrationId(Globals.TWITTER_PROVIDER_FOR_STORE + userResult.data.idStr);
+//                        String userName = userResult.data.name;
+//                        String[] unTokens = userName.split(" ");
+//                        mNewUser.setFirstName(unTokens[0]);
+//                        mNewUser.setLastName(unTokens[1]);
+//                        mNewUser.setEmail(userResult.data.email);
+//
+//                        //mNewUser.setPictureURL(userResult.data.profileImageUrl);
+//                        mNewUser.setPictureURL(userResult.data.profileImageUrl.replace("_normal", "_bigger"));
+//
+//                        mCheckUsersTask.execute(mNewUser);
+//                    }
+//
+//                    @Override
+//                    public void failure(TwitterException e) {
+//
+//                    }
+//                });
+//
+//            }
+//
+//            @Override
+//            public void failure(TwitterException exception) {
+//                // Do something on failure
+//            }
+//        });
+
         // FB stuff
         mFBLoginButton = (LoginButton) findViewById(R.id.loginButton);
         mFBLoginButton.setReadPermissions("email");
@@ -154,6 +278,14 @@ public class RegisterActivity extends FragmentActivity
             public void onUserInfoFetched(final GraphUser user) {
                 if (user != null) {
                     RegisterActivity.this.fbUser = user;
+
+                    mNewUser = new User();
+                    mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + fbUser.getId());
+                    mNewUser.setFirstName(fbUser.getFirstName());
+                    mNewUser.setLastName(fbUser.getLastName());
+                    String pictureURL = "http://graph.facebook.com/" + fbUser.getId() + "/picture?width=100&height=100";
+                    mNewUser.setPictureURL(pictureURL);
+                    mNewUser.setEmail((String) fbUser.getProperty("email"));
 
                     new AsyncTask<Void, Void, Void>() {
 
@@ -186,11 +318,12 @@ public class RegisterActivity extends FragmentActivity
 
                             String regID = Globals.FB_PROVIDER_FOR_STORE + user.getId();
                             try {
+
+                                saveProviderAccessToken(Globals.FB_PROVIDER);
+
                                 MobileServiceList<User> _users =
                                         usersTable.where().field("registration_id").eq(regID)
                                                 .execute().get();
-
-                                saveFBUser(user);
 
                                 if( _users.size() >= 1 )
                                     mAddNewUser = false;
@@ -251,6 +384,7 @@ public class RegisterActivity extends FragmentActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         uiHelper.onActivityResult(requestCode, resultCode, data);
+        //mTwitterloginButton.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -271,14 +405,15 @@ public class RegisterActivity extends FragmentActivity
         uiHelper.onSaveInstanceState(outState);
     }
 
-    private void saveFBUser(GraphUser fbUser) {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    private void saveProviderAccessToken(String provider) {
 
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString(Globals.FB_USERNAME_PREF, fbUser.getFirstName());
-        editor.putString(Globals.REG_PROVIDER_PREF, fbProvider);
-        editor.putString(Globals.FB_LASTNAME_PREF, fbUser.getLastName());
+
+        editor.putString(Globals.REG_PROVIDER_PREF, provider);
         editor.putString(Globals.TOKENPREF, mAccessToken);
+        if( mAcessTokenSecret != null && !mAcessTokenSecret.isEmpty() )
+            editor.putString(Globals.TOKENSECRETPREF, mAcessTokenSecret);
 
         editor.apply();
     }
@@ -328,25 +463,17 @@ public class RegisterActivity extends FragmentActivity
 
             try {
 
-                final User newUser = new User();
-
-                newUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + fbUser.getId());
-                newUser.setFirstName(fbUser.getFirstName());
-                newUser.setLastName(fbUser.getLastName());
-                String pictureURL = "http://graph.facebook.com/" + fbUser.getId() + "/picture?width=100&height=100";
-                newUser.setPictureURL(pictureURL);
-                newUser.setEmail((String) fbUser.getProperty("email"));
-                newUser.setPhone(txtUser.getText().toString());
+                mNewUser.setPhone(txtUser.getText().toString());
                 CheckBox cbUsePhone = (CheckBox)findViewById(R.id.cbUsePhone);
-                newUser.setUsePhone(cbUsePhone.isChecked());
+                mNewUser.setUsePhone(cbUsePhone.isChecked());
 
                 String android_id = Settings.Secure.getString(this.getContentResolver(),
-                        Settings.Secure.ANDROID_ID);
-                newUser.setDeviceId(android_id);
+                                                              Settings.Secure.ANDROID_ID);
+                mNewUser.setDeviceId(android_id);
 
-                newUser.setPlatform(Globals.PLATFORM);
+                mNewUser.setPlatform(Globals.PLATFORM);
 
-                newUser.save(this);
+                mNewUser.save(this);
 
                 new AsyncTask<Void, Void, Void>() {
 
@@ -389,7 +516,7 @@ public class RegisterActivity extends FragmentActivity
                             // permissions for READ and INSERT operations, so no authentication is
                             // required for adding new user to it
                             if( mAddNewUser )
-                                usersTable.insert(newUser).get();
+                                usersTable.insert(mNewUser).get();
 
                         } catch (InterruptedException | ExecutionException e) {
                             mEx = e;
@@ -464,6 +591,7 @@ public class RegisterActivity extends FragmentActivity
 
                         Intent returnIntent = new Intent();
                         returnIntent.putExtra(Globals.TOKENPREF, mAccessToken);
+                        returnIntent.putExtra(Globals.TOKENSECRETPREF, mAcessTokenSecret);
                         setResult(RESULT_OK, returnIntent);
                         finish();
 
@@ -493,11 +621,11 @@ public class RegisterActivity extends FragmentActivity
                                         Globals.WAMS_API_KEY,
                                         getApplicationContext());
 
-                        MobileServiceSyncTable<GFence> gFencesSyncTable = wamsClient.getSyncTable("gfences",
-                                GFence.class);
-                        wamsUtils.sync(wamsClient, "gfences");
+                        MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
+                                GeoFence.class);
+                        wamsUtils.sync(wamsClient, "geofences");
 
-                        Query pullQuery = wamsClient.getTable(GFence.class).where();
+                        Query pullQuery = wamsClient.getTable(GeoFence.class).where();
                         gFencesSyncTable.purge(pullQuery);
                         gFencesSyncTable.pull(pullQuery).get();
 
