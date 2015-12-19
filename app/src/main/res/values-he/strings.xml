@@ -139,5 +139,6 @@
     <string name="instruction_advanced_mode">כל אחד מהנוסעים צריך להצטלם</string>
     <string name="request_postponed">אי אפשר להגיש את בקשתך</string>
     <string name="enable_location_question">האם לאפשר שירותי מיקום במכשיר זה?</string>
+    <string name="geofences_inside_title">אתה נמצא באזור פיקוח</string>
 
 </resources>

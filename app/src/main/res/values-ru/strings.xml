@@ -137,5 +137,6 @@
     <string name="instruction_advanced_mode">Каждый пассажир должен сделать селфи</string>
     <string name="request_postponed">Ваш запорос не может быть обслужен</string>
     <string name="enable_location_question">Включить службы местоположения на этом устройстве?</string>
+    <string name="geofences_inside_title">Вы находитесь в зоне контроля</string>
 
 </resources>

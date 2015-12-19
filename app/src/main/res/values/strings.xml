@@ -195,12 +195,15 @@ limitations under the License.</string>
     <string name="tutorial_id">tutorial_id</string>
 
     <!-- Transition type strings -->
+
     <string name="geofence_transition_entered">You\'ve entered the monitored area: </string>
     <string name="geofence_transition_dwell">You\'re riding in monitored area: </string>
     <string name="geofence_transition_exited">You exited geofences area: </string>
     <string name="unknown_geofence_transition">Unknown Transition</string>
-    <string name="geofence_outside_title">You are outside of monitored area</string>
-    <string name="out_of_gfs">Out of GFs</string>
+
+    <string name="geofence_outside_title">You are out of monitored areas</string>
+    <string name="geofence_outside_title_debug">Out of GFs</string>
+    <string name="geofences_inside_title">You are on road:</string>
     <string name="geofence_positive_answer">Yes, remind me</string>
     <string name="geofence_negative_answer">No, I\'ll try later</string>
 
