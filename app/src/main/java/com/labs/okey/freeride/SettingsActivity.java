@@ -26,7 +26,7 @@ import android.widget.Toast;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.freeride.adapters.CarsAdapter;
-import com.labs.okey.freeride.model.GFence;
+import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.RegisteredCar;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
@@ -398,20 +398,20 @@ public class SettingsActivity extends BaseActivity
                                     Globals.WAMS_API_KEY,
                                     getApplicationContext());
 
-                    MobileServiceSyncTable<GFence> gFencesSyncTable = wamsClient.getSyncTable("gfences",
-                            GFence.class);
-                    MobileServiceTable<GFence> gFencesTbl = wamsClient.getTable(GFence.class);
+                    MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
+                            GeoFence.class);
+                    MobileServiceTable<GeoFence> gFencesTbl = wamsClient.getTable(GeoFence.class);
 
-                    wamsUtils.sync(wamsClient, "gfences");
+                    wamsUtils.sync(wamsClient, "geofences");
 
-                    Query pullQuery = gFencesTbl.where();
+                    Query pullQuery = gFencesTbl.where().field("isactive").ne(false);
                     gFencesSyncTable.purge(pullQuery);
                     gFencesSyncTable.pull(pullQuery).get();
 
                     // TEST
-                    MobileServiceList<GFence> gFences
+                    MobileServiceList<GeoFence> gFences
                             = gFencesSyncTable.read(pullQuery).get();
-                    for (GFence _gFence : gFences) {
+                    for (GeoFence _gFence : gFences) {
                         double lat = _gFence.getLat();
                         double lon = _gFence.getLon();
                         String label = _gFence.getLabel();
