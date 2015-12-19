@@ -15,12 +15,11 @@ import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -141,17 +140,33 @@ public class AppealDetailsActivity extends BaseActivity {
 
 
     private InputStream fetch(String urlString){
-        InputStream is = null;
-        DefaultHttpClient httpClient = new DefaultHttpClient();
-        HttpGet request = new HttpGet(urlString);
-        HttpResponse response = null;
+
+        InputStream in = null;
+        HttpURLConnection urlConnection = null;
+
         try {
-            response = httpClient.execute(request);
-            is =  response.getEntity().getContent();
+
+            URL url = new URL(urlString);
+            urlConnection = (HttpURLConnection) url
+                        .openConnection();
+            in = urlConnection.getInputStream();
+
+            InputStreamReader isw = new InputStreamReader(in);
+
+            int data = isw.read();
+            while (data != -1) {
+                char current = (char) data;
+                data = isw.read();
+                System.out.print(current);
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if( urlConnection != null )
+                urlConnection.disconnect();
         }
-        return is;
+
+        return in;
       }
 }
