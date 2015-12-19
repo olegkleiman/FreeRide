@@ -57,10 +57,8 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.labs.okey.freeride.adapters.PassengersAdapter;
+import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.Ride;
@@ -80,6 +78,7 @@ import com.labs.okey.freeride.utils.WiFiUtil;
 import com.labs.okey.freeride.utils.faceapiUtils;
 import com.labs.okey.freeride.utils.wamsAddAppeal;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
@@ -89,6 +88,7 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -96,7 +96,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -112,13 +111,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         WiFiUtil.IPeersChangedListener,
         WifiP2pManager.PeerListListener,
         WifiP2pManager.ConnectionInfoListener,
-        GoogleApiClient.ConnectionCallbacks,
         WAMSVersionTable.IVersionMismatchListener,
         IUploader,
-        ResultCallback<Status> // for geofences callback
+        android.location.LocationListener
 {
 
-    private static final String LOG_TAG = "FR.Driver";
+    private static final String                 LOG_TAG = "FR.Driver";
 
     PassengersAdapter                           mPassengersAdapter;
     SwipeableRecyclerViewTouchListener          mSwipeTouchListener;
@@ -132,6 +130,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     TextSwitcher                                mTextSwitcher;
     RecyclerView                                mPeersRecyclerView;
     ImageView                                   mImageTransmit;
+
+    private Location                            mCurrentLocation;
+    private MobileServiceSyncTable<GeoFence>    mGFencesSyncTable;
 
     String                                      mCarNumber;
     Uri                                         mUriPhotoAppeal;
@@ -161,7 +162,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private Boolean                             mCabinPictureButtonShown = false;
     private Boolean                             mCabinShown = false;
     private Boolean                             mSubmitButtonShown = false;
-
 
     private Runnable                            mEnableCabinPictureButtonRunnable = new Runnable() {
 
@@ -238,13 +238,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
+        mCurrentLocation = getCurrentLocation();
+        startLocationUpdates(this);
+
         if (savedInstanceState != null) {
             wamsInit();
+            initGeofences();
+
             saveState(savedInstanceState);
         } else {
 
             if( isConnectedToNetwork() ) {
                 wamsInit();
+                initGeofences();
+
                 setupNetwork();
             }
         }
@@ -355,8 +362,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS)) {
             bInitializedBeforeRotation = true;
 
-            ConcurrentHashMap<Integer, PassengerFace> hash_map =
-                    (ConcurrentHashMap) savedInstanceState.getSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+            HashMap<Integer, PassengerFace> hash_map =
+                    (HashMap) savedInstanceState.getSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
 
             Globals.set_PassengerFaces(hash_map);
 
@@ -525,6 +532,31 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mCabinShown = false;
     }
 
+    //
+    // Implementation of LocationListener
+    //
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+        String msg = getGFenceForLocation(location);
+        mTextSwitcher.setCurrentText(msg);
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
+    }
+
     private void startAdvertise(String userID,
                                 String userName,
                                 String rideCode) {
@@ -546,6 +578,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @CallSuper
     public void onResume() {
         super.onResume();
+
+//        if (getGoogleApiClient().isConnected() && !mRequestingLocationUpdates) {
+        startLocationUpdates(this);
 
         if( !isConnectedToNetwork() ) {
             TextView txtRideCodeLabel =  (TextView)findViewById(R.id.code_label_caption);
@@ -574,6 +609,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.stopDiscovery();
         }
 
+        stopLocationUpdates(this);
         super.onPause();
     }
 
@@ -820,11 +856,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onConnected(Bundle bundle) {
-        super.onConnected(bundle);
-    }
-
     private void wamsInit() {
 
         wamsInit(true);
@@ -971,6 +1002,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 } catch (ExecutionException | InterruptedException ex) {
 
+
                     if( Crashlytics.getInstance() != null )
                         Crashlytics.logException(ex);
 
@@ -1093,40 +1125,40 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCarNumber = cars[0];
         }
 
-        mGeoFencesTimerResult =
-        mCheckGeoFencesTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-
-                try {
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            String currentGeoStatus = Globals.getMonitorStatus();
-
-                            String message = Globals.isInGeofenceArea() ?
-                                    currentGeoStatus :
-                                    getString(R.string.geofence_outside_title);
-
-                            if( !mCabinPictureButtonShown ) { // do not override message on status bar
-                                                              // when cabin picture button is displayed
-                                if (!currentGeoStatus.equals(message))
-                                    mTextSwitcher.setText(message);
-                            }
-                        }
-                    });
-
-
-                } catch(Exception ex){
-                    Log.e(LOG_TAG, ex.getMessage());
-                }
-            }
-        },
-        1, // 1-sec delay
-        2, // period between successive executions
-        TimeUnit.SECONDS );
+//        mGeoFencesTimerResult =
+//        mCheckGeoFencesTimer.scheduleAtFixedRate(new Runnable() {
+//            @Override
+//            public void run() {
+//
+//                try {
+//
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//
+//                            String currentGeoStatus = Globals.getMonitorStatus();
+//
+//                            String message = Globals.isInGeofenceArea() ?
+//                                    currentGeoStatus :
+//                                    getString(R.string.geofence_outside_title);
+//
+//                            if( !mCabinPictureButtonShown ) { // do not override message on status bar
+//                                                              // when cabin picture button is displayed
+//                                if (!currentGeoStatus.equals(message))
+//                                    mTextSwitcher.setText(message);
+//                            }
+//                        }
+//                    });
+//
+//
+//                } catch(Exception ex){
+//                    Log.e(LOG_TAG, ex.getMessage());
+//                }
+//            }
+//        },
+//        1, // 1-sec delay
+//        2, // period between successive executions
+//        TimeUnit.SECONDS );
 
     }
 
@@ -1270,11 +1302,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         String currentMonitorStatus = getString(R.string.geofence_outside_title);
         mTextSwitcher.setCurrentText(currentMonitorStatus);
 
-        mTextSwitcher.setOnLongClickListener(new View.OnLongClickListener(){
+        mTextSwitcher.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public boolean onLongClick(View view){
+            public boolean onLongClick(View view) {
                 Intent intent = new Intent(DriverRoleActivity.this,
-                                           GFActivity.class);
+                        GFActivity.class);
                 startActivity(intent);
 
                 return false;
@@ -1569,7 +1601,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                     UUID _faceId = (UUID) extras.getSerializable(getString(R.string.detection_face_id));
                     URI faceURI = (URI) extras.getSerializable(getString(R.string.detection_face_uri));
-                    addPassengerFace(requestCode - 1, _faceId, faceURI.toString());
+                    if( faceURI != null )
+                        addPassengerFace(requestCode - 1, _faceId, faceURI.toString());
                 }
             }
 
@@ -1703,11 +1736,21 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     //
+    // Implementation of GoogleApiClient.ConnectionCallbacks
+    //
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    //
     // Implementation of IPictureURLUpdater
     //
     @Override
     public void update(String url) {
     }
+
+
 
     @Override
     public void finished(int task_tag, boolean success) {
