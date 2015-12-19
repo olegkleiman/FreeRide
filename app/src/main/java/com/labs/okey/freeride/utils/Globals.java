@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -78,6 +77,9 @@ public class Globals {
 
         try {
 
+//            TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
+//                                                                  TWITTER_CONSUMER_SECRET);
+//            Fabric.with(ctx, new TwitterCore(authConfig), new Crashlytics(), new Digits());
             Fabric.with(ctx, new Crashlytics());
 
             User user = User.load(ctx);
@@ -86,8 +88,6 @@ public class Globals {
             Crashlytics.setUserEmail(user.getEmail());
 
             _monitorInitialized = true;
-
-
 
         } catch(Exception e) {
             String msg = e.getMessage();
@@ -102,7 +102,7 @@ public class Globals {
 
     public static int RIDE_CODE_INPUT_LENGTH = 6;
 
-    public static int CABIN_PICTURES_BUTTON_SHOW_INTERVAL = 5 * 1000;
+    public static int CABIN_PICTURES_BUTTON_SHOW_INTERVAL = 40 * 1000;
 
     private static boolean _passengerListAlerted = false;
     public static boolean isPassengerListAlerted() {
@@ -207,6 +207,7 @@ public class Globals {
     public static final String USE_PHONE_PFER = "usephone";
 
     public static final String FB_PROVIDER = "Facebook";
+    public static final String TWITTER_PROVIDER = "Twitter";
     public static final String FB_PROVIDER_FOR_STORE = "Facebook:";
     public static final String GOOGLE_PROVIDER_FOR_STORE = "Google:";
     public static final String MS_PROVIDER_FOR_STORE = "MS:";
@@ -222,8 +223,10 @@ public class Globals {
     public static final String USERIDPREF = "userid";
     public static final String CARS_PREF = "cars";
     public static final String TOKENPREF = "accessToken";
+    public static final String TOKENSECRETPREF = "accessTokenSecret";
     public static final String WAMSTOKENPREF = "wamsToken";
     public static final String SHOW_SELFIE_DESC = "selfieDesc";
+    public static final String PREF_DEBUG_WITHOUT_GEOFENCES = "debug_without_geofences";
 
     private static final Object lock2 = new Object();
     private static String MONITOR_STATUS;
@@ -238,7 +241,7 @@ public class Globals {
         }
     }
 
-    // TODO: synchronize with Geo0-Fences
+    // TODO: synchronize with Geo-Fences
     public static boolean f_update_required;
 
     private static String _currentGeoFenceName;
@@ -265,11 +268,11 @@ public class Globals {
     public static final long GEOFENCE_EXPIRATION_IN_HOURS = 2;
     public static final long GEOFENCE_EXPIRATION_IN_MILLISECONDS =
             GEOFENCE_EXPIRATION_IN_HOURS * 60 * 60 * 1000;
-    public static final float GEOFENCE_RADIUS_IN_METERS = 100;
+    public static final int GEOFENCE_RADIUS_IN_METERS = 100;
     public static final int GEOFENCE_LOITERING_DELAY = 60000; // 1 min
     public static final int GEOFENCE_RESPONSIVENESS = 5000; // 5 sec
 
-    public static Boolean DEBUG_WITHOUT_GEOFENCES = true;
+    public static Boolean DEBUG_WITHOUT_GEOFENCES = false;
 
     private static final Object lock = new Object();
     private static boolean inGeofenceArea;
@@ -299,6 +302,11 @@ public class Globals {
             return _REMIND_GEOFENCE_ENTRANCE;
         }
     }
+    public static void clearRemindGeofenceEntrance() {
+        synchronized ( lock3 ) {
+            _REMIND_GEOFENCE_ENTRANCE = false;
+        }
+    }
 
     public static  String CASCADE_URL = "http://maximum.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
     private static String CASCADE_PATH;
@@ -323,14 +331,14 @@ public class Globals {
     }
 
     private static final Object lockPassengerFaces = new Object();
-    private static ConcurrentHashMap<Integer, PassengerFace> _passengerFaces = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<Integer, PassengerFace> get_PassengerFaces() {
+    private static HashMap<Integer, PassengerFace> _passengerFaces = new HashMap<>();
+    public static HashMap<Integer, PassengerFace> get_PassengerFaces() {
         synchronized (lockPassengerFaces) {
             return _passengerFaces;
         }
     }
-    public static void set_PassengerFaces(ConcurrentHashMap<Integer, PassengerFace> faces) {
-        _passengerFaces = faces;
+    public static void set_PassengerFaces(HashMap<Integer, PassengerFace> faces) {
+        _passengerFaces.putAll(faces);
     }
     public static void add_PassengerFace(PassengerFace pf) {
         for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
@@ -374,8 +382,8 @@ public class Globals {
     public static String PARCELABLE_KEY_PASSENGER_PREFIX = "thumb_";
     public static String PARCELABLE_KEY_APPEAL_DIALOG_SHOWN = "appeak_shown";
 
-    public static String TWITTER_CONSUMER_KEY = "NJUZRWiKT5FRRq6Q7ni6BgckK";
-    public static String TWITTER_CONSUMER_SECRET = "HVOOFxJgiTawiqtCtZgngc4eShFKCj1CVZjegjGEutWys6WDYP";
+    public static String TWITTER_CONSUMER_KEY = "jxvXE5xHG84JvuI4bLJApTzYb";
+    public static String TWITTER_CONSUMER_SECRET = "EzJlpFBvSkeaoPA28wJT9sHvEnxAEpvKDOLTImwM0Jk9wLsnQK";
 
     public static final String storageConnectionString =
             "DefaultEndpointsProtocol=http;" +
