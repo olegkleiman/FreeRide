@@ -1,8 +1,12 @@
 package com.labs.okey.freeride;
 
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -15,12 +19,10 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-
-import com.labs.okey.freeride.model.GFence;
+import com.labs.okey.freeride.model.GFCircle;
+import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.services.GeofenceErrorMessages;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.ITrace;
@@ -30,8 +32,7 @@ import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import java.math.BigDecimal;
-import java.text.DateFormat;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -39,24 +40,17 @@ import java.util.Map;
  */
 public class BaseActivityWithGeofences extends BaseActivity
         implements ResultCallback<Status>,
-                GoogleApiClient.ConnectionCallbacks,
-                LocationListener
+                GoogleApiClient.ConnectionCallbacks
 {
-    private static final String LOG_TAG = "FR.GeoFences";
-    private MobileServiceSyncTable<GFence> mGFencesSyncTable;
+    private static final String                     LOG_TAG = "FR.GeoFences";
+    private MobileServiceSyncTable<GeoFence>        mGFencesSyncTable;
 
-    LocationRequest mLocationRequest;
-    private Location mCurrentLocation;
-    public Location getCurrentLocation() { return mCurrentLocation; }
-    String mLastUpdateTime;
+    private android.location.LocationListener       mLocationListener;
+    protected ArrayList<GFCircle>                   mGFCircles = new ArrayList<GFCircle>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
         super.onCreate(savedInstanceState);
     }
 
@@ -66,14 +60,7 @@ public class BaseActivityWithGeofences extends BaseActivity
 
     @Override
     public void onConnected(Bundle bundle) {
-
-        LocationServices
-                .FusedLocationApi
-                .requestLocationUpdates(getGoogleApiClient(),
-                                        mLocationRequest,
-                                        this);
-
-        initGeofences();
+        //initGeofencesAPI();
     }
 
     @Override
@@ -81,23 +68,203 @@ public class BaseActivityWithGeofences extends BaseActivity
 
     }
 
-    //
-    // Implementation of LocationListener
-    //
+    @TargetApi(23)
+    protected Location getCurrentLocation() {
+
+//        if (Build.VERSION.SDK_INT >= 23) {
+//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+//                    != PackageManager.PERMISSION_GRANTED &&
+//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+//                            != PackageManager.PERMISSION_GRANTED)
+//                return null;
+//        }
+
+        Location location = LocationServices.FusedLocationApi.getLastLocation(getGoogleApiClient());
+        if (location != null)
+            return location;
+
+
+        try {
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setAltitudeRequired(false);
+            criteria.setBearingRequired(false);
+            criteria.setCostAllowed(true);
+
+            String provider = locationManager.getBestProvider(criteria, true);
+
+            location = locationManager.getLastKnownLocation(provider);
+        } catch (Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
+
+        return location;
+    }
+
+    protected void startLocationUpdates(android.location.LocationListener locationListener) {
+
+//        if (Build.VERSION.SDK_INT >= 23) {
+//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+//                    != PackageManager.PERMISSION_GRANTED &&
+//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+//                            != PackageManager.PERMISSION_GRANTED)
+//                return;
+//        }
+
+        mLocationListener = locationListener;
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+//        Criteria criteria = new Criteria();
+//        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+//        criteria.setAltitudeRequired(false);
+//        criteria.setBearingRequired(false);
+//        criteria.setCostAllowed(true);
+
+        if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) )
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                    0, 0, locationListener);
+
+        if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    0, 0, locationListener);
+
+    }
+
+    protected void stopLocationUpdates(android.location.LocationListener locationListener) {
+
+//        if (Build.VERSION.SDK_INT >= 23) {
+//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+//                    != PackageManager.PERMISSION_GRANTED &&
+//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+//                            != PackageManager.PERMISSION_GRANTED)
+//                return;
+//        }
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager.removeUpdates(locationListener);
+    }
+
     @Override
-    public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+    protected void onPause(){
+
+        if( mLocationListener != null )
+            stopLocationUpdates(mLocationListener);
+
+        super.onPause();
     }
 
     protected void initGeofences() {
+        if (!isWamsInitialized())
+            return;
+
+        if (mGFencesSyncTable == null)
+            mGFencesSyncTable = getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
+
+        new AsyncTask<Object, Void, Void>() {
+
+            MobileServiceList<GeoFence> gFences = null;
+
+            @Override
+            protected void onPostExecute(Void result){
+                if( gFences == null )
+                    return;
+
+                for (GeoFence _gFence : gFences) {
+                    if( _gFence.isActive() ) {
+                        // About the issues of converting float to double
+                        // see here: http://programmingjungle.blogspot.co.il/2013/03/float-to-double-conversion-in-java.html
+                        double lat = new BigDecimal(String.valueOf(_gFence.getLat())).doubleValue();
+                        double lon = new BigDecimal(String.valueOf(_gFence.getLon())).doubleValue();
+                        int radius = Math.round(_gFence.getRadius());
+
+                        GFCircle gfCircle = new GFCircle(lat, lon,
+                                radius,
+                                _gFence.getLabel());
+                        mGFCircles.add(gfCircle);
+
+                    }
+                }
+
+//                String msg = getGFenceForLocation(mCurrentLocation);
+//                mTextSwitcher.setCurrentText(msg);
+
+            }
+
+            @Override
+            protected Void doInBackground(Object... params) {
+
+                try {
+
+                    wamsUtils.sync(getMobileServiceClient(), "geofences");
+
+                    Query pullQuery = getMobileServiceClient().getTable(GeoFence.class).where();
+                    gFences = mGFencesSyncTable.read(pullQuery).get();
+
+                } catch (Exception ex) {
+                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+                }
+
+                return null;
+            }
+        }.execute();
+
+    }
+
+    protected String getGFenceForLocation(Location location) {
+
+        String strStatus = getString(R.string.geofence_outside_title);
+
+        Boolean bInsideGeoFences = false;
+
+        for(GFCircle circle : mGFCircles) {
+            float[] res = new float[3];
+            Location.distanceBetween(location.getLatitude(),
+                    location.getLongitude(),
+                    circle.getX(),
+                    circle.getY(),
+                    res);
+            if (res[0] < circle.getRadius()) {
+
+                bInsideGeoFences = true;
+
+                strStatus = getString(R.string.geofences_inside_title);
+
+                strStatus += " " + circle.getTag();
+
+//                if (location.hasAccuracy()) {
+//                    strStatus += String.format("%s %f %f (%.1f) ",
+//                            location.getProvider(),
+//                            location.getLatitude(),
+//                            location.getLongitude(),
+//                            location.getAccuracy());
+//                } else {
+//                    strStatus += String.format("%s %f %f ",
+//                            location.getProvider(),
+//                            location.getLatitude(),
+//                            location.getLongitude());
+//                }
+//
+//                String lastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+//                strStatus += " " + lastUpdateTime;
+
+                break;
+            }
+        }
+
+        Globals.setInGeofenceArea(bInsideGeoFences);
+
+        return strStatus;
+    }
+
+    protected void initGeofencesAPI() {
         if( !isWamsInitialized() )
             return;
 
         final ResultCallback<Status> resultCallback = this;
 
         if( mGFencesSyncTable == null )
-            mGFencesSyncTable = getMobileServiceClient().getSyncTable("gfences", GFence.class);
+            mGFencesSyncTable = getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
 
         new AsyncTask<Object, Void, Void>() {
 
@@ -157,12 +324,13 @@ public class BaseActivityWithGeofences extends BaseActivity
             @Override
             protected Void doInBackground(Object... params) {
 
-                MobileServiceList<GFence> gFences = null;
+                MobileServiceList<GeoFence> gFences = null;
                 try {
 
-                    wamsUtils.sync(getMobileServiceClient(), "gfences");
+                    //wamsUtils.sync(getMobileServiceClient(), "gfences");
+                    wamsUtils.sync(getMobileServiceClient(), "geofences");
 
-                    Query pullQuery = getMobileServiceClient().getTable(GFence.class).where();
+                    Query pullQuery = getMobileServiceClient().getTable(GeoFence.class).where();
                     gFences = mGFencesSyncTable.read(pullQuery).get();
 
                 } catch (Exception ex) {
@@ -181,7 +349,7 @@ public class BaseActivityWithGeofences extends BaseActivity
                     // 4. define pending intent for geofences transitions
                     // 5. add geofences to Google API service
 
-                    for (GFence _gFence : gFences) {
+                    for (GeoFence _gFence : gFences) {
 
                         if( _gFence.isActive() ) {
 
@@ -189,6 +357,8 @@ public class BaseActivityWithGeofences extends BaseActivity
                             // see here: http://programmingjungle.blogspot.co.il/2013/03/float-to-double-conversion-in-java.html
                             double lat = new BigDecimal(String.valueOf(_gFence.getLat())).doubleValue();
                             double lon = new BigDecimal(String.valueOf(_gFence.getLon())).doubleValue();
+                            //int radius = _gFence.getRaius();
+
                             LatLng latLng = new LatLng(lat, lon);
 
                             Globals.FWY_AREA_LANDMARKS.put(_gFence.getLabel(), latLng);
@@ -214,9 +384,6 @@ public class BaseActivityWithGeofences extends BaseActivity
         try {
 
             if( getGoogleApiClient().isConnected() ) {
-
-                LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(),
-                        this);
 
                 Globals.setInGeofenceArea(false);
                 Globals.setMonitorStatus("");
