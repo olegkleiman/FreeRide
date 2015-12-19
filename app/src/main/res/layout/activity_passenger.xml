@@ -89,7 +89,7 @@
             android:visibility="visible">
 
             <TextSwitcher
-                android:id="@+id/monitor_text_switcher"
+                android:id="@+id/passenger_monitor_text_switcher"
                 android:layout_weight="10"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
@@ -99,7 +99,6 @@
                 android:paddingEnd="@dimen/snackbar_rightpadding">
 
                 <TextView
-                    android:id="@+id/status_monitor"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
 
