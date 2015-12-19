@@ -89,7 +89,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         WiFiUtil.IPeersChangedListener,
         BLEUtil.IDeviceDiscoveredListener,
         WifiP2pManager.ConnectionInfoListener,
-        WAMSVersionTable.IVersionMismatchListener{
+        WAMSVersionTable.IVersionMismatchListener,
+        android.location.LocationListener
+{
 
     private static final String LOG_TAG = "FR.Passenger";
 
@@ -116,6 +118,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private URI                         mPictureURI;
     private UUID                        mFaceId;
 
+    private Location                    mCurrentLocation;
+
     @Override
     @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,45 +128,50 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
 
+        startLocationUpdates(this);
+
         wamsInit(false); // without auto-update for this activity
+
+        initGeofences();
+
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
 
-        new Thread() {
-            @Override
-            public void run(){
-
-                try{
-
-                    while (true) {
-
-                        runOnUiThread(new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                String message = Globals.isInGeofenceArea() ?
-                                        Globals.getMonitorStatus() :
-                                        getString(R.string.geofence_outside_title);
-
-//                                String currentGeoStatus = Globals.getMonitorStatus();
-//                                if( !currentGeoStatus.equals(message) )
-                                    mTextSwitcher.setCurrentText(message);
-
-                            }
-                        });
-
-                        Thread.sleep(2000);
-                    }
-                }
-                catch(InterruptedException ex) {
-                    Log.e(LOG_TAG, ex.getMessage());
-                }
-
-            }
-        }.start();
+//        new Thread() {
+//            @Override
+//            public void run(){
+//
+//                try{
+//
+//                    while (true) {
+//
+//                        runOnUiThread(new Runnable() {
+//
+//                            @Override
+//                            public void run() {
+//
+//                                String message = Globals.isInGeofenceArea() ?
+//                                        Globals.getMonitorStatus() :
+//                                        getString(R.string.geofence_outside_title);
+//
+////                                String currentGeoStatus = Globals.getMonitorStatus();
+////                                if( !currentGeoStatus.equals(message) )
+//                                    mTextSwitcher.setCurrentText(message);
+//
+//                            }
+//                        });
+//
+//                        Thread.sleep(2000);
+//                    }
+//                }
+//                catch(InterruptedException ex) {
+//                    Log.e(LOG_TAG, ex.getMessage());
+//                }
+//
+//            }
+//        }.start();
 
         mWiFiUtil = new WiFiUtil(this);
 
@@ -217,7 +226,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         mDriversShown = false;
 
-        mTextSwitcher = (TextSwitcher) findViewById(R.id.monitor_text_switcher);
+        mTextSwitcher = (TextSwitcher) findViewById(R.id.passenger_monitor_text_switcher);
         Animation in = AnimationUtils.loadAnimation(this, R.anim.push_up_in);
         Animation out = AnimationUtils.loadAnimation(this, R.anim.push_up_out);
         mTextSwitcher.setInAnimation(in);
@@ -225,6 +234,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         // Set the initial text without an animation
         String currentMonitorStatus = getString(R.string.geofence_outside_title);
         mTextSwitcher.setCurrentText(currentMonitorStatus);
+        mTextSwitcher.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Intent intent = new Intent(PassengerRoleActivity.this,
+                        GFActivity.class);
+                startActivity(intent);
+
+                return false;
+            }
+        });
+
 
         Globals.setMonitorStatus(currentMonitorStatus);
     }
@@ -234,6 +254,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
+        startLocationUpdates(this);
+
         if( mWiFiUtil != null)
             mWiFiUtil.registerReceiver(this);
     }
@@ -241,8 +263,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     public void onPause() {
-        super.onPause();
-
         if( mWiFiUtil != null ) {
             mWiFiUtil.unregisterReceiver();
             mWiFiUtil.stopDiscovery();
@@ -250,6 +270,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
+
+        stopLocationUpdates(this);
+
+        super.onPause();
     }
 
     @Override
@@ -259,9 +283,34 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.removeGroup();
 
         // Ride Code will be re-newed on next activity's launch
-        mRideCode =  "";
+        mRideCode = "";
 
         super.onStop();
+    }
+
+    //
+    // Implementation of LocationListener
+    //
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+        String msg = getGFenceForLocation(location);
+        mTextSwitcher.setCurrentText(msg);
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
     }
 
 
