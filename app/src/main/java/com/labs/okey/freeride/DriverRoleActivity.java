@@ -15,6 +15,7 @@ import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.location.LocationProvider;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -77,8 +78,12 @@ import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.labs.okey.freeride.utils.faceapiUtils;
 import com.labs.okey.freeride.utils.wamsAddAppeal;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
+
+import junit.framework.Assert;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
@@ -140,12 +145,72 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     int                                         mEmojiID;
 
     private MobileServiceTable<Ride>            mRidesTable;
+    private String                              mRideCode;
 
     ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
     ScheduledFuture<?>                          mCheckPassengerTimerResult;
-    ScheduledExecutorService                    mCheckGeoFencesTimer = Executors.newScheduledThreadPool(1);
-    ScheduledFuture<?>                          mGeoFencesTimerResult;
-    AsyncTask<Void, Void, Void>                 mAdvertiseTask;
+
+    private Boolean                             mRideStored = false;
+    AsyncTask<Void, Void, Void>                 mWAMSStoreRideTask =  new AsyncTask<Void, Void, Void>() {
+
+                Exception mEx;
+
+                @Override
+                protected void onPostExecute(Void result) {
+
+                    if (mEx != null) {
+
+                        Toast.makeText(DriverRoleActivity.this,
+                                        mEx.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+
+                    final String tableName = "rides";
+                    try {
+
+                        MobileServiceClient wamsClient = getMobileServiceClient(); //wamsUtils.init(getApplicationContext());
+
+                        final Ride ride = new Ride();
+
+                        ride.setRideCode(mRideCode);
+                        ride.setCarNumber(mCarNumber);
+                        ride.setGFenceName(getCurrentGFenceName());
+                        ride.setDriverName(getUser().getFullName());
+                        ride.setPictureRequiredByDriver(false);
+
+                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        final String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
+                        final String token = sharedPrefs.getString(Globals.WAMSTOKENPREF, "");
+
+                        List<Pair<String, String>> parameters = new ArrayList<>();
+                        parameters.add(new Pair<>("rideCodeGenerated", "true"));
+
+
+
+                        MobileServiceUser wamsUser = new MobileServiceUser(userID);
+                        wamsUser.setAuthenticationToken(token);
+                        wamsClient.setCurrentUser(wamsUser);
+
+                        MobileServiceTable<Ride> ridesTable = wamsClient.getTable(tableName, Ride.class);
+                        Ride currentRide = ridesTable.insert(ride, parameters).get();
+
+                        Assert.assertNotNull(currentRide);
+
+                    } catch (Exception ex)  {
+                        if( Crashlytics.getInstance() != null )
+                            Crashlytics.logException(ex);
+
+                        mEx = ex;
+                        if( !ex.getMessage().isEmpty() )
+                            Log.e(LOG_TAG, ex.getMessage());
+                    }
+
+                    return null;
+                }
+            };
 
     // codes handled in onActivityResult()
     final int WIFI_CONNECT_REQUEST  = 100;// request code for starting WiFi connection
@@ -181,6 +246,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
         }
     };
+
+
 
     @Override
     @CallSuper
@@ -540,11 +607,41 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mCurrentLocation = location;
         String msg = getGFenceForLocation(location);
         mTextSwitcher.setCurrentText(msg);
+
+        if( !mRideStored && isGeoFencesInitialized() ) {
+            mRideStored = true;
+            mWAMSStoreRideTask.execute();
+        }
     }
 
     @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        String msg = String.format("%s location provider %s",
+                provider,
+                getLocationProviderStatus(status));
+        Log.i(LOG_TAG, msg);
+    }
 
+    private String getLocationProviderStatus(int status) {
+
+        String strStatus = "undefined";
+
+        switch(status) {
+            case LocationProvider.AVAILABLE:
+                strStatus = "Available";
+                break;
+
+            case LocationProvider.OUT_OF_SERVICE:
+                strStatus = "Out of service";
+                break;
+
+            case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                strStatus = "Temporarily unavailable";
+                break;
+
+        }
+
+        return strStatus;
     }
 
     @Override
@@ -630,8 +727,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if( mCheckPassengerTimerResult != null )
             mCheckPassengerTimerResult .cancel(true);
-        if( mGeoFencesTimerResult != null )
-            mGeoFencesTimerResult.cancel(true);
 
         super.onDestroy();
     }
@@ -870,21 +965,21 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         Random r = new Random();
         int rideCode = r.nextInt(max - min + 1) + min;
-        final String _rideCode = Integer.toString(rideCode);
+        mRideCode = Integer.toString(rideCode);
 
         TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
         txtRideCodeCaption.setText(R.string.ride_code_label);
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
         txtRideCode.setVisibility(View.VISIBLE);
-        txtRideCode.setText(_rideCode);
+        txtRideCode.setText(mRideCode);
 
         mImageTransmit.setVisibility(View.VISIBLE);
         AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
         animationDrawable.start();
 
         startAdvertise(getUser().getRegistrationId(),
-                getUser().getFullName(),
-                _rideCode);
+                        getUser().getFullName(),
+                        mRideCode);
 
         getHandler().postDelayed(mEnableCabinPictureButtonRunnable,
                                  Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
@@ -927,92 +1022,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //            }
 //        }.execute();
 
-
-        mAdvertiseTask = new AsyncTask<Void, Void, Void>() {
-
-            Exception mEx;
-            Boolean mRequestSelfie;
-
-//            @Override
-//            protected void onPreExecute() {
-//                TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
-//                txtRideCodeCaption.setText(R.string.generating_ride_code);
-//            }
-
-            @Override
-            protected void onPostExecute(Void result) {
-
-                if (mEx == null) {
-//                    TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
-//                    txtRideCodeCaption.setText(R.string.ride_code_label);
-//                    TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
-//                    txtRideCode.setVisibility(View.VISIBLE);
-//
-//                    String rideCode = mCurrentRide.getRideCode();
-//                    txtRideCode.setText(rideCode);
-
-//                    findViewById(R.id.img_transmit).setVisibility(View.VISIBLE);
-
-                    if (!mCurrentRide.isPictureRequired()) {
-//                        mImageTransmit.setVisibility(View.VISIBLE);
-//                        AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
-//                        animationDrawable.start();
-//
-//                        startAdvertise(getUser().getRegistrationId(),
-//                                getUser().getFullName(),
-//                                rideCode);
-
-//                        getHandler().postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
-//                                fab.setVisibility(View.VISIBLE);
-//
-//                                mTextSwitcher.setText(getString(R.string.instruction_not_enought_passengers));
-//
-//                                mCabinPictureButtonShown = true;
-//
-//                            }
-//                        }, Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
-                    }
-                } else {
-                    Toast.makeText(DriverRoleActivity.this,
-                            mEx.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-                try {
-
-                    Ride ride = new Ride();
-                    ride.setCreated(new Date());
-                    ride.setCarNumber(mCarNumber);
-                    ride.setRideCode(_rideCode);
-                    ride.setPictureRequiredByDriver(mRequestSelfie);
-                    if( mRidesTable != null ) {
-                        List<Pair<String, String>> parameters = new ArrayList<>();
-                        parameters.add(new Pair<>("rideCodeGenerated", "true"));
-                        //mCurrentRide = mRidesTable.insert(ride).get();
-                        mCurrentRide = mRidesTable.insert(ride, parameters).get();
-                    } else {
-                        mEx = new Exception("No network");
-                    }
-
-                } catch (ExecutionException | InterruptedException ex) {
-
-
-                    if( Crashlytics.getInstance() != null )
-                        Crashlytics.logException(ex);
-
-                    mEx = ex;
-                    Log.e(LOG_TAG, ex.getMessage());
-                }
-
-                return null;
-            }
-        }.execute();
 
         mCheckPassengerTimerResult =
         mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
@@ -1124,42 +1133,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         } else {
             mCarNumber = cars[0];
         }
-
-//        mGeoFencesTimerResult =
-//        mCheckGeoFencesTimer.scheduleAtFixedRate(new Runnable() {
-//            @Override
-//            public void run() {
-//
-//                try {
-//
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//
-//                            String currentGeoStatus = Globals.getMonitorStatus();
-//
-//                            String message = Globals.isInGeofenceArea() ?
-//                                    currentGeoStatus :
-//                                    getString(R.string.geofence_outside_title);
-//
-//                            if( !mCabinPictureButtonShown ) { // do not override message on status bar
-//                                                              // when cabin picture button is displayed
-//                                if (!currentGeoStatus.equals(message))
-//                                    mTextSwitcher.setText(message);
-//                            }
-//                        }
-//                    });
-//
-//
-//                } catch(Exception ex){
-//                    Log.e(LOG_TAG, ex.getMessage());
-//                }
-//            }
-//        },
-//        1, // 1-sec delay
-//        2, // period between successive executions
-//        TimeUnit.SECONDS );
-
     }
 
     @UiThread
