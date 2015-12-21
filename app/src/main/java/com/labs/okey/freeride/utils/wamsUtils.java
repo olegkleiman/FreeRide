@@ -57,7 +57,7 @@ public class wamsUtils {
                            tableDefinition.put("created", ColumnDataType.Date);
                            tableDefinition.put("carnumber", ColumnDataType.String);
                            tableDefinition.put("picture_url", ColumnDataType.String);
-                           tableDefinition.put("approved", ColumnDataType.Number);
+                           tableDefinition.put("approved", ColumnDataType.Integer);
                            tableDefinition.put("ispicturerequired", ColumnDataType.Boolean);
                            tableDefinition.put("ispicturerequired_bydriver", ColumnDataType.Boolean);
                            tableDefinition.put("gfencename", ColumnDataType.String);
@@ -68,8 +68,8 @@ public class wamsUtils {
 
                        case "gfences": {
                            tableDefinition.put("id", ColumnDataType.String);
-                           tableDefinition.put("lat", ColumnDataType.Number);
-                           tableDefinition.put("lon", ColumnDataType.Number);
+                           tableDefinition.put("lat", ColumnDataType.Real);
+                           tableDefinition.put("lon", ColumnDataType.Real);
                            tableDefinition.put("when_updated", ColumnDataType.Date);
                            tableDefinition.put("label", ColumnDataType.String);
                            tableDefinition.put("isactive", ColumnDataType.Boolean);
@@ -80,10 +80,10 @@ public class wamsUtils {
 
                        case "geofences": {
                            tableDefinition.put("id", ColumnDataType.String);
-                           tableDefinition.put("lat", ColumnDataType.Number);
-                           tableDefinition.put("lon", ColumnDataType.Number);
+                           tableDefinition.put("lat", ColumnDataType.Real);
+                           tableDefinition.put("lon", ColumnDataType.Real);
                            tableDefinition.put("label", ColumnDataType.String);
-                           tableDefinition.put("radius", ColumnDataType.Number);
+                           tableDefinition.put("radius", ColumnDataType.Integer);
                            tableDefinition.put("isactive", ColumnDataType.Boolean);
                            tableDefinition.put("route_code", ColumnDataType.String);
                            tableDefinition.put("__deleted", ColumnDataType.Boolean);
@@ -135,9 +135,9 @@ public class wamsUtils {
         MobileServiceClient wamsClient = new MobileServiceClient(
                     Globals.WAMS_URL,
                     Globals.WAMS_API_KEY,
-                    context)
-                .withFilter(new ProgressFilter())
-                .withFilter(new RefreshTokenCacheFilter());
+                    context);
+//                .withFilter(new ProgressFilter())
+//                .withFilter(new RefreshTokenCacheFilter());
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
