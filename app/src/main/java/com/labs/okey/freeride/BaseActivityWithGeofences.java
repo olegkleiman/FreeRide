@@ -44,6 +44,10 @@ public class BaseActivityWithGeofences extends BaseActivity
 {
     private static final String                     LOG_TAG = "FR.GeoFences";
     private MobileServiceSyncTable<GeoFence>        mGFencesSyncTable;
+    private String                                  mCurrentGeoFenceName;
+    protected String getCurrentGFenceName() { return mCurrentGeoFenceName; }
+    private Boolean                                 isGeoFencesInitialized = false;
+    protected Boolean isGeoFencesInitialized() { return isGeoFencesInitialized; }
 
     private android.location.LocationListener       mLocationListener;
     protected ArrayList<GFCircle>                   mGFCircles = new ArrayList<GFCircle>();
@@ -186,8 +190,7 @@ public class BaseActivityWithGeofences extends BaseActivity
                     }
                 }
 
-//                String msg = getGFenceForLocation(mCurrentLocation);
-//                mTextSwitcher.setCurrentText(msg);
+                isGeoFencesInitialized = true;
 
             }
 
@@ -230,6 +233,7 @@ public class BaseActivityWithGeofences extends BaseActivity
 
                 strStatus = getString(R.string.geofences_inside_title);
 
+                mCurrentGeoFenceName = circle.getTag();
                 strStatus += " " + circle.getTag();
 
 //                if (location.hasAccuracy()) {
