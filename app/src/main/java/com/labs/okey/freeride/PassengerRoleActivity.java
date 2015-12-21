@@ -673,7 +673,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         } else {
 
                             responseCode = mse.getResponse().getStatus().getStatusCode();
-                         }
+                        }
 
                         switch( responseCode ) {
                             case 409: // HTTP 'Conflict'
@@ -717,7 +717,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         if( Crashlytics.getInstance() != null )
                             Crashlytics.logException(ex);
 
-                         Log.e(LOG_TAG, ex.getMessage());
+                        if( !ex.getMessage().isEmpty() )
+                            Log.e(LOG_TAG, ex.getMessage());
                     }
 
                 }
