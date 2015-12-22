@@ -134,8 +134,8 @@ public class GFActivity extends BaseActivity
             criteria.setCostAllowed(true);
 
             String provider = locationManager.getBestProvider(criteria, true);
+            location = locationManager.getLastKnownLocation(provider);
 
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         } catch (Exception ex) {
             Log.e(LOG_TAG, ex.getMessage());
         }
