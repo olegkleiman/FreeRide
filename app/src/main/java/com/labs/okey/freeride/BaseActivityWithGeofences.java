@@ -4,13 +4,16 @@ import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -75,13 +78,13 @@ public class BaseActivityWithGeofences extends BaseActivity
     @TargetApi(23)
     protected Location getCurrentLocation() {
 
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                    != PackageManager.PERMISSION_GRANTED &&
-//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                            != PackageManager.PERMISSION_GRANTED)
-//                return null;
-//        }
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
+                            != PackageManager.PERMISSION_GRANTED)
+                return null;
+        }
 
         Location location = LocationServices.FusedLocationApi.getLastLocation(getGoogleApiClient());
         if (location != null)
@@ -108,13 +111,13 @@ public class BaseActivityWithGeofences extends BaseActivity
 
     protected void startLocationUpdates(android.location.LocationListener locationListener) {
 
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                    != PackageManager.PERMISSION_GRANTED &&
-//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                            != PackageManager.PERMISSION_GRANTED)
-//                return;
-//        }
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
+                            != PackageManager.PERMISSION_GRANTED)
+                return;
+        }
 
         mLocationListener = locationListener;
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -131,19 +134,19 @@ public class BaseActivityWithGeofences extends BaseActivity
 
         if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    0, 0, locationListener);
+                    3000, 0, locationListener);
 
     }
 
     protected void stopLocationUpdates(android.location.LocationListener locationListener) {
 
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                    != PackageManager.PERMISSION_GRANTED &&
-//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                            != PackageManager.PERMISSION_GRANTED)
-//                return;
-//        }
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
+                            != PackageManager.PERMISSION_GRANTED)
+                return;
+        }
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.removeUpdates(locationListener);
@@ -223,10 +226,10 @@ public class BaseActivityWithGeofences extends BaseActivity
         for(GFCircle circle : mGFCircles) {
             float[] res = new float[3];
             Location.distanceBetween(location.getLatitude(),
-                    location.getLongitude(),
-                    circle.getX(),
-                    circle.getY(),
-                    res);
+                                    location.getLongitude(),
+                                    circle.getX(),
+                                    circle.getY(),
+                                    res);
             if (res[0] < circle.getRadius()) {
 
                 bInsideGeoFences = true;
@@ -236,22 +239,6 @@ public class BaseActivityWithGeofences extends BaseActivity
                 mCurrentGeoFenceName = circle.getTag();
                 strStatus += " " + circle.getTag();
 
-//                if (location.hasAccuracy()) {
-//                    strStatus += String.format("%s %f %f (%.1f) ",
-//                            location.getProvider(),
-//                            location.getLatitude(),
-//                            location.getLongitude(),
-//                            location.getAccuracy());
-//                } else {
-//                    strStatus += String.format("%s %f %f ",
-//                            location.getProvider(),
-//                            location.getLatitude(),
-//                            location.getLongitude());
-//                }
-//
-//                String lastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-//                strStatus += " " + lastUpdateTime;
-
                 break;
             }
         }
@@ -259,6 +246,12 @@ public class BaseActivityWithGeofences extends BaseActivity
         Globals.setInGeofenceArea(bInsideGeoFences);
 
         return strStatus;
+    }
+
+    protected boolean isAccurate(Location loc){
+
+        return loc.hasAccuracy() && loc.getAccuracy() > Globals.MIN_ACCURACY;
+
     }
 
     protected void initGeofencesAPI() {
