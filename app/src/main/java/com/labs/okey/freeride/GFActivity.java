@@ -21,7 +21,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -79,8 +78,11 @@ public class GFActivity extends BaseActivity
 
         wamsInit(false);
 
-        mCurrentLocation = _getCurrentLocation();
-        if( mCurrentLocation == null ){
+        try {
+            mCurrentLocation = _getCurrentLocation();
+            startLocationUpdates();
+        }
+        catch(SecurityException sex) {
             new MaterialDialog.Builder(this)
                     .title(R.string.location_permission_lacked_title)
                     .content(R.string.location_permission_lacked)
@@ -93,9 +95,7 @@ public class GFActivity extends BaseActivity
                         }
                     })
                     .show();
-        }
-        else {
-            startLocationUpdates();
+
         }
 
         initGeofences();
@@ -111,19 +111,15 @@ public class GFActivity extends BaseActivity
     }
 
     @TargetApi(23)
-    private Location _getCurrentLocation() {
+    private Location _getCurrentLocation() throws SecurityException{
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
                     != PackageManager.PERMISSION_GRANTED &&
                     ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
                             != PackageManager.PERMISSION_GRANTED)
-                return null;
+                throw new SecurityException();
         }
-
-        Location location = LocationServices.FusedLocationApi.getLastLocation(getGoogleApiClient());
-        if (location != null)
-            return location;
 
         try {
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -134,13 +130,13 @@ public class GFActivity extends BaseActivity
             criteria.setCostAllowed(true);
 
             String provider = locationManager.getBestProvider(criteria, true);
-            location = locationManager.getLastKnownLocation(provider);
+            return locationManager.getLastKnownLocation(provider);
 
         } catch (Exception ex) {
             Log.e(LOG_TAG, ex.getMessage());
         }
 
-        return location;
+        return null;
     }
 
     @Override

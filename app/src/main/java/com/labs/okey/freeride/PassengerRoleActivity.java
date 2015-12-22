@@ -30,6 +30,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.CallSuper;
 import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
@@ -51,6 +52,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
@@ -129,7 +131,23 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
 
-        startLocationUpdates(this);
+        try {
+            startLocationUpdates(this);
+        } catch( SecurityException sex) {
+
+            new MaterialDialog.Builder(this)
+                    .title(R.string.location_permission_lacked_title)
+                    .content(R.string.location_permission_lacked)
+                    .iconRes(R.drawable.ic_exclamation)
+                    .positiveText(R.string.ok)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                        }
+                    })
+                    .show();
+        }
 
         wamsInit(false); // without auto-update for this activity
 

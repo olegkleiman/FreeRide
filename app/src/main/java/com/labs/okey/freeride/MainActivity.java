@@ -24,18 +24,27 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.crashlytics.android.answers.LoginEvent;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
 import com.labs.okey.freeride.gcm.GCMHandler;
 import com.labs.okey.freeride.model.FRMode;
+import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
+import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+import com.microsoft.windowsazure.mobileservices.table.query.Query;
+import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import java.net.MalformedURLException;
@@ -48,10 +57,10 @@ public class MainActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener,
                    IRecyclerClickListener {
 
-    static final int REGISTER_USER_REQUEST = 1;
+    static final int            REGISTER_USER_REQUEST = 1;
     private static final String LOG_TAG = "FR.Main";
-    public static MobileServiceClient wamsClient;
-    private boolean mWAMSLogedIn = false;
+    public static               MobileServiceClient wamsClient;
+    private boolean             mWAMSLogedIn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,12 +127,13 @@ public class MainActivity extends BaseActivity
         } else {
 
             NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
-                    GCMHandler.class);
+                                                     GCMHandler.class);
 
             String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
+            String accessTokenSecret = sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
 
             // Don't mess with BaseActivity.wamsInit();
-            wamsInit(accessToken);
+            wamsInit(accessToken, accessTokenSecret);
 
             WAMSVersionTable wamsVersionTable = new WAMSVersionTable(this, this);
             try {
@@ -152,7 +162,114 @@ public class MainActivity extends BaseActivity
 
             Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
 
-            //throw new RuntimeException("This is a test crash");
+            new AsyncTask<Void, Void, Void>() {
+
+                MobileServiceSyncTable<GeoFence> gFencesSyncTable;
+                MobileServiceClient wamsClient;
+
+                @Override
+                protected void onPreExecute() {
+                    try {
+                        wamsClient = new MobileServiceClient(
+                                        Globals.WAMS_URL,
+                                        Globals.WAMS_API_KEY,
+                                        getApplicationContext());
+                        gFencesSyncTable = wamsClient.getSyncTable("geofences", GeoFence.class);
+                    }
+                    catch(Exception ex){
+                        Log.e(LOG_TAG, ex.getMessage());
+                    }
+                }
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+
+                    try {
+
+                        wamsUtils.sync(wamsClient, "geofences");
+
+                        Query query = wamsClient.getTable(GeoFence.class).where();
+
+                        MobileServiceList<GeoFence> geoFences = gFencesSyncTable.read(query).get();
+                        if(geoFences.getTotalCount() == 0 ) {
+                            query = wamsClient.getTable(GeoFence.class).where().field("isactive").ne(false);
+
+                            gFencesSyncTable.purge(query);
+                            gFencesSyncTable.pull(query).get();
+
+                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_updated));
+                        } else
+                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_uptodate));
+
+
+                    } catch(ExecutionException | InterruptedException ex) {
+                        Log.e(LOG_TAG, ex.getMessage());
+                    }
+
+                    return null;
+                }
+            }.execute();
+
+//            if( !ensureGeoFences() ) {
+//
+//                Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_not_ensured));
+//
+//                new AsyncTask<Void, Void, Void>() {
+//
+//                    MaterialDialog progress;
+//
+//                    @Override
+//                    protected void onPreExecute() {
+//
+//                    }
+//
+//                    @Override
+//                    protected void onPostExecute(Void result) {
+//                    }
+//
+//                    @Override
+//                    protected Void doInBackground(Void... voids) {
+//
+//                        try {
+//                            MobileServiceClient wamsClient =
+//                                    new MobileServiceClient(
+//                                            Globals.WAMS_URL,
+//                                            Globals.WAMS_API_KEY,
+//                                            getApplicationContext());
+//
+//                            MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
+//                                    GeoFence.class);
+//                            MobileServiceTable<GeoFence> gFencesTbl = wamsClient.getTable(GeoFence.class);
+//
+//                            wamsUtils.sync(wamsClient, "geofences");
+//
+//                            Query pullQuery = gFencesTbl.where().field("isactive").ne(false);
+//                            gFencesSyncTable.purge(pullQuery);
+//                            gFencesSyncTable.pull(pullQuery).get();
+//
+//                            // TEST
+//                            MobileServiceList<GeoFence> gFences
+//                                    = gFencesSyncTable.read(pullQuery).get();
+//                            for (GeoFence _gFence : gFences) {
+//                                double lat = _gFence.getLat();
+//                                double lon = _gFence.getLon();
+//                                String label = _gFence.getLabel();
+//                                String[] tokens = label.split(":");
+//                                if( tokens.length > 1 )
+//                                    Log.i(LOG_TAG, "GFence: " + tokens[0] + " " + tokens[1]);
+//                                Log.i(LOG_TAG, "GFence: " + lat + " " + lon);
+//                            }
+//
+//
+//                        } catch(MalformedURLException | InterruptedException | ExecutionException ex ) {
+//                            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+//                        }
+//
+//                        return null;
+//                    }
+//
+//                }.execute();
+//            }
         }
     }
 
@@ -250,6 +367,33 @@ public class MainActivity extends BaseActivity
         recycler.setAdapter(adapter);
     }
 
+    private Boolean ensureGeoFences() {
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+                    MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
+                            GeoFence.class);
+
+                    MobileServiceTable<GeoFence> gFencesTbl = wamsClient.getTable(GeoFence.class);
+                    Query query = gFencesTbl.where();
+
+                    MobileServiceList<GeoFence> geoFences = gFencesSyncTable.read(query).get();
+                    Boolean bRes = geoFences.getTotalCount() > 0;
+
+                } catch(ExecutionException | InterruptedException ex) {
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
+
+                return null;
+            }
+        }.execute();
+
+        return true;
+    }
+
     @Override
     protected void onDestroy(){
         super.onDestroy();
@@ -268,8 +412,9 @@ public class MainActivity extends BaseActivity
                 if (resultCode == RESULT_OK) {
                     Bundle bundle = data.getExtras();
                     String accessToken = bundle.getString(Globals.TOKENPREF);
+                    String accessTokenSecret = bundle.getString(Globals.TOKENSECRETPREF);
 
-                    wamsInit(accessToken);
+                    wamsInit(accessToken, accessTokenSecret);
                     NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
                             GCMHandler.class);
                     setupUI(getString(R.string.title_activity_main), "");
@@ -281,7 +426,7 @@ public class MainActivity extends BaseActivity
         }
     }
 
-    public void wamsInit(String accessToken){
+    public void wamsInit(String accessToken, String accessTokenSecret){
 
         if( mWAMSLogedIn )
             return;
@@ -292,48 +437,38 @@ public class MainActivity extends BaseActivity
                     Globals.WAMS_API_KEY,
                     this);
 
-            final JsonObject body = new JsonObject();
-            body.addProperty("access_token", accessToken);
+            if( !wamsUtils.loadUserTokenCache(wamsClient, this) ) {
 
-            new AsyncTask<Void, Void, Void>() {
+                final JsonObject body = new JsonObject();
+                body.addProperty("access_token", accessToken);
+                if (accessTokenSecret != null && !accessTokenSecret.isEmpty()) {
+                    body.addProperty("access_token_secret", accessTokenSecret);
+                }
 
-                Exception mEx;
+                final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
+                ListenableFuture<MobileServiceUser> mLogin =
+                        wamsClient.login(tokenProvider, body);
+                Futures.addCallback(mLogin, new FutureCallback<MobileServiceUser>() {
+                    @Override
+                    public void onSuccess(MobileServiceUser mobileServiceUser) {
+                        cacheUserToken(mobileServiceUser);
+                        mWAMSLogedIn = true;
 
-                @Override
-                protected void onPostExecute(Void result){
+                        if (Answers.getInstance() != null)
+                            Answers.getInstance().logLogin(new LoginEvent()
+                                    .putMethod(tokenProvider.toString())
+                                    .putSuccess(true));
 
-                    if( mEx != null ) {
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
                         Toast.makeText(MainActivity.this,
-                                mEx.getMessage(), Toast.LENGTH_LONG).show();
+                                t.getMessage(), Toast.LENGTH_LONG).show();
                     }
-                }
+                });
+            }
 
-                @Override
-                protected Void doInBackground(Void... voids) {
-
-                    try {
-                        MobileServiceUser mobileServiceUser =
-                                wamsClient.login(MobileServiceAuthenticationProvider.Facebook,
-                                        body).get();
-                        if( mobileServiceUser != null ) {
-                            saveUser(mobileServiceUser);
-                            mWAMSLogedIn = true;
-
-                            if( Answers.getInstance() != null )
-                                Answers.getInstance().logLogin(new LoginEvent()
-                                                .putMethod(Globals.FB_PROVIDER)
-                                                .putSuccess(true));
-                        }
-                    } catch(ExecutionException | InterruptedException ex ) {
-                        mEx = ex;
-                        if( Crashlytics.getInstance() != null)
-                            Crashlytics.logException(ex);
-                        Log.e(LOG_TAG, ex.getMessage());
-                    }
-
-                    return null;
-                }
-            }.execute();
         } catch(MalformedURLException ex ) {
             if( Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
@@ -342,12 +477,25 @@ public class MainActivity extends BaseActivity
         }
     }
 
-    private void saveUser(MobileServiceUser mobileServiceUser) {
+    private MobileServiceAuthenticationProvider getTokenProvider() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String accessTokenProvider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
 
+        if( accessTokenProvider.equals(Globals.FB_PROVIDER))
+            return MobileServiceAuthenticationProvider.Facebook;
+        else if( accessTokenProvider.equals(Globals.TWITTER_PROVIDER))
+            return MobileServiceAuthenticationProvider.Twitter;
+        else
+            return null;
+    }
+
+    private void cacheUserToken(MobileServiceUser mobileServiceUser) {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPrefs.edit();
+
         editor.putString(Globals.WAMSTOKENPREF, mobileServiceUser.getAuthenticationToken());
         editor.putString(Globals.USERIDPREF, mobileServiceUser.getUserId());
+
         editor.apply();
     }
 

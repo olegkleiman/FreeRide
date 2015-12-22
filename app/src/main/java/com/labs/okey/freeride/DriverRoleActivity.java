@@ -28,6 +28,7 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -53,13 +54,13 @@ import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
 import com.labs.okey.freeride.adapters.PassengersAdapter;
-import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.Ride;
@@ -81,7 +82,6 @@ import com.labs.okey.freeride.utils.wamsAddAppeal;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
-import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import junit.framework.Assert;
 
@@ -138,7 +138,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private Location                            mCurrentLocation;
     private long                                mLastLocationUpdateTime;
-    private MobileServiceSyncTable<GeoFence>    mGFencesSyncTable;
 
     String                                      mCarNumber;
     Uri                                         mUriPhotoAppeal;
@@ -304,8 +303,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
-        mCurrentLocation = getCurrentLocation();
-        startLocationUpdates(this);
+        try {
+            mCurrentLocation = getCurrentLocation();
+            startLocationUpdates(this);
+        } catch( SecurityException sex) {
+
+            new MaterialDialog.Builder(this)
+                    .title(R.string.location_permission_lacked_title)
+                    .content(R.string.location_permission_lacked)
+                    .iconRes(R.drawable.ic_exclamation)
+                    .positiveText(R.string.ok)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                        }
+                    })
+                    .show();
+        }
 
         if (savedInstanceState != null) {
             wamsInit();
@@ -614,7 +629,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         String msg = getGFenceForLocation(location);
 
         TextView textView = (TextView) mTextSwitcher.getCurrentView();
-        String msgRepeat = "(R) "  + textView.getText().toString();
+        String msgRepeat = textView.getText().toString();
 
         if( Globals.isInGeofenceArea() ) {
             mLastLocationUpdateTime = System.currentTimeMillis();
@@ -622,8 +637,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
             if( mLastLocationUpdateTime != 0 // for the first-time
                 && elapsed < Globals.GF_OUT_TOLERANCE ) {
-                 Globals.setInGeofenceArea(true);
-                 msg = msgRepeat;
+
+                Globals.setInGeofenceArea(true);
+
+                if( !msgRepeat.startsWith("(R)") )
+                    msg = "(R) " + msgRepeat;
             }
         }
 
@@ -1221,8 +1239,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private void forceLTR() {
-        if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 )
-            getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 ) {
+            View v = findViewById(R.id.driver_status_layout);
+            if( v != null )
+                v.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+            //getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        }
     }
 
     @Override
