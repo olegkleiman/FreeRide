@@ -2,12 +2,15 @@ package com.labs.okey.freeride;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -26,6 +29,7 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.labs.okey.freeride.model.GFCircle;
 import com.labs.okey.freeride.model.GeoFence;
+import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
@@ -36,7 +40,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class GFActivity extends BaseActivity //FragmentActivity
+public class GFActivity extends BaseActivity
         implements ResultCallback<Status>,
         GoogleApiClient.ConnectionCallbacks,
         android.location.LocationListener,
@@ -52,6 +56,7 @@ public class GFActivity extends BaseActivity //FragmentActivity
     private ArrayList<GFCircle>                 mGFCircles = new ArrayList<GFCircle>();
     private TextView                            mTextSwitcher;
     private Circle                              meCircle;
+    private long                                mLastLocationUpdateTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,13 +98,13 @@ public class GFActivity extends BaseActivity //FragmentActivity
         if (location != null)
             return location;
 
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                    != PackageManager.PERMISSION_GRANTED &&
-//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                            != PackageManager.PERMISSION_GRANTED)
-//                return null;
-//        }
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
+                            != PackageManager.PERMISSION_GRANTED)
+                return null;
+        }
 
         try {
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -142,13 +147,13 @@ public class GFActivity extends BaseActivity //FragmentActivity
 
     private void startLocationUpdates() {
 
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                    != PackageManager.PERMISSION_GRANTED &&
-//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                            != PackageManager.PERMISSION_GRANTED)
-//                return;
-//        }
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
+                            != PackageManager.PERMISSION_GRANTED)
+                return;
+        }
 
         // 1
 //        if (getGoogleApiClient().isConnected()) {
@@ -176,26 +181,20 @@ public class GFActivity extends BaseActivity //FragmentActivity
 
         if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    0, 0, this);
+                    3000, 0, this);
 
         mRequestingLocationUpdates = true;
     }
 
     protected void stopLocationUpdates() {
 
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                    != PackageManager.PERMISSION_GRANTED &&
-//                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                            != PackageManager.PERMISSION_GRANTED)
-//                return;
-//        }
-
-//        if (getGoogleApiClient().isConnected()) {
-//            LocationServices
-//                    .FusedLocationApi
-//                    .removeLocationUpdates(getGoogleApiClient(), this);
-//        }
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
+                            != PackageManager.PERMISSION_GRANTED)
+                return;
+        }
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.removeUpdates(this);
@@ -291,6 +290,7 @@ public class GFActivity extends BaseActivity //FragmentActivity
 
         String strStatus = getString(R.string.geofence_outside_title_debug);
 
+        long start = System.currentTimeMillis();
         for(GFCircle circle : mGFCircles) {
             float[] res = new float[3];
             Location.distanceBetween(mCurrentLocation.getLatitude(),
@@ -299,27 +299,31 @@ public class GFActivity extends BaseActivity //FragmentActivity
                     circle.getY(),
                     res);
             if (res[0] < circle.getRadius()) {
-                strStatus = circle.getTag() + " ";
 
-                if (location.hasAccuracy()) {
-                    strStatus += String.format("%s %f %f (%.1f) ",
-                            location.getProvider(),
-                            location.getLatitude(),
-                            location.getLongitude(),
-                            location.getAccuracy());
-                } else {
-                    strStatus += String.format("%s %f %f ",
-                            location.getProvider(),
-                            location.getLatitude(),
-                            location.getLongitude());
-                }
-
-                String lastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                strStatus += " " + lastUpdateTime;
+                strStatus = circle.getTag();
 
                 break;
             }
         }
+        long elapsed = System.currentTimeMillis() - start;
+
+        if (location.hasAccuracy()) {
+            strStatus += String.format(" %s %f %f (%.1f) [%d]",
+                    location.getProvider(),
+                    location.getLatitude(),
+                    location.getLongitude(),
+                    location.getAccuracy(),
+                    elapsed);
+        } else {
+            strStatus += String.format(" %s %f %f [%d]",
+                    location.getProvider(),
+                    location.getLatitude(),
+                    location.getLongitude(),
+                    elapsed);
+        }
+
+        String lastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        strStatus += " " + lastUpdateTime;
 
         return strStatus;
     }
@@ -329,6 +333,11 @@ public class GFActivity extends BaseActivity //FragmentActivity
     //
     @Override
     public void onLocationChanged(Location location) {
+
+        if( !isAccurate(location) ) {
+            Log.i(LOG_TAG, "Location skipped");
+            return;
+        }
 
         mCurrentLocation = location;
 
@@ -346,10 +355,26 @@ public class GFActivity extends BaseActivity //FragmentActivity
                 .fillColor(Color.RED);
         meCircle = mGoogleMap.addCircle(circleOpt);
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+        mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(17));
 
-        String msg = getGFenceForLocation(location) + " ";
+        String msg = getGFenceForLocation(location);
+
+        String msgRepeat = "(R) " + mTextSwitcher.getText().toString();
+
+        long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
+        if( mLastLocationUpdateTime != 0 // for the first-time
+                && elapsed < Globals.GF_OUT_TOLERANCE ) {
+            Globals.setInGeofenceArea(true);
+            msg = msgRepeat;
+        }
+
         mTextSwitcher.setText(msg);
+
+    }
+
+    protected boolean isAccurate(Location loc){
+
+        return loc.hasAccuracy() && loc.getAccuracy() < Globals.MIN_ACCURACY;
 
     }
 
