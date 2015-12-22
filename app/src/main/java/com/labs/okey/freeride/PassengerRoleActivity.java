@@ -119,6 +119,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private UUID                        mFaceId;
 
     private Location                    mCurrentLocation;
+    private long                        mLastLocationUpdateTime = System.currentTimeMillis();
 
     @Override
     @CallSuper
@@ -293,8 +294,29 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     //
     @Override
     public void onLocationChanged(Location location) {
+
+        if( !isAccurate(location) )
+            return;
+
         mCurrentLocation = location;
+        // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
         String msg = getGFenceForLocation(location);
+
+        TextView textView = (TextView) mTextSwitcher.getCurrentView();
+        String msgRepeat = "(R) "  + textView.getText().toString();
+
+        if( Globals.isInGeofenceArea() ) {
+            mLastLocationUpdateTime = System.currentTimeMillis();
+        } else {
+            long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
+            if( mLastLocationUpdateTime != 0 // for the first-time
+                    && elapsed < Globals.GF_OUT_TOLERANCE ) {
+                Globals.setInGeofenceArea(true);
+                msg = msgRepeat;
+            }
+
+        }
+
         mTextSwitcher.setCurrentText(msg);
     }
 
