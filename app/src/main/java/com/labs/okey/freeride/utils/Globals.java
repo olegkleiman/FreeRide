@@ -292,7 +292,8 @@ public class Globals {
         }
     }
 
-    public static long GF_OUT_TOLERANCE = 5000;
+    public static long GF_OUT_TOLERANCE = Globals.LOCATION_UPDATE_MIN_FEQUENCY * 2;
+    public static long LOCATION_UPDATE_MIN_FEQUENCY = 3000;
 
     private static final Object lock3 = new Object();
     private static boolean _REMIND_GEOFENCE_ENTRANCE;
