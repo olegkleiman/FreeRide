@@ -309,14 +309,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         } catch( SecurityException sex) {
 
             new MaterialDialog.Builder(this)
-                    .title(R.string.location_permission_lacked_title)
+                    .title(R.string.permission_lacked_title)
                     .content(R.string.location_permission_lacked)
                     .iconRes(R.drawable.ic_exclamation)
                     .positiveText(R.string.ok)
                     .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-
+                            finish();
                         }
                     })
                     .show();

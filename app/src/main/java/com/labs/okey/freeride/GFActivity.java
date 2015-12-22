@@ -84,14 +84,14 @@ public class GFActivity extends BaseActivity
         }
         catch(SecurityException sex) {
             new MaterialDialog.Builder(this)
-                    .title(R.string.location_permission_lacked_title)
+                    .title(R.string.permission_lacked_title)
                     .content(R.string.location_permission_lacked)
                     .iconRes(R.drawable.ic_exclamation)
                     .positiveText(R.string.ok)
                     .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-
+                            finish();
                         }
                     })
                     .show();
@@ -105,9 +105,6 @@ public class GFActivity extends BaseActivity
     public void onMapReady(GoogleMap googleMap) {
 
         mGoogleMap = googleMap;
-//        mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
-//        mGoogleMap.setMyLocationEnabled(true);
-
     }
 
     @TargetApi(23)
