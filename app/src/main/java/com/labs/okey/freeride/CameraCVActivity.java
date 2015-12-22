@@ -69,15 +69,13 @@ import java.util.concurrent.ScheduledExecutorService;
 public class CameraCVActivity extends Activity
         implements CameraBridgeViewBase.CvCameraViewListener2,
                     Camera.PictureCallback,
-        IUploader,
+                    IUploader,
                     Handler.Callback {
 
     private static final String LOG_TAG = "FR.CV";
 
     private Handler handle = new Handler(this);
     public Handler getHandler() { return handle; }
-
-    private String mRideCode = "73373"; // TODO: get rid of this!
 
     private Mat     mGray;
     private Mat     mRgba;
@@ -652,14 +650,14 @@ public class CameraCVActivity extends Activity
                                                 true,       /* Whether to analyzes facial landmarks */
                                                 false,       /* Whether to analyzes age */
                                                 false,       /* Whether to analyzes gender */
-                                                true);      /* Whether to analyzes head pose */
+                                                false);      /* Whether to analyzes head pose */
 
                     // Upload face image to blog (may be redundant, used here primarily for tests)
                     if( faces.length > 0 ) {
                         Face face = faces[0];
 
                         File outputDir = getApplicationContext().getCacheDir();
-                        String photoFileName = face.faceId.toString(); //getTempFileName();
+                        String photoFileName = face.faceId.toString();
 
                         File photoFile = File.createTempFile(photoFileName, ".jpg", outputDir);
                         FileOutputStream fos = new FileOutputStream(photoFile);
