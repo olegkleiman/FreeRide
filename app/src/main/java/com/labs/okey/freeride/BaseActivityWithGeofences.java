@@ -76,20 +76,15 @@ public class BaseActivityWithGeofences extends BaseActivity
     }
 
     @TargetApi(23)
-    protected Location getCurrentLocation() {
+    protected Location getCurrentLocation() throws SecurityException {
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
                     != PackageManager.PERMISSION_GRANTED &&
                     ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
                             != PackageManager.PERMISSION_GRANTED)
-                return null;
+                throw new SecurityException();
         }
-
-        Location location = LocationServices.FusedLocationApi.getLastLocation(getGoogleApiClient());
-        if (location != null)
-            return location;
-
 
         try {
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -101,12 +96,12 @@ public class BaseActivityWithGeofences extends BaseActivity
 
             String provider = locationManager.getBestProvider(criteria, true);
 
-            location = locationManager.getLastKnownLocation(provider);
+            return locationManager.getLastKnownLocation(provider);
         } catch (Exception ex) {
             Log.e(LOG_TAG, ex.getMessage());
+            return null;
         }
 
-        return location;
     }
 
     protected void startLocationUpdates(android.location.LocationListener locationListener) {
@@ -116,17 +111,11 @@ public class BaseActivityWithGeofences extends BaseActivity
                     != PackageManager.PERMISSION_GRANTED &&
                     ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
                             != PackageManager.PERMISSION_GRANTED)
-                return;
+                throw new SecurityException();
         }
 
         mLocationListener = locationListener;
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-//        Criteria criteria = new Criteria();
-//        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-//        criteria.setAltitudeRequired(false);
-//        criteria.setBearingRequired(false);
-//        criteria.setCostAllowed(true);
 
         if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) )
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
@@ -134,7 +123,7 @@ public class BaseActivityWithGeofences extends BaseActivity
 
         if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    3000, 0, locationListener);
+                    Globals.LOCATION_UPDATE_MIN_FEQUENCY, 0, locationListener);
 
     }
 
@@ -250,7 +239,7 @@ public class BaseActivityWithGeofences extends BaseActivity
 
     protected boolean isAccurate(Location loc){
 
-        return loc.hasAccuracy() && loc.getAccuracy() > Globals.MIN_ACCURACY;
+        return loc.hasAccuracy() && loc.getAccuracy() < Globals.MIN_ACCURACY;
 
     }
 
