@@ -97,6 +97,8 @@ public class Globals {
         }
     }
 
+    public static float MIN_ACCURACY = 50;
+
     public static float PICTURE_CORNER_RADIUS = 20;
     public static float PICTURE_BORDER_WIDTH = 4;
 
@@ -289,6 +291,8 @@ public class Globals {
             inGeofenceArea = value;
         }
     }
+
+    public static long GF_OUT_TOLERANCE = 5000;
 
     private static final Object lock3 = new Object();
     private static boolean _REMIND_GEOFENCE_ENTRANCE;
