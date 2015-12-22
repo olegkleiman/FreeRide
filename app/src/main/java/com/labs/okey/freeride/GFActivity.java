@@ -10,10 +10,13 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -77,7 +80,23 @@ public class GFActivity extends BaseActivity
         wamsInit(false);
 
         mCurrentLocation = _getCurrentLocation();
-        startLocationUpdates();
+        if( mCurrentLocation == null ){
+            new MaterialDialog.Builder(this)
+                    .title(R.string.location_permission_lacked_title)
+                    .content(R.string.location_permission_lacked)
+                    .iconRes(R.drawable.ic_exclamation)
+                    .positiveText(R.string.ok)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                        }
+                    })
+                    .show();
+        }
+        else {
+            startLocationUpdates();
+        }
 
         initGeofences();
     }
@@ -93,9 +112,6 @@ public class GFActivity extends BaseActivity
 
     @TargetApi(23)
     private Location _getCurrentLocation() {
-        Location location = LocationServices.FusedLocationApi.getLastLocation(getGoogleApiClient());
-        if (location != null)
-            return location;
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
@@ -104,6 +120,10 @@ public class GFActivity extends BaseActivity
                             != PackageManager.PERMISSION_GRANTED)
                 return null;
         }
+
+        Location location = LocationServices.FusedLocationApi.getLastLocation(getGoogleApiClient());
+        if (location != null)
+            return location;
 
         try {
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -286,6 +306,9 @@ public class GFActivity extends BaseActivity
     private String getGFenceForLocation(Location location) {
 
         String strStatus = getString(R.string.geofence_outside_title_debug);
+        if( mCurrentLocation == null )
+            return strStatus;
+
         Boolean bInsideGeoFences = false;
 
         long start = System.currentTimeMillis();
