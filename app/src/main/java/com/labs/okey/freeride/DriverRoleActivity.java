@@ -636,12 +636,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         } else {
             long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
             if( mLastLocationUpdateTime != 0 // for the first-time
-                && elapsed < Globals.GF_OUT_TOLERANCE ) {
+                && elapsed < Globals.GF_OUT_TOLERANCE )  {
 
                 Globals.setInGeofenceArea(true);
 
-                if( !msgRepeat.startsWith("(R)") )
-                    msg = "(R) " + msgRepeat;
+                msg = msgRepeat;
             }
         }
 
