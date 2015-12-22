@@ -51,7 +51,6 @@ public class GFActivity extends BaseActivity
     private LocationRequest                     mLocationRequest;
     private Location                            mCurrentLocation;
     private GoogleMap                           mGoogleMap;
-    private Boolean                             mRequestingLocationUpdates = false;
     private MobileServiceSyncTable<GeoFence>    mGFencesSyncTable;
     private ArrayList<GFCircle>                 mGFCircles = new ArrayList<GFCircle>();
     private TextView                            mTextSwitcher;
@@ -181,9 +180,9 @@ public class GFActivity extends BaseActivity
 
         if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    3000, 0, this);
+                    Globals.LOCATION_UPDATE_MIN_FEQUENCY, 0, this);
 
-        mRequestingLocationUpdates = true;
+        Globals.setInGeofenceArea(false);
     }
 
     protected void stopLocationUpdates() {
@@ -198,8 +197,6 @@ public class GFActivity extends BaseActivity
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.removeUpdates(this);
-
-        mRequestingLocationUpdates = false;
     }
 
     @Override
@@ -289,6 +286,7 @@ public class GFActivity extends BaseActivity
     private String getGFenceForLocation(Location location) {
 
         String strStatus = getString(R.string.geofence_outside_title_debug);
+        Boolean bInsideGeoFences = false;
 
         long start = System.currentTimeMillis();
         for(GFCircle circle : mGFCircles) {
@@ -300,6 +298,7 @@ public class GFActivity extends BaseActivity
                     res);
             if (res[0] < circle.getRadius()) {
 
+                bInsideGeoFences = true;
                 strStatus = circle.getTag();
 
                 break;
@@ -324,6 +323,8 @@ public class GFActivity extends BaseActivity
 
         String lastUpdateTime = DateFormat.getTimeInstance().format(new Date());
         strStatus += " " + lastUpdateTime;
+
+        Globals.setInGeofenceArea(bInsideGeoFences);
 
         return strStatus;
     }
@@ -361,11 +362,15 @@ public class GFActivity extends BaseActivity
 
         String msgRepeat = "(R) " + mTextSwitcher.getText().toString();
 
-        long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
-        if( mLastLocationUpdateTime != 0 // for the first-time
-                && elapsed < Globals.GF_OUT_TOLERANCE ) {
-            Globals.setInGeofenceArea(true);
-            msg = msgRepeat;
+        if( Globals.isInGeofenceArea() ) {
+            mLastLocationUpdateTime = System.currentTimeMillis();
+        } else {
+            long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
+            if( mLastLocationUpdateTime != 0 // for the first-time
+                    && elapsed < Globals.GF_OUT_TOLERANCE ) {
+                Globals.setInGeofenceArea(true);
+                msg = msgRepeat;
+            }
         }
 
         mTextSwitcher.setText(msg);
