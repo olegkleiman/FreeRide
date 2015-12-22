@@ -266,6 +266,8 @@ limitations under the License.</string>
     <string name="geofence_outside">Remind you when getting inside?</string>
 
     <string name="log_start">Application started</string>
+    <string name="log_gf_updated">Geofences updated</string>
+    <string name="log_gf_uptodate">Geofences are up to date</string>
     <string name="camera_directive_1">Look straight into camera lens</string>
 
     <string name="passenger_confirmation_answer_name">Passenger Confirmation</string>
