@@ -140,5 +140,7 @@
     <string name="request_postponed">אי אפשר להגיש את בקשתך</string>
     <string name="enable_location_question">האם לאפשר שירותי מיקום במכשיר זה?</string>
     <string name="geofences_inside_title">אתה נמצא באזור פיקוח</string>
+    <string name="location_permission_lacked">אנא להניק את ההרשאה</string>
+    <string name="location_permission_lacked_title">הרשאת שימוש בשירותי מיקום חסרה</string>
 
 </resources>

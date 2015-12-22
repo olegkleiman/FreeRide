@@ -207,6 +207,9 @@ limitations under the License.</string>
     <string name="geofence_positive_answer">Yes, remind me</string>
     <string name="geofence_negative_answer">No, I\'ll try later</string>
 
+    <string name="location_permission_lacked_title">Location permission lacked</string>
+    <string name="location_permission_lacked">Please grant location permission to this application</string>
+
     <!-- Geofences Error strings -->
     <string name="not_connected">GoogleApiClient no yet connected. Try again.</string>
     <string name="geofence_not_available">Geofence service is not available now</string>
