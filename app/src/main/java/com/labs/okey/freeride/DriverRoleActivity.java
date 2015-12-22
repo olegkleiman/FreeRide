@@ -137,6 +137,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     ImageView                                   mImageTransmit;
 
     private Location                            mCurrentLocation;
+    private long                                mLastLocationUpdateTime;
     private MobileServiceSyncTable<GeoFence>    mGFencesSyncTable;
 
     String                                      mCarNumber;
@@ -150,8 +151,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
     ScheduledFuture<?>                          mCheckPassengerTimerResult;
 
-    private Boolean                             mRideStored = false;
-    AsyncTask<Void, Void, Void>                 mWAMSStoreRideTask =  new AsyncTask<Void, Void, Void>() {
+    private Boolean                             mRideCodeUploaded = false;
+    AsyncTask<Void, Void, Void>                 mWAMSUploadRideCodeTask =  new AsyncTask<Void, Void, Void>() {
 
                 Exception mEx;
 
@@ -187,8 +188,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                         List<Pair<String, String>> parameters = new ArrayList<>();
                         parameters.add(new Pair<>("rideCodeGenerated", "true"));
-
-
 
                         MobileServiceUser wamsUser = new MobileServiceUser(userID);
                         wamsUser.setAuthenticationToken(token);
@@ -604,13 +603,36 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     //
     @Override
     public void onLocationChanged(Location location) {
+
+        if( !isAccurate(location) ) {
+            Log.i(LOG_TAG, "Location skipped");
+            return;
+        }
+
         mCurrentLocation = location;
+        // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
         String msg = getGFenceForLocation(location);
+
+        TextView textView = (TextView) mTextSwitcher.getCurrentView();
+        String msgRepeat = "(R) "  + textView.getText().toString();
+
+        if( Globals.isInGeofenceArea() ) {
+            mLastLocationUpdateTime = System.currentTimeMillis();
+        } else {
+            long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
+            if( mLastLocationUpdateTime != 0 // for the first-time
+                && elapsed < Globals.GF_OUT_TOLERANCE ) {
+                 Globals.setInGeofenceArea(true);
+                 msg = msgRepeat;
+            }
+        }
+
         mTextSwitcher.setCurrentText(msg);
 
-        if( !mRideStored && isGeoFencesInitialized() ) {
-            mRideStored = true;
-            mWAMSStoreRideTask.execute();
+        // Upload generated ride-code (within whole ride) once if geo-fences were initialized
+        if( !mRideCodeUploaded && isGeoFencesInitialized() ) {
+            mRideCodeUploaded = true;
+            mWAMSUploadRideCodeTask.execute();
         }
     }
 
