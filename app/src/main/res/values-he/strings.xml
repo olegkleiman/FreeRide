@@ -67,7 +67,7 @@
     <string name="geofence_outside">להזכיר בכניסתך לכביש?</string>
     <string name="geofence_positive_answer">כן, תזכירו לי</string>
     <string name="geofence_negative_answer">לא, אני אנסה מאוחר יותר</string>
-    <string name="geofence_outside_title">אינך נמצא באזור פיקוח</string>
+    <string name="geofence_outside_title">אינך נמצא באזור מפוקח</string>
     <string name="close">סגור</string>
     <string name="complete_registration">השלמת הרישום</string>
     <string name="registration_next">הבא</string>
