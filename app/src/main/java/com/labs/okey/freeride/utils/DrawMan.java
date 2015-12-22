@@ -11,15 +11,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,24 +68,23 @@ public class DrawMan {
                         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
                         Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString(), options);
-                        drawable = new BitmapDrawable(bitmap);
+                        drawable = new BitmapDrawable(context.getResources(), bitmap);
 
                     } else {
                         // If the picture was not there, download it from Web
 
                         Log.i(LOG_TAG, "Fetching drawable from URL");
-                        InputStream is = fetch(pictureURL);
-                        //InputStream is = new URL(pictureURL).openStream();
-                        drawable = Drawable.createFromStream(is, "src");
+                        drawable = fetch(pictureURL);
 
                         // ... and store it in the file
                         Bitmap bmp = ((BitmapDrawable) drawable).getBitmap();
                         if (bmp != null) {
-                            filePath.createNewFile();
-                            OutputStream fileOut = new FileOutputStream(filePath);
-                            bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
-                            fileOut.flush();
-                            fileOut.close();
+                            if( filePath.createNewFile() ) {
+                                OutputStream fileOut = new FileOutputStream(filePath);
+                                bmp.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
+                                fileOut.flush();
+                                fileOut.close();
+                            }
                         }
                     }
 
@@ -125,11 +121,51 @@ public class DrawMan {
         return new File(context.getCacheDir(), fileName);
     }
 
-    private InputStream fetch(String urlString) throws IOException {
-        DefaultHttpClient httpClient = new DefaultHttpClient();
-        HttpGet request = new HttpGet(urlString);
-        HttpResponse response = httpClient.execute(request);
-        return response.getEntity().getContent();
+    private Drawable fetch(String urlString) throws IOException {
+        Drawable drawable = null;
+        HttpURLConnection urlConnection = null;
+
+        try {
+
+            URL url = new URL(urlString);
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            boolean redirect = false;
+
+            urlConnection.connect();
+            int responseCode = urlConnection.getResponseCode();
+
+            urlConnection.setInstanceFollowRedirects(true);
+            HttpURLConnection.setFollowRedirects(true);
+
+           if( responseCode ==  HttpURLConnection.HTTP_MOVED_TEMP
+                   || responseCode == HttpURLConnection.HTTP_MOVED_PERM
+                   || responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
+
+               redirect = true;
+            }
+
+            if( redirect ) {
+                String loc = urlConnection.getHeaderField("Location");
+                urlConnection = (HttpURLConnection)new URL(loc).openConnection();
+            }
+
+            InputStream is = urlConnection.getInputStream();
+
+            drawable = Drawable.createFromStream(is, "src");
+
+            is.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+
+            if( urlConnection != null )
+                urlConnection.disconnect();
+        }
+
+        return drawable;
+
     }
 
 }
