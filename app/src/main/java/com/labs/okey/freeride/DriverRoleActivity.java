@@ -1253,6 +1253,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             View v = findViewById(R.id.driver_status_layout);
             if( v != null )
                 v.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+
+            v = findViewById(R.id.cabin_background_layout);
+            if( v!= null )
+                v.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
             //getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         }
     }
