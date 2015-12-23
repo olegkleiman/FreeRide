@@ -292,6 +292,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     }
 
                     @Override
+                    public void onNegative(MaterialDialog dialog) {
+                        finish();
+                    }
+
+                    @Override
                     public void onNeutral(MaterialDialog dialog) {
                         onAppealCamera();
                     }
@@ -1500,7 +1505,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             builder.title(R.string.appeal)
                     .positiveText(R.string.ok)
                     .negativeText(R.string.cancel)
-                    .neutralText(R.string.help)
+//                    .neutralText(R.string.help)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
@@ -1512,20 +1517,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             finish();
                         }
 
-                        @Override
-                        public void onNeutral(MaterialDialog dialog) {
-                            Intent intent = new Intent(getApplicationContext(),
-                                                        TutorialActivity.class);
-                            intent.putExtra(getString(R.string.tutorial_id), Globals.TUTORIAL_Appeal);
-                            startActivity(intent);
-                        }
+//                        @Override
+//                        public void onNeutral(MaterialDialog dialog) {
+//                            Intent intent = new Intent(getApplicationContext(),
+//                                                        TutorialActivity.class);
+//                            intent.putExtra(getString(R.string.tutorial_id), Globals.TUTORIAL_Appeal);
+//                            startActivity(intent);
+//                        }
                     });
 
             View customDialog = getLayoutInflater().inflate(R.layout.dialog_appeal, null);
             builder.customView(customDialog, false);
 
             if( mEmojiID == 0 ){
-                mEmojiID =  new Random().nextInt(Globals.NUM_OF_EMOJIS);
+                mEmojiID =  new Random().nextInt(Globals.NUM_OF_EMOJIS)
+                        // nextInt() gets number between 0 (inclusive and specified value (exclusive)
+                                + 1;
             }
 
             String uri = "@drawable/emoji_" + Integer.toString(mEmojiID);
