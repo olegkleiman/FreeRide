@@ -179,6 +179,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         ride.setCarNumber(mCarNumber);
                         ride.setGFenceName(getCurrentGFenceName());
                         ride.setDriverName(getUser().getFullName());
+                        ride.setCreated(new Date());
                         ride.setPictureRequiredByDriver(false);
 
                         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -193,9 +194,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         wamsClient.setCurrentUser(wamsUser);
 
                         MobileServiceTable<Ride> ridesTable = wamsClient.getTable(tableName, Ride.class);
-                        Ride currentRide = ridesTable.insert(ride, parameters).get();
+                        mCurrentRide = ridesTable.insert(ride, parameters).get();
 
-                        Assert.assertNotNull(currentRide);
+                        Assert.assertNotNull(mCurrentRide);
 
                     } catch (Exception ex)  {
                         if( Crashlytics.getInstance() != null )
@@ -619,38 +620,48 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     public void onLocationChanged(Location location) {
 
-        if( !isAccurate(location) ) {
-            Log.i(LOG_TAG, "Location skipped");
-            return;
-        }
+        if( !Globals.DEBUG_WITHOUT_GEOFENCES ) {
 
-        mCurrentLocation = location;
-        // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
-        String msg = getGFenceForLocation(location);
+            if (!isAccurate(location)) {
+                Log.i(LOG_TAG, "Location skipped");
+                return;
+            }
 
-        TextView textView = (TextView) mTextSwitcher.getCurrentView();
-        String msgRepeat = textView.getText().toString();
+            mCurrentLocation = location;
+            // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
+            String msg = getGFenceForLocation(location);
 
-        if( Globals.isInGeofenceArea() ) {
-            mLastLocationUpdateTime = System.currentTimeMillis();
+            TextView textView = (TextView) mTextSwitcher.getCurrentView();
+            String msgRepeat = textView.getText().toString();
+
+            if (Globals.isInGeofenceArea()) {
+                mLastLocationUpdateTime = System.currentTimeMillis();
+            } else {
+                long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
+                if (mLastLocationUpdateTime != 0 // for the first-time
+                        && elapsed < Globals.GF_OUT_TOLERANCE) {
+
+                    Globals.setInGeofenceArea(true);
+
+                    msg = msgRepeat;
+                }
+            }
+
+            mTextSwitcher.setCurrentText(msg);
+
+            // Upload generated ride-code (within whole ride) once if geo-fences were initialized
+            if (!mRideCodeUploaded && isGeoFencesInitialized()) {
+                mRideCodeUploaded = true;
+                mWAMSUploadRideCodeTask.execute();
+            }
         } else {
-            long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
-            if( mLastLocationUpdateTime != 0 // for the first-time
-                && elapsed < Globals.GF_OUT_TOLERANCE )  {
 
-                Globals.setInGeofenceArea(true);
-
-                msg = msgRepeat;
+            if (!mRideCodeUploaded ) {
+                mRideCodeUploaded = true;
+                mWAMSUploadRideCodeTask.execute();
             }
         }
 
-        mTextSwitcher.setCurrentText(msg);
-
-        // Upload generated ride-code (within whole ride) once if geo-fences were initialized
-        if( !mRideCodeUploaded && isGeoFencesInitialized() ) {
-            mRideCodeUploaded = true;
-            mWAMSUploadRideCodeTask.execute();
-        }
     }
 
     @Override
