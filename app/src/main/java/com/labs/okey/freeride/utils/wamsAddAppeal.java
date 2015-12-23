@@ -83,31 +83,44 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
         display.getSize(size);
         lt.setTranslationY(size.y / 2);
         lt.show();
-        lt.show();
     }
 
 
     @Override
     protected void onPostExecute(Void result) {
 
-        CustomEvent requestEvent = new CustomEvent(mContext.getString(R.string.appeal_answer_name));
-        requestEvent.putCustomAttribute("User", mDriverName);
+        if( error == null ) {
 
-        Answers.getInstance().logCustom(requestEvent);
+            lt.success();
 
-        new MaterialDialog.Builder(mContext)
-                .title(mContext.getString(R.string.appeal_send_title))
-                .content(mContext.getString(R.string.appeal_send_success))
-                .iconRes(R.drawable.ic_info)
-                .positiveText(R.string.ok)
-                .callback(new MaterialDialog.ButtonCallback() {
-                              @Override
-                              public void onPositive(MaterialDialog dialog) {
-                                  mUploader.finished(Globals.APPEAL_UPLOAD_TASK_TAG, true);
+            CustomEvent requestEvent = new CustomEvent(mContext.getString(R.string.appeal_answer_name));
+            requestEvent.putCustomAttribute("User", mDriverName);
+
+            Answers.getInstance().logCustom(requestEvent);
+
+            new MaterialDialog.Builder(mContext)
+                    .title(mContext.getString(R.string.appeal_send_title))
+                    .content(mContext.getString(R.string.appeal_send_success))
+                    .iconRes(R.drawable.ic_info)
+                    .positiveText(R.string.ok)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                                  @Override
+                                  public void onPositive(MaterialDialog dialog) {
+                                      mUploader.finished(Globals.APPEAL_UPLOAD_TASK_TAG, true);
+                                  }
                               }
-                          }
                     )
-                .show();
+                    .show();
+        }
+        else {
+            lt.error();
+
+            new MaterialDialog.Builder(mContext)
+                    .title(mContext.getString(R.string.appeal_send_title))
+                    .content(error.getMessage())
+                    .iconRes(R.drawable.ic_exclamation)
+                    .show();
+        }
 
     }
 
