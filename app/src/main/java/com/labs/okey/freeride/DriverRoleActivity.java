@@ -332,7 +332,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             wamsInit();
             initGeofences();
 
-            saveState(savedInstanceState);
+            restoreState(savedInstanceState);
         } else {
 
             if( isConnectedToNetwork() ) {
@@ -351,18 +351,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    private void saveState(Bundle savedInstanceState) {
+    private void restoreState(Bundle savedInstanceState) {
         boolean bInitializedBeforeRotation = false;
 
 
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE)) {
             bInitializedBeforeRotation = true;
 
-            String rideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+            mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+            mRideCodeUploaded = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED);
 
             TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
             txtRideCode.setVisibility(View.VISIBLE);
-            txtRideCode.setText(rideCode);
+            txtRideCode.setText(mRideCode);
 
             TextView txtRideCodeCaption = (TextView) findViewById(R.id.code_label_caption);
             txtRideCodeCaption.setText(R.string.ride_code_label);
@@ -524,6 +525,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( !rideCode.isEmpty() ) {
 
             outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, rideCode);
+            outState.putBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED, mRideCodeUploaded);
             outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
 
             outState.putParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE, mCurrentRide);
@@ -655,13 +657,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mTextSwitcher.setCurrentText(msg);
 
             // Upload generated ride-code (within whole ride) once if geo-fences were initialized
-            if (!mRideCodeUploaded && isGeoFencesInitialized()) {
+            if (!mRideCodeUploaded
+                    && isGeoFencesInitialized()
+                    && (mRideCode != null && !mRideCode.isEmpty())) {
                 mRideCodeUploaded = true;
                 mWAMSUploadRideCodeTask.execute();
             }
         } else {
 
-            if (!mRideCodeUploaded ) {
+            if (!mRideCodeUploaded
+                    && (mRideCode != null &&  mRideCode.isEmpty())) {
                 mRideCodeUploaded = true;
                 mWAMSUploadRideCodeTask.execute();
             }
@@ -734,18 +739,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //        if (getGoogleApiClient().isConnected() && !mRequestingLocationUpdates) {
         startLocationUpdates(this);
 
-        if( !isConnectedToNetwork() ) {
-            TextView txtRideCodeLabel =  (TextView)findViewById(R.id.code_label_caption);
-            txtRideCodeLabel.setText("");
-            mOfflineDialog.show();
-        }
-        else {
+        try {
 
-            if( mOfflineDialog != null && mOfflineDialog.isShowing() ) {
-                mOfflineDialog.dismiss();
+            if (!isConnectedToNetwork()) {
+                TextView txtRideCodeLabel = (TextView) findViewById(R.id.code_label_caption);
+                txtRideCodeLabel.setText("");
+                mOfflineDialog.show();
+            } else {
 
-                setupNetwork();
+                if (mOfflineDialog != null && mOfflineDialog.isShowing()) {
+                    mOfflineDialog.dismiss();
+
+                    setupNetwork();
+                }
             }
+        } catch(Exception ex){
+            Log.e(LOG_TAG, ex.getMessage());
         }
 
         if( mWiFiUtil != null )
@@ -850,36 +859,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         new faceapiUtils(this).execute();
     }
 
-    AsyncTask<Void, Void, Void> updateOnDeniedCurrentRideTask = new AsyncTask<Void, Void, Void>() {
-
-        Exception mEx;
-
-        @Override
-        protected Void doInBackground(Void... args) {
-
-            try {
-                String currentGeoFenceName = Globals.get_currentGeoFenceName();
-                mCurrentRide.setGFenceName(currentGeoFenceName);
-                mRidesTable.update(mCurrentRide).get();
-            } catch (InterruptedException | ExecutionException e) {
-                mEx = e;
-                Log.e(LOG_TAG, e.getMessage());
-            }
-
-            return null;
-
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-
-            CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
-            requestEvent.putCustomAttribute("User", getUser().getFullName());
-
-            requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 0);
-            Answers.getInstance().logCustom(requestEvent);
-        }
-    };
 
     AsyncTask<Void, Void, Void> updateCurrentRideTask = new AsyncTask<Void, Void, Void>() {
 
@@ -1867,7 +1846,38 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 } else {
 
                     mCurrentRide.setApproved(Globals.RIDE_STATUS.DENIED.ordinal());
-                    updateOnDeniedCurrentRideTask.execute();
+
+                    new AsyncTask<Void, Void, Void>() {
+
+                        Exception mEx;
+
+                        @Override
+                        protected Void doInBackground(Void... args) {
+
+                            try {
+                                String currentGeoFenceName = Globals.get_currentGeoFenceName();
+                                mCurrentRide.setGFenceName(currentGeoFenceName);
+                                mRidesTable.update(mCurrentRide).get();
+                            } catch (InterruptedException | ExecutionException e) {
+                                mEx = e;
+                                Log.e(LOG_TAG, e.getMessage());
+                            }
+
+                            return null;
+
+                        }
+
+                        @Override
+                        protected void onPostExecute(Void result) {
+
+                            CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
+                            requestEvent.putCustomAttribute("User", getUser().getFullName());
+
+                            requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 0);
+                            Answers.getInstance().logCustom(requestEvent);
+                        }
+                    }.execute();
+
 
                     onAppealCamera();
                 }
