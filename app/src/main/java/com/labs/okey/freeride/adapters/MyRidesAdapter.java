@@ -107,11 +107,10 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
             Log.e(LOG_TAG, e.getMessage());
         }
 
-
-
-
-        DateFormat df = new SimpleDateFormat("MM.dd.yy");
-        holder.created.setText(df.format(ride.getCreated()));
+        if( ride.getCreated() != null ) {
+            DateFormat df = new SimpleDateFormat("MM.dd.yy");
+            holder.created.setText(df.format(ride.getCreated()));
+        }
 
     }
 
