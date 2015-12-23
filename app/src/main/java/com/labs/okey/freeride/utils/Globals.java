@@ -374,6 +374,7 @@ public class Globals {
 
     // Parcels
     public static String PARCELABLE_KEY_RIDE_CODE = "ride_code_key";
+    public static String PARCELABLE_KEY_RIDE_CODE_UPLOADED = "ride_code_uploaded_key";
     public static String PARCELABLE_KEY_PASSENGERS = "passengers_key";
     public static String PARCELABLE_KEY_DRIVERS = "drivers_key";
     public static String PARCELABLE_KEY_CURRENT_RIDE = "current_ride";
