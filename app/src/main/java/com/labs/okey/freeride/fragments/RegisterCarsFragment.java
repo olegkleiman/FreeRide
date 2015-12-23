@@ -2,21 +2,16 @@ package com.labs.okey.freeride.fragments;
 
 import android.app.Fragment;
 import android.content.SharedPreferences;
-import android.graphics.Outline;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 import android.widget.EditText;
 import android.widget.ListView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.adapters.CarsAdapter;
 import com.labs.okey.freeride.model.RegisteredCar;
@@ -53,7 +48,8 @@ public class RegisterCarsFragment extends Fragment {
                     String[] tokens = strCar.split("~");
                     RegisteredCar car = new RegisteredCar();
                     car.setCarNumber(tokens[0]);
-                    car.setCarNick(tokens[1]);
+                    if( tokens.length > 1 )
+                        car.setCarNick(tokens[1]);
                     mCars.add(car);
                 }
             }
