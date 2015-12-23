@@ -29,7 +29,7 @@
     <dimen name="card_backpanel_height">64dp</dimen>
     <dimen name="card_backpanel_height_landscape">32dp</dimen>
     <dimen name="card_horizontal_margin">16dp</dimen>
-    <dimen name="negativeActionBarSize">-56dp</dimen>
+    <dimen name="negativeActionBarSize">-62dp</dimen>
     <dimen name="snackbar_height">64dp</dimen>
     <dimen name="snackbar_detection_height">48dp</dimen>
     <dimen name="snackbar_leftpadding">16dp</dimen>
