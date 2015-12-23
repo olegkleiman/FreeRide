@@ -6,7 +6,7 @@ import android.app.job.JobService;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.labs.okey.freeride.model.GFence;
+import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
@@ -48,8 +48,8 @@ public class GeofencesDownloadService extends JobService {
     private class UpdateGeofencesAsyncTask extends AsyncTask<JobParameters, Void, JobParameters[]> {
 
         private MobileServiceClient wamsClient;
-        private MobileServiceTable<GFence> gFencesTbl;
-        MobileServiceSyncTable<GFence> gFencesSyncTable;
+        private MobileServiceTable<GeoFence> gFencesTbl;
+        MobileServiceSyncTable<GeoFence> gFencesSyncTable;
 
         @Override
         protected void onPreExecute() {
@@ -60,11 +60,11 @@ public class GeofencesDownloadService extends JobService {
                         Globals.WAMS_API_KEY,
                         getApplicationContext());
 
-                gFencesSyncTable = wamsClient.getSyncTable("gfences", GFence.class);
-                gFencesTbl = wamsClient.getTable(GFence.class);
-                gFencesSyncTable = wamsClient.getSyncTable("gfences", GFence.class);
+                gFencesSyncTable = wamsClient.getSyncTable("geofences", GeoFence.class);
+                gFencesTbl = wamsClient.getTable(GeoFence.class);
+                gFencesSyncTable = wamsClient.getSyncTable("geofences", GeoFence.class);
 
-                wamsUtils.sync(wamsClient, "gfences");
+                wamsUtils.sync(wamsClient, "geofences");
 
             } catch(MalformedURLException ex ) {
                 Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
