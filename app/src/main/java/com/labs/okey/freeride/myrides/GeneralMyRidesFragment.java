@@ -117,6 +117,10 @@ public class GeneralMyRidesFragment extends Fragment{
 
         Collections.sort(mRides, Collections.reverseOrder(new Comparator<Ride>() {
             public int compare(Ride r1, Ride r2) {
+                if( r1.getCreated() == null
+                        || r2.getCreated() == null )
+                    return 1;
+
                 return r1.getCreated().compareTo(r2.getCreated());
             }}));
 

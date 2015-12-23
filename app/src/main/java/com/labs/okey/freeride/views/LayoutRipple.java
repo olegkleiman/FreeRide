@@ -7,14 +7,18 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
+import com.crashlytics.android.Crashlytics;
 
 /**
  * Created by Oleg on 22-Aug-15.
  */
 public class LayoutRipple extends CustomView {
 
+    private static final String LOG_TAG = "FR.LayoutRipple";
     int background;
     float rippleSpeed = 10f;
     int rippleSize = 3;
@@ -137,28 +141,38 @@ public class LayoutRipple extends CustomView {
     }
 
     public Bitmap makeCircle() {
-        Bitmap output = Bitmap.createBitmap(getWidth(), getHeight(),
-                Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
-        canvas.drawARGB(0, 0, 0, 0);
-        Paint paint = new Paint();
-        paint.setAntiAlias(true);
-        if (rippleColor == null)
-            rippleColor = makePressColor();
-        paint.setColor(rippleColor);
-        x = (xRippleOrigin == null) ? x : xRippleOrigin;
-        y = (yRippleOrigin == null) ? y : yRippleOrigin;
-        canvas.drawCircle(x, y, radius, paint);
-        if (radius > getHeight() / rippleSize)
-            radius += rippleSpeed;
-        if (radius >= getWidth()) {
-            x = -1;
-            y = -1;
-            radius = getHeight() / rippleSize;
-            if (onClickListener != null)
-                onClickListener.onClick(this);
+        try {
+            Bitmap output = Bitmap.createBitmap(getWidth(), getHeight(),
+                    Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(output);
+            canvas.drawARGB(0, 0, 0, 0);
+            Paint paint = new Paint();
+            paint.setAntiAlias(true);
+            if (rippleColor == null)
+                rippleColor = makePressColor();
+            paint.setColor(rippleColor);
+            x = (xRippleOrigin == null) ? x : xRippleOrigin;
+            y = (yRippleOrigin == null) ? y : yRippleOrigin;
+            canvas.drawCircle(x, y, radius, paint);
+            if (radius > getHeight() / rippleSize)
+                radius += rippleSpeed;
+            if (radius >= getWidth()) {
+                x = -1;
+                y = -1;
+                radius = getHeight() / rippleSize;
+                if (onClickListener != null)
+                    onClickListener.onClick(this);
+            }
+            return output;
+        } catch (Exception ex) {
+            if( !ex.getMessage().isEmpty() )
+                Log.e(LOG_TAG, ex.getMessage());
+
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+
+            return null;
         }
-        return output;
     }
 
     protected void onDraw(Canvas canvas) {
