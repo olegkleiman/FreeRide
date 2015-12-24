@@ -28,6 +28,7 @@ import com.labs.okey.freeride.model.GFCircle;
 import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.services.GeofenceErrorMessages;
 import com.labs.okey.freeride.utils.Globals;
+import com.labs.okey.freeride.utils.IInitializeNotifier;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
@@ -99,9 +100,10 @@ public class BaseActivityWithGeofences extends BaseActivity
             return locationManager.getLastKnownLocation(provider);
         } catch (Exception ex) {
             Log.e(LOG_TAG, ex.getMessage());
-            return null;
+
         }
 
+        return null;
     }
 
     protected void startLocationUpdates(android.location.LocationListener locationListener) {
@@ -150,7 +152,7 @@ public class BaseActivityWithGeofences extends BaseActivity
         super.onPause();
     }
 
-    protected void initGeofences() {
+    protected void initGeofences(final IInitializeNotifier notifier) {
         if (!isWamsInitialized())
             return;
 
@@ -183,6 +185,10 @@ public class BaseActivityWithGeofences extends BaseActivity
                 }
 
                 isGeoFencesInitialized = true;
+
+                if( notifier != null ) {
+                    notifier.initialized(null);
+                }
 
             }
 

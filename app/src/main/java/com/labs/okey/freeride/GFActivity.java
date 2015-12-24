@@ -167,25 +167,7 @@ public class GFActivity extends BaseActivity
                 return;
         }
 
-        // 1
-//        if (getGoogleApiClient().isConnected()) {
-//            LocationServices
-//                    .FusedLocationApi
-//                    .requestLocationUpdates(getGoogleApiClient(),
-//                            mLocationRequest,
-//                            this);
-//        }
-
-        // 2
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-//        Criteria criteria = new Criteria();
-//        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-//        criteria.setAltitudeRequired(false);
-//        criteria.setBearingRequired(false);
-//        criteria.setCostAllowed(true);
-//        //criteria.setPowerRequirement(Criteria.POWER_HIGH);
-//        String bestProvider = locationManager.getBestProvider(criteria, true);
 
         if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) )
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,

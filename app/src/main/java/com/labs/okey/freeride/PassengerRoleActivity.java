@@ -64,6 +64,7 @@ import com.labs.okey.freeride.utils.BLEUtil;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
+import com.labs.okey.freeride.utils.IInitializeNotifier;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
@@ -92,6 +93,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         BLEUtil.IDeviceDiscoveredListener,
         WifiP2pManager.ConnectionInfoListener,
         WAMSVersionTable.IVersionMismatchListener,
+        IInitializeNotifier, // used for geo-fence initialization
         android.location.LocationListener
 {
 
@@ -132,6 +134,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         setupUI(getString(R.string.title_activity_passenger_role), "");
 
         try {
+
+            mCurrentLocation = getCurrentLocation();
+
             startLocationUpdates(this);
         } catch( SecurityException sex) {
 
@@ -151,7 +156,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         wamsInit(false); // without auto-update for this activity
 
-        initGeofences();
+        initGeofences(this);
 
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
@@ -308,6 +313,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     //
+    // IInitializeNotifier implemntation
+    //
+    @Override
+    public void initialized(Object what){
+
+        String msg = getGFenceForLocation(mCurrentLocation);
+        mTextSwitcher.setText(msg);
+    }
+
+    //
     // Implementation of LocationListener
     //
     @Override
@@ -450,7 +465,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .negativeText(R.string.code_retry_action)
                     .contentColor(contentColor)
                     .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
-                    .inputMaxLength(Globals.RIDE_CODE_INPUT_LENGTH)
+                    .inputRange(Globals.RIDE_CODE_INPUT_LENGTH, Globals.RIDE_CODE_INPUT_LENGTH)
                     .input(R.string.ride_code_hint,
                             R.string.ride_code_refill,
                             new MaterialDialog.InputCallback() {

@@ -69,6 +69,7 @@ import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
+import com.labs.okey.freeride.utils.IInitializeNotifier;
 import com.labs.okey.freeride.utils.IMessageTarget;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
@@ -118,6 +119,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         WifiP2pManager.ConnectionInfoListener,
         WAMSVersionTable.IVersionMismatchListener,
         IUploader,
+        IInitializeNotifier, // used for geo-fence initialization
         android.location.LocationListener
 {
 
@@ -310,7 +312,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         setupUI(getString(R.string.title_activity_driver_role), "");
 
         try {
-            mCurrentLocation = getCurrentLocation();
+            mCurrentLocation = getCurrentLocation(); // SecurityException may come from here
+
             startLocationUpdates(this);
         } catch( SecurityException sex) {
 
@@ -330,14 +333,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if (savedInstanceState != null) {
             wamsInit();
-            initGeofences();
+            initGeofences(this);
 
             restoreState(savedInstanceState);
         } else {
 
             if( isConnectedToNetwork() ) {
                 wamsInit();
-                initGeofences();
+                initGeofences(this);
 
                 setupNetwork();
             }
@@ -590,6 +593,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         super.onSaveInstanceState(outState);
     }
 
+    //
+    // IInitializeNotifier implemntation
+    //
+    @Override
+    public void initialized(Object what){
+
+        String msg = getGFenceForLocation(mCurrentLocation);
+        mTextSwitcher.setText(msg);
+    }
+
     private Bitmap convertToBitmap(Drawable drawable, int widthPixels, int heighPixels) {
         Bitmap mutableBitmap = Bitmap.createBitmap(widthPixels, heighPixels, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(mutableBitmap);
@@ -736,7 +749,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
-//        if (getGoogleApiClient().isConnected() && !mRequestingLocationUpdates) {
+        mCurrentLocation = getCurrentLocation();
+        String msg = getGFenceForLocation(mCurrentLocation);
+        mTextSwitcher.setText(msg);
         startLocationUpdates(this);
 
         try {
