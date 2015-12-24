@@ -56,7 +56,7 @@
     <string name="add_car_hint">מספר רכב</string>
     <string name="subtitle_activity_tutorial">הדרכות</string>
     <string name="ride_code_dialog_content">אפשר לראות את הקוד הזה על מסך המכשיר של הנהג</string>
-    <string name="ride_code_title">הזן קוד נסיעה</string>
+    <string name="ride_code_title">אנא הזן קוד נסיעה</string>
     <string name="ride_code_hint">6 ספרות ללא מקף</string>
     <string name="title_activity_passenger_role">מצב נוסע</string>
     <string name="registration_finish">סיום</string>
@@ -139,7 +139,7 @@
     <string name="instruction_advanced_mode">כל אחד מהנוסעים צריך להצטלם</string>
     <string name="request_postponed">אי אפשר להגיש את בקשתך</string>
     <string name="enable_location_question">האם לאפשר שירותי מיקום במכשיר זה?</string>
-    <string name="geofences_inside_title">אתה נמצא באזור פיקוח</string>
+    <string name="geofences_inside_title">אתה נמצא באזור מפוקח</string>
     <string name="location_permission_lacked">אנא להעניק את ההרשאת שימוש בשירותי מיקום</string>
     <string name="permission_lacked_title">הרשאת חסרה</string>
     <string name="camera_permission_lacked">אנא להעניק את הרשאת שימוש במצלמה</string>
