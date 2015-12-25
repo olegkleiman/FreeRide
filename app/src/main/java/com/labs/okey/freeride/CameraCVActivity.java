@@ -20,6 +20,7 @@ import android.speech.tts.TextToSpeech;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Menu;
@@ -210,18 +211,10 @@ public class CameraCVActivity extends Activity
             mCameraDirective2 = getString(R.string.camera_directive_2);
 
         } catch(SecurityException sex) {
-            new MaterialDialog.Builder(this)
-                    .title(R.string.permission_lacked_title)
-                    .content(R.string.camera_permission_lacked)
-                    .iconRes(R.drawable.ic_exclamation)
-                    .positiveText(R.string.ok)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            finish();
-                        }
-                    })
-                    .show();
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{"android.permission.CAMERA"},
+                    Globals.CAMERA_PERMISSION_REQUEST);
         }
 
     }

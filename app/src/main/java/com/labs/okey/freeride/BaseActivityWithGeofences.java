@@ -1,6 +1,7 @@
 package com.labs.okey.freeride;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -76,67 +78,80 @@ public class BaseActivityWithGeofences extends BaseActivity
 
     }
 
-    @TargetApi(23)
-    protected Location getCurrentLocation() throws SecurityException {
+    @TargetApi(Build.VERSION_CODES.M)
+    protected Location getCurrentLocation(Activity permissionsHandler) throws SecurityException {
 
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
-                            != PackageManager.PERMISSION_GRANTED)
-                throw new SecurityException();
-        }
+                    != PackageManager.PERMISSION_GRANTED )
+                // Permission android.permission.ACCESS_FINE_LOCATION includes
+                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
 
-        try {
-            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            criteria.setAltitudeRequired(false);
-            criteria.setBearingRequired(false);
-            criteria.setCostAllowed(true);
+                    throw new SecurityException();
 
-            String provider = locationManager.getBestProvider(criteria, true);
+        } else {
 
-            return locationManager.getLastKnownLocation(provider);
-        } catch (Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+            try {
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                Criteria criteria = new Criteria();
+                criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                criteria.setAltitudeRequired(false);
+                criteria.setBearingRequired(false);
+                criteria.setCostAllowed(true);
 
+                String provider = locationManager.getBestProvider(criteria, true);
+
+                return locationManager.getLastKnownLocation(provider);
+            } catch (Exception ex) {
+                Log.e(LOG_TAG, ex.getMessage());
+
+                if( Crashlytics.getInstance() != null )
+                    Crashlytics.logException(ex);
+
+            }
         }
 
         return null;
     }
 
-    protected void startLocationUpdates(android.location.LocationListener locationListener) {
+    protected void startLocationUpdates(Activity permissionsHandler,
+                                        android.location.LocationListener locationListener) {
 
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
-                            != PackageManager.PERMISSION_GRANTED)
+                    != PackageManager.PERMISSION_GRANTED )
+                // Permission android.permission.ACCESS_FINE_LOCATION includes
+                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
+
                 throw new SecurityException();
         }
 
-        mLocationListener = locationListener;
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        try {
+            mLocationListener = locationListener;
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) )
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                    0, 0, locationListener);
+            if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) )
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                        0, 0, locationListener);
 
-        if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    Globals.LOCATION_UPDATE_MIN_FEQUENCY, 0, locationListener);
+            if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                        Globals.LOCATION_UPDATE_MIN_FEQUENCY, 0, locationListener);
+        } catch (Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+        }
 
     }
 
     protected void stopLocationUpdates(android.location.LocationListener locationListener) {
 
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
-                            != PackageManager.PERMISSION_GRANTED)
-                return;
+                    != PackageManager.PERMISSION_GRANTED)
+                throw new SecurityException();
         }
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);

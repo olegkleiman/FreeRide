@@ -16,12 +16,15 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -35,6 +38,7 @@ import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -257,23 +261,34 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
-        try {
-            mCurrentLocation = getCurrentLocation();
-            startLocationUpdates(this);
-        } catch( SecurityException sex) {
+        try{
+            mCurrentLocation = getCurrentLocation(this);// check Location Permission inside!
 
-            new MaterialDialog.Builder(this)
-                    .title(R.string.permission_lacked_title)
-                    .content(R.string.location_permission_lacked)
-                    .iconRes(R.drawable.ic_exclamation)
-                    .positiveText(R.string.ok)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            finish();
-                        }
-                    })
-                    .show();
+            // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
+            String msg = getGFenceForLocation(mCurrentLocation);
+            mTextSwitcher.setCurrentText(msg);
+
+            startLocationUpdates(this, this);
+
+        } catch (SecurityException ex) {
+
+            // Returns true if app has requested this permission previously
+            // and the user denied the request
+            if( ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    "android.permission.ACCESS_FINE_LOCATION")) {
+
+                mTextSwitcher.setCurrentText(getString(R.string.permission_location_denied));
+                Log.d(LOG_TAG, getString(R.string.permission_location_denied));
+
+            } else {
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{"android.permission.ACCESS_FINE_LOCATION"},
+                        Globals.LOCATION_PERMISSION_REQUEST);
+
+                // to be continued on onRequestPermissionsResult() in permissionsHandler's activity
+            }
+
         }
 
         if( mWiFiUtil != null)
@@ -306,6 +321,31 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         mRideCode = "";
 
         super.onStop();
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions,
+                                           int[] grantResults){
+
+        try {
+
+            switch( requestCode ) {
+
+                case Globals.LOCATION_PERMISSION_REQUEST: {
+
+                    mCurrentLocation = getCurrentLocation(this);
+                    startLocationUpdates(this, this);
+                }
+            }
+
+        } catch (Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+
+        }
+
+        startLocationUpdates(this, this);
     }
 
     //
@@ -809,7 +849,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     _join.setDeviceId(android_id);
 
                     try {
-                        Location loc = getCurrentLocation();
+                        Location loc = getCurrentLocation(PassengerRoleActivity.this);
                         if (loc != null) {
                             _join.setLat((float) loc.getLatitude());
                             _join.setLon((float) loc.getLongitude());

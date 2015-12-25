@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -14,7 +15,9 @@ import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -32,6 +35,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -750,22 +754,32 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         super.onResume();
 
         try {
-            mCurrentLocation = getCurrentLocation();
-            startLocationUpdates(this);
-        } catch( SecurityException sex) {
+            mCurrentLocation = getCurrentLocation(this);// check Location Permission inside!
 
-            new MaterialDialog.Builder(this)
-                    .title(R.string.permission_lacked_title)
-                    .content(R.string.location_permission_lacked)
-                    .iconRes(R.drawable.ic_exclamation)
-                    .positiveText(R.string.ok)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            finish();
-                        }
-                    })
-                    .show();
+            // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
+            String msg = getGFenceForLocation(mCurrentLocation);
+            mTextSwitcher.setCurrentText(msg);
+
+            startLocationUpdates(this, this);
+        } catch (SecurityException ex) {
+
+            // Returns true if app has requested this permission previously
+            // and the user denied the request
+            if( ActivityCompat.shouldShowRequestPermissionRationale(this,
+                                        "android.permission.ACCESS_FINE_LOCATION")) {
+
+                mTextSwitcher.setCurrentText(getString(R.string.permission_location_denied));
+                Log.d(LOG_TAG, getString(R.string.permission_location_denied));
+
+            } else {
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{"android.permission.ACCESS_FINE_LOCATION"},
+                        Globals.LOCATION_PERMISSION_REQUEST);
+
+                // to be continued on onRequestPermissionsResult() in permissionsHandler's activity
+            }
+
         }
 
         try {
@@ -799,7 +813,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.stopDiscovery();
         }
 
-        stopLocationUpdates(this);
+        try {
+            stopLocationUpdates(this);
+        } catch (SecurityException sex) {
+            Log.e(LOG_TAG, "n/a");
+        }
+
         super.onPause();
     }
 
@@ -822,6 +841,34 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCheckPassengerTimerResult .cancel(true);
 
         super.onDestroy();
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults){
+
+        try {
+
+            switch( requestCode ) {
+
+                case Globals.LOCATION_PERMISSION_REQUEST: {
+
+                    if(  grantResults.length > 0
+                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                        mCurrentLocation = getCurrentLocation(this);
+                        startLocationUpdates(this, this);
+                    }
+                }
+            }
+
+        } catch (Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+
+        }
+
     }
 
     public void onButtonPassengerCamera(View v) {
@@ -1842,7 +1889,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 //_join.setDeviceId(android_id);
 
                                 try {
-                                    Location loc = getCurrentLocation();
+                                    Location loc = getCurrentLocation(DriverRoleActivity.this);
                                     if (loc != null) {
                                         _join.setLat((float) loc.getLatitude());
                                         _join.setLon((float) loc.getLongitude());

@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.TextView;
@@ -82,19 +83,11 @@ public class GFActivity extends BaseActivity
             mCurrentLocation = _getCurrentLocation();
             startLocationUpdates();
         }
-        catch(SecurityException sex) {
-            new MaterialDialog.Builder(this)
-                    .title(R.string.permission_lacked_title)
-                    .content(R.string.location_permission_lacked)
-                    .iconRes(R.drawable.ic_exclamation)
-                    .positiveText(R.string.ok)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            finish();
-                        }
-                    })
-                    .show();
+        catch(SecurityException ex) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{"android.permission.ACCESS_FINE_LOCATION"},
+                    Globals.LOCATION_PERMISSION_REQUEST);
 
         }
 
@@ -112,9 +105,7 @@ public class GFActivity extends BaseActivity
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
-                            != PackageManager.PERMISSION_GRANTED)
+                    != PackageManager.PERMISSION_GRANTED)
                 throw new SecurityException();
         }
 
@@ -161,9 +152,7 @@ public class GFActivity extends BaseActivity
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
-                            != PackageManager.PERMISSION_GRANTED)
+                    != PackageManager.PERMISSION_GRANTED )
                 return;
         }
 
@@ -184,9 +173,7 @@ public class GFActivity extends BaseActivity
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_COARSE_LOCATION")
-                            != PackageManager.PERMISSION_GRANTED)
+                    != PackageManager.PERMISSION_GRANTED )
                 return;
         }
 
