@@ -138,9 +138,7 @@
     <string name="request_postponed">Ваш запорос не может быть обслужен</string>
     <string name="enable_location_question">Включить службы местоположения на этом устройстве?</string>
     <string name="geofences_inside_title">Вы находитесь в зоне контроля</string>
-    <string name="location_permission_lacked">Пожалуйста, добавьте разрешение на использование Местоположения</string>
-    <string name="permission_lacked_title">Немного необходимого разрешения</string>
-    <string name="camera_permission_lacked">Пожалуйста, добавьте разрешение на использование Камеры</string>
-    <string name="storage_permission_lacked">Пожалуйста, добавьте разрешение на использование Памяти</string>
+    <string name="permission_location_denied">Отказано в доступе к данным о местоположении устройства</string>
+
 
 </resources>

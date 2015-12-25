@@ -139,10 +139,7 @@
     <string name="request_postponed">אי אפשר להגיש את בקשתך</string>
     <string name="enable_location_question">האם לאפשר שירותי מיקום במכשיר זה?</string>
     <string name="geofences_inside_title">אתה נמצא באזור מפוקח</string>
-    <string name="location_permission_lacked">אנא להעניק את ההרשאת שימוש בשירותי מיקום</string>
-    <string name="permission_lacked_title">הרשאת חסרה</string>
-    <string name="camera_permission_lacked">אנא להעניק את הרשאת שימוש במצלמה</string>
-    <string name="storage_permission_lacked">אנא להעניק את ההרשאת שימוש בשירותי אחסון</string>
+    <string name="permission_location_denied">גישה למיקום המכשיר נדחתה</string>
 
 
 </resources>
