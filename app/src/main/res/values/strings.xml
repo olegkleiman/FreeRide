@@ -207,10 +207,10 @@ limitations under the License.</string>
     <string name="geofence_positive_answer">Yes, remind me</string>
     <string name="geofence_negative_answer">No, I\'ll try later</string>
 
-    <string name="permission_lacked_title">Permission lacked</string>
-    <string name="location_permission_lacked">Please grant Location permission to this application</string>
-    <string name="camera_permission_lacked">Please grant Camera permission to this application</string>
-    <string name="storage_permission_lacked">Please grant Storage permission to this application</string>
+    <string name="permission_lacked_title">Permission Required</string>
+    <string name="location_permission_lacked">FastRide needs access to your location to be able to continue</string>
+    <string name="camera_permission_lacked">FastRide needs access to your camera to be able to continue</string>
+    <string name="storage_permission_lacked">FastRide needs access to your storage to be able to continue</string>
 
     <!-- Geofences Error strings -->
     <string name="not_connected">GoogleApiClient no yet connected. Try again.</string>

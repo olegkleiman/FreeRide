@@ -133,27 +133,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
 
-        try {
-
-            mCurrentLocation = getCurrentLocation();
-
-            startLocationUpdates(this);
-        } catch( SecurityException sex) {
-
-            new MaterialDialog.Builder(this)
-                    .title(R.string.permission_lacked_title)
-                    .content(R.string.location_permission_lacked)
-                    .iconRes(R.drawable.ic_exclamation)
-                    .positiveText(R.string.ok)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-
-                        }
-                    })
-                    .show();
-        }
-
         wamsInit(false); // without auto-update for this activity
 
         initGeofences(this);
@@ -278,7 +257,24 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
-        startLocationUpdates(this);
+        try {
+            mCurrentLocation = getCurrentLocation();
+            startLocationUpdates(this);
+        } catch( SecurityException sex) {
+
+            new MaterialDialog.Builder(this)
+                    .title(R.string.permission_lacked_title)
+                    .content(R.string.location_permission_lacked)
+                    .iconRes(R.drawable.ic_exclamation)
+                    .positiveText(R.string.ok)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            finish();
+                        }
+                    })
+                    .show();
+        }
 
         if( mWiFiUtil != null)
             mWiFiUtil.registerReceiver(this);

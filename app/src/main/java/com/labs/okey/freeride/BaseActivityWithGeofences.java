@@ -215,6 +215,8 @@ public class BaseActivityWithGeofences extends BaseActivity
     protected String getGFenceForLocation(Location location) {
 
         String strStatus = getString(R.string.geofence_outside_title);
+        if( location == null )
+            return strStatus;
 
         Boolean bInsideGeoFences = false;
 

@@ -311,29 +311,29 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
-        try {
-            mCurrentLocation = getCurrentLocation(); // SecurityException may come from here
-
-            startLocationUpdates(this);
-        } catch( SecurityException sex) {
-
-            new MaterialDialog.Builder(this)
-                    .title(R.string.permission_lacked_title)
-                    .content(R.string.location_permission_lacked)
-                    .iconRes(R.drawable.ic_exclamation)
-                    .positiveText(R.string.ok)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            finish();
-                        }
-                    })
-                    .show();
-        }
+//        try {
+//            mCurrentLocation = getCurrentLocation(); // SecurityException may come from here
+//
+//            startLocationUpdates(this);
+//        } catch( SecurityException sex) {
+//
+//            new MaterialDialog.Builder(this)
+//                    .title(R.string.permission_lacked_title)
+//                    .content(R.string.location_permission_lacked)
+//                    .iconRes(R.drawable.ic_exclamation)
+//                    .positiveText(R.string.ok)
+//                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+//                        @Override
+//                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+//                            finish();
+//                        }
+//                    })
+//                    .show();
+//        }
 
         if (savedInstanceState != null) {
             wamsInit();
-            initGeofences(this);
+            initGeofences(this); // upon successful return, will be continued on initialized()
 
             restoreState(savedInstanceState);
         } else {
@@ -749,10 +749,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
-        mCurrentLocation = getCurrentLocation();
-        String msg = getGFenceForLocation(mCurrentLocation);
-        mTextSwitcher.setText(msg);
-        startLocationUpdates(this);
+        try {
+            mCurrentLocation = getCurrentLocation();
+            startLocationUpdates(this);
+        } catch( SecurityException sex) {
+
+            new MaterialDialog.Builder(this)
+                    .title(R.string.permission_lacked_title)
+                    .content(R.string.location_permission_lacked)
+                    .iconRes(R.drawable.ic_exclamation)
+                    .positiveText(R.string.ok)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            finish();
+                        }
+                    })
+                    .show();
+        }
 
         try {
 
