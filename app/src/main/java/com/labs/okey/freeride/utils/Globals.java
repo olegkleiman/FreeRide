@@ -183,6 +183,10 @@ public class Globals {
         }
     }
 
+    // PERMISSIONS
+    static final public int LOCATION_PERMISSION_REQUEST = 1;
+    static final public int CAMERA_PERMISSION_REQUEST = 2;
+
     static final public int SERVER_PORT = 4545;
     static final public int SOCKET_TIMEOUT = 5000;
     public static final String TXTRECORD_PROP_AVAILABLE = "available";
