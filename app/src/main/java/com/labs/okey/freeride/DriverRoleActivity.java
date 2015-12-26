@@ -662,9 +662,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 // Send notification and log the transition details.
                 if( Globals.getRemindGeofenceEntrance() ) {
 
-                    sendNotification(msg);
-
                     Globals.clearRemindGeofenceEntrance();
+
+                    sendNotification(msg);
                 }
 
                 } else {
