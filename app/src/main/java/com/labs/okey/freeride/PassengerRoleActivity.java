@@ -16,9 +16,7 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -56,7 +54,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
@@ -326,8 +323,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions,
-                                           int[] grantResults){
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults){
 
         try {
 
@@ -378,6 +375,15 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             if (Globals.isInGeofenceArea()) {
                 mLastLocationUpdateTime = System.currentTimeMillis();
+
+                // Send notification and log the transition details.
+                if( Globals.getRemindGeofenceEntrance() ) {
+
+                    sendNotification(msg);
+
+                    Globals.clearRemindGeofenceEntrance();
+                }
+
             } else {
                 long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
                 if (mLastLocationUpdateTime != 0 // for the first-time
@@ -749,7 +755,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 // Prepare to play sound loud :)
                 AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-                int sb2value = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
+                int sb2value = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value/2, 0);
 
                 CustomEvent confirmEvent = new CustomEvent(getString(R.string.passenger_confirmation_answer_name));
@@ -928,9 +934,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 new Runnable() {
                     @Override
                     public void run() {
-                        if( btnRefresh != null )
+                        if (btnRefresh != null)
                             btnRefresh.setVisibility(View.VISIBLE);
-                        if( progress_refresh != null )
+                        if (progress_refresh != null)
                             progress_refresh.setVisibility(View.GONE);
                     }
                 },
@@ -1112,7 +1118,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         checkAndConnect(device);
     }
 
-    @TargetApi(18)
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void checkAndConnect(BluetoothDevice device) {
         if( device.getType() == BluetoothDevice.DEVICE_TYPE_LE ) {
             device.connectGatt(this, true, new BluetoothGattCallback() {
@@ -1155,5 +1161,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             });
         }
     }
+
+
 
 }

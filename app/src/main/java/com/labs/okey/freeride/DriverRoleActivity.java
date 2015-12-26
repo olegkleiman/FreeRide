@@ -15,9 +15,7 @@ import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -58,7 +56,6 @@ import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
@@ -659,8 +656,18 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             String msgRepeat = textView.getText().toString();
 
             if (Globals.isInGeofenceArea()) {
+
                 mLastLocationUpdateTime = System.currentTimeMillis();
-            } else {
+
+                // Send notification and log the transition details.
+                if( Globals.getRemindGeofenceEntrance() ) {
+
+                    sendNotification(msg);
+
+                    Globals.clearRemindGeofenceEntrance();
+                }
+
+                } else {
                 long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
                 if (mLastLocationUpdateTime != 0 // for the first-time
                         && elapsed < Globals.GF_OUT_TOLERANCE) {

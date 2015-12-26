@@ -10,14 +10,11 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -100,7 +97,7 @@ public class GFActivity extends BaseActivity
         mGoogleMap = googleMap;
     }
 
-    @TargetApi(23)
+    @TargetApi(Build.VERSION_CODES.M)
     private Location _getCurrentLocation() throws SecurityException{
 
         if (Build.VERSION.SDK_INT >= 23) {
