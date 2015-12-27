@@ -208,6 +208,8 @@ limitations under the License.</string>
     <string name="geofence_negative_answer">No, I\'ll try later</string>
 
     <string name="permission_location_denied">Location Permission was denied</string>
+    <string name="permission_camera_denied">Camera Permission was denied</string>
+    <string name="permission_storage_denied">Storage Permission was denied</string>
 
     <!-- Geofences Error strings -->
     <string name="not_connected">GoogleApiClient no yet connected. Try again.</string>
