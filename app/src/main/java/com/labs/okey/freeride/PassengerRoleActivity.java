@@ -1,5 +1,6 @@
 package com.labs.okey.freeride;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -10,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -272,7 +274,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             // Returns true if app has requested this permission previously
             // and the user denied the request
             if( ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    "android.permission.ACCESS_FINE_LOCATION")) {
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 mTextSwitcher.setCurrentText(getString(R.string.permission_location_denied));
                 Log.d(LOG_TAG, getString(R.string.permission_location_denied));
@@ -280,7 +282,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             } else {
 
                 ActivityCompat.requestPermissions(this,
-                        new String[]{"android.permission.ACCESS_FINE_LOCATION"},
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         Globals.LOCATION_PERMISSION_REQUEST);
 
                 // to be continued on onRequestPermissionsResult() in permissionsHandler's activity
@@ -303,7 +305,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
 
-        stopLocationUpdates(this);
+        try {
+            stopLocationUpdates(this);
+        } catch (SecurityException sex) {
+            Log.e(LOG_TAG, "n/a");
+        }
 
         super.onPause();
     }
@@ -332,9 +338,26 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 case Globals.LOCATION_PERMISSION_REQUEST: {
 
-                    mCurrentLocation = getCurrentLocation(this);
-                    startLocationUpdates(this, this);
+                    if(  grantResults.length > 0
+                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                        mCurrentLocation = getCurrentLocation(this);
+                        startLocationUpdates(this, this);
+                    }
                 }
+                break;
+
+                case Globals.CAMERA_PERMISSION_REQUEST : {
+                    if (grantResults.length > 0
+                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        onCameraCVInternal(null);
+                    } else {
+                        mTextSwitcher.setCurrentText(getString(R.string.permission_camera_denied));
+                        Log.d(LOG_TAG, getString(R.string.permission_camera_denied));
+                    }
+                }
+                break;
+
             }
 
         } catch (Exception ex) {
@@ -342,7 +365,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         }
 
-        startLocationUpdates(this, this);
     }
 
     //
@@ -529,6 +551,33 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     public void onCameraCV(View view) {
 
+        try {
+            checkCameraAndStoragePermissions();
+            onCameraCVInternal(view);
+        }
+        catch(SecurityException ex) {
+
+            // Returns true if app has requested this permission previously 
+            // and the user denied the request 
+            if( ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+
+                Toast.makeText(this, getString(R.string.permission_camera_denied), Toast.LENGTH_LONG).show();
+                Log.d(LOG_TAG, getString(R.string.permission_camera_denied));
+
+            } else if ( ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                Toast.makeText(this, getString(R.string.permission_storage_denied), Toast.LENGTH_LONG).show();
+                Log.d(LOG_TAG, getString(R.string.permission_storage_denied));
+            }
+            else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        Globals.CAMERA_PERMISSION_REQUEST);
+            }
+        }
+    }
+
+    private void onCameraCVInternal(View v) {
+
         // Only allow participation request from monitored areas
         if( !Globals.isInGeofenceArea() ) {
             new MaterialDialog.Builder(this)
@@ -563,7 +612,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         public void onPositive(MaterialDialog dialog) {
 
                             Intent intent = new Intent(PassengerRoleActivity.this,
-                                                        CameraCVActivity.class);
+                                    CameraCVActivity.class);
                             //intent.putExtra("RIDE_CODE", Globals.getRideCode());
                             startActivityForResult(intent, MAKE_PICTURE_REQUEST);
                         }
@@ -576,7 +625,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             editor.apply();
 
                             Intent intent = new Intent(PassengerRoleActivity.this,
-                                                        CameraCVActivity.class);
+                                    CameraCVActivity.class);
                             startActivityForResult(intent, MAKE_PICTURE_REQUEST);
                         }
                     })
@@ -586,7 +635,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             startActivityForResult(intent, MAKE_PICTURE_REQUEST);
 
         }
-
 
     }
 

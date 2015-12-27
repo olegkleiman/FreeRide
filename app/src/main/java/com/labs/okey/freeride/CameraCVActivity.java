@@ -1,5 +1,6 @@
 package com.labs.okey.freeride;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -179,53 +180,95 @@ public class CameraCVActivity extends Activity
         try {
             checkCameraPermissions();
 
-            mOpenCvCameraView = (FastCVCameraView) findViewById(R.id.java_surface_view);
-            if( mOpenCvCameraView != null ) {
-                mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-                mOpenCvCameraView.setCvCameraViewListener(this);
-
-                PackageManager pm = getPackageManager();
-                if( pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT) )
-                    mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
-                else
-                    mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
-
-                mCurrentOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
-                mOrientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
-                    @Override
-                    public void onOrientationChanged(int degrees) {
-                        if( (degrees >= 45 && degrees <= 135)
-                                || (degrees >= 225 && degrees <= 315) )
-                            mCurrentOrientation = Configuration.ORIENTATION_LANDSCAPE;
-                        else
-                            mCurrentOrientation = Configuration.ORIENTATION_PORTRAIT;
-
-                    }
-                };
-                if( mOrientationEventListener.canDetectOrientation() ) {
-                    mOrientationEventListener.enable();
-                }
-            }
-
-            mCameraDirective = getString(R.string.camera_directive_1);
-            mCameraDirective2 = getString(R.string.camera_directive_2);
+            initCamera();
 
         } catch(SecurityException sex) {
 
-            ActivityCompat.requestPermissions(this,
-                    new String[]{"android.permission.CAMERA"},
-                    Globals.CAMERA_PERMISSION_REQUEST);
+            // Returns true if app has requested this permission previously
+            // and the user denied the request
+            if( ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.CAMERA)) {
+
+                Log.d(LOG_TAG, getString(R.string.permission_camera_denied));
+
+            } else {
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA},
+                        Globals.CAMERA_PERMISSION_REQUEST);
+            }
         }
 
     }
 
-    @TargetApi(23)
+    @TargetApi(Build.VERSION_CODES.M)
     private void checkCameraPermissions() throws SecurityException {
         if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(this, "android.permission.CAMERA")
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                     != PackageManager.PERMISSION_GRANTED )
                 throw new SecurityException();
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults){
+        try {
+
+            switch( requestCode ) {
+
+                case Globals.CAMERA_PERMISSION_REQUEST: {
+
+                    if(  grantResults.length > 0
+                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                        initCamera();
+
+                    } else {
+                        //finish();
+                    }
+                }
+            }
+
+        } catch (Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+
+        }
+    }
+
+    private void initCamera() {
+        mOpenCvCameraView = (FastCVCameraView) findViewById(R.id.java_surface_view);
+        if( mOpenCvCameraView != null ) {
+            mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+            mOpenCvCameraView.setCvCameraViewListener(this);
+
+            PackageManager pm = getPackageManager();
+            if( pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT) )
+                mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
+            else
+                mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
+
+            mCurrentOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
+            mOrientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
+                @Override
+                public void onOrientationChanged(int degrees) {
+                    if( (degrees >= 45 && degrees <= 135)
+                            || (degrees >= 225 && degrees <= 315) )
+                        mCurrentOrientation = Configuration.ORIENTATION_LANDSCAPE;
+                    else
+                        mCurrentOrientation = Configuration.ORIENTATION_PORTRAIT;
+
+                }
+            };
+            if( mOrientationEventListener.canDetectOrientation() ) {
+                mOrientationEventListener.enable();
+            }
+        }
+
+        mCameraDirective = getString(R.string.camera_directive_1);
+        mCameraDirective2 = getString(R.string.camera_directive_2);
     }
 
     @Override

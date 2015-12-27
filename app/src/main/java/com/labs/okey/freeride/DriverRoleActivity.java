@@ -1,5 +1,6 @@
 package com.labs.okey.freeride;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
@@ -773,7 +774,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             // Returns true if app has requested this permission previously
             // and the user denied the request
             if( ActivityCompat.shouldShowRequestPermissionRationale(this,
-                                        "android.permission.ACCESS_FINE_LOCATION")) {
+                                    Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 mTextSwitcher.setCurrentText(getString(R.string.permission_location_denied));
                 Log.d(LOG_TAG, getString(R.string.permission_location_denied));
@@ -781,7 +782,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             } else {
 
                 ActivityCompat.requestPermissions(this,
-                        new String[]{"android.permission.ACCESS_FINE_LOCATION"},
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         Globals.LOCATION_PERMISSION_REQUEST);
 
                 // to be continued on onRequestPermissionsResult() in permissionsHandler's activity
@@ -869,6 +870,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         startLocationUpdates(this, this);
                     }
                 }
+                break;
+
+                case Globals.CAMERA_PERMISSION_REQUEST : {
+                    if (grantResults.length > 0
+                            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        onSubmitRideInternal();
+                    }
+                }
+                break;
             }
 
         } catch (Exception ex) {
@@ -916,7 +926,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     };
 
-    public void onSubmitRidePics(View view){
+    public void onSubmitRidePics(View v){
 
         // Only allow no-fee request from monitored area
         if( !Globals.isInGeofenceArea() ) {
@@ -941,7 +951,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // Will be continued on finish() from IPictureURLUpdater
         new faceapiUtils(this).execute();
     }
-
 
     AsyncTask<Void, Void, Void> updateCurrentRideTask = new AsyncTask<Void, Void, Void>() {
 
@@ -1000,13 +1009,37 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public void onSubmitRide(View v) {
 
-        if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER ) {
+        if (mCurrentRide == null)
+            return;
+
+        try {
+
+            checkCameraAndStoragePermissions();
+            onSubmitRideInternal();
+
+        } catch(SecurityException sex) {
+
+                // Returns true if app has requested this permission previously 
+                // and the user denied the request 
+                if( ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                    mTextSwitcher.setCurrentText(getString(R.string.permission_camera_denied));
+                    Log.d(LOG_TAG, getString(R.string.permission_camera_denied) );
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            Globals.CAMERA_PERMISSION_REQUEST);
+                }
+        }
+
+    }
+
+    private void onSubmitRideInternal() {
+
+        if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER )
+        {
             showCabinView();
             return;
         }
-
-        if (mCurrentRide == null)
-            return;
 
         boolean bRequestApprovalBySefies = false;
 
@@ -1019,7 +1052,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
 
         if( bRequestApprovalBySefies )
-            onSubmitRidePics(v);
+            onSubmitRidePics(null);
         else {
 
             // Only allow no-fee request from monitored area
@@ -1044,6 +1077,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
             updateCurrentRideTask.execute();
         }
+
     }
 
     @Override

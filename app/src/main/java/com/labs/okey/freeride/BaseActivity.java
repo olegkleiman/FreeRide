@@ -1,5 +1,7 @@
 package com.labs.okey.freeride;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -16,6 +18,7 @@ import android.os.Bundle;
 import android.support.annotation.UiThread;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -283,6 +286,17 @@ public class BaseActivity extends AppCompatActivity
         } catch (PackageManager.NameNotFoundException ex) {
 
             Log.e(LOG_TAG, ex.getMessage());
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public void checkCameraAndStoragePermissions() throws SecurityException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if ( (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED )
+                    || (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) )
+                throw new SecurityException();
         }
     }
 
