@@ -109,6 +109,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DriverRoleActivity extends BaseActivityWithGeofences
         implements ITrace,
@@ -154,7 +155,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
     ScheduledFuture<?>                          mCheckPassengerTimerResult;
 
-    private Boolean                             mRideCodeUploaded = false;
+//    private Boolean                             mRideCodeUploaded = false;
+    private AtomicBoolean                       _mRideCodeUploaded = new AtomicBoolean();
+//    private final Object                        mRideCodeUploadedLock = new Object();
+//    private Boolean isRideCodeUploaded() {
+//        synchronized (mRideCodeUploadedLock) {
+//            return mRideCodeUploaded;
+//        }
+//    }
+//    private void setRideCodeUploaded(Boolean value) {
+//        synchronized (mRideCodeUploadedLock) {
+//            mRideCodeUploaded = value;
+//        }
+//    }
+
     AsyncTask<Void, Void, Void>                 mWAMSUploadRideCodeTask =  new AsyncTask<Void, Void, Void>() {
 
                 Exception mEx;
@@ -166,6 +180,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                         Toast.makeText(DriverRoleActivity.this,
                                         mEx.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                    else {
+                        View v = findViewById(R.id.passenger_snackbar);
+                        if( v != null )
+                            Snackbar.make(v, R.string.ride_uploaded, Snackbar.LENGTH_SHORT)
+                                    .show();
                     }
                 }
 
@@ -313,6 +333,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
+        _mRideCodeUploaded.set(false);
+
 //        try {
 //            mCurrentLocation = getCurrentLocation(); // SecurityException may come from here
 //
@@ -364,7 +386,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             bInitializedBeforeRotation = true;
 
             mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
-            mRideCodeUploaded = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED);
+            _mRideCodeUploaded.set( savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED) );
 
             TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
             txtRideCode.setVisibility(View.VISIBLE);
@@ -530,7 +552,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( !rideCode.isEmpty() ) {
 
             outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, rideCode);
-            outState.putBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED, mRideCodeUploaded);
+            outState.putBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED, _mRideCodeUploaded.get()); // isRideCodeUploaded());
             outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
 
             outState.putParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE, mCurrentRide);
@@ -596,13 +618,21 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     //
-    // IInitializeNotifier implemntation
+    // IInitializeNotifier implementation
     //
     @Override
     public void initialized(Object what){
 
         String msg = getGFenceForLocation(mCurrentLocation);
         mTextSwitcher.setText(msg);
+
+        if (Globals.isInGeofenceArea()) { // set or not set inside getGFenceForLocation()
+            //if (!isRideCodeUploaded() && mRideCode != null) {
+            if( _mRideCodeUploaded.compareAndSet(false, true) && mRideCode != null ) {
+                //setRideCodeUploaded(true);
+                mWAMSUploadRideCodeTask.execute();
+            }
+        }
     }
 
     private Bitmap convertToBitmap(Drawable drawable, int widthPixels, int heighPixels) {
@@ -645,7 +675,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( !Globals.DEBUG_WITHOUT_GEOFENCES ) {
 
             if (!isAccurate(location)) {
-                Log.i(LOG_TAG, "Location skipped");
+                Globals.setInGeofenceArea(false); // ?
+                mTextSwitcher.setCurrentText(getGFenceForLocation(null));
+                Log.d(LOG_TAG, getString(R.string.location_inaccurate));
                 return;
             }
 
@@ -665,7 +697,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                     Globals.clearRemindGeofenceEntrance();
 
-                    sendNotification(msg);
+                    sendNotification(msg, DriverRoleActivity.class);
                 }
 
                 } else {
@@ -682,17 +714,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mTextSwitcher.setCurrentText(msg);
 
             // Upload generated ride-code (within whole ride) once if geo-fences were initialized
-            if (!mRideCodeUploaded
-                    && isGeoFencesInitialized()
-                    && (mRideCode != null && !mRideCode.isEmpty())) {
-                mRideCodeUploaded = true;
+            if ( _mRideCodeUploaded.compareAndSet(false, true)
+                    && isGeoFencesInitialized() && mRideCode != null ) {
                 mWAMSUploadRideCodeTask.execute();
             }
         } else {
 
-            if (!mRideCodeUploaded
-                    && (mRideCode != null &&  mRideCode.isEmpty())) {
-                mRideCodeUploaded = true;
+            if ( _mRideCodeUploaded.compareAndSet(false, true) && mRideCode != null ) {
                 mWAMSUploadRideCodeTask.execute();
             }
         }
@@ -1202,6 +1230,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                                      }
 
                                                                      mPassengersAdapter.notifyDataSetChanged();
+
+                                                                     View v = findViewById(R.id.empty_view);
+                                                                     if( v != null )
+                                                                         v.setVisibility(View.GONE);
 
                                                                      if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
                                                                          FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
