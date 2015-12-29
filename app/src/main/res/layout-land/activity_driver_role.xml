@@ -65,7 +65,7 @@
             android:layout_width="fill_parent"
             android:layout_height="220dp"
             android:layout_gravity="center_horizontal"
-            android:background="@color/ColorBackground"
+            android:background="@android:drawable/dialog_holo_light_frame"
             android:layout_weight="0.5"
             android:elevation="8dp"
             android:layout_marginLeft="@dimen/card_horizontal_margin"
@@ -79,6 +79,14 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:scrollbars="vertical"/>
+
+            <TextView
+                android:id="@+id/empty_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:visibility="visible"
+                android:text="@string/no_passengers" />
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/submit_ride_button"
@@ -122,8 +130,8 @@
                 android:layout_height="match_parent"
                 android:layout_centerHorizontal="true"
                 android:id="@+id/centerImage"
+                android:src="@drawable/cabin_portrait"
                 android:contentDescription="@string/cabin_image_description"
-                android:src="@drawable/cabin_land"
                 android:scaleType="fitCenter" />
 
             <ImageView
