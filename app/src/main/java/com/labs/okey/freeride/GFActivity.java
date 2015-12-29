@@ -346,6 +346,15 @@ public class GFActivity extends BaseActivity
 
         if( Globals.isInGeofenceArea() ) {
             mLastLocationUpdateTime = System.currentTimeMillis();
+
+            // Send notification and log the transition details.
+            if( Globals.getRemindGeofenceEntrance() ) {
+
+                Globals.clearRemindGeofenceEntrance();
+
+                sendNotification(msg, DriverRoleActivity.class);
+            }
+
         } else {
             long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
             if( mLastLocationUpdateTime != 0 // for the first-time
