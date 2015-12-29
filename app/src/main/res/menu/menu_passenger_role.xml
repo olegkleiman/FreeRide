@@ -1,13 +1,4 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<menu xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.maximum.fastride.DriverRoleActivity">
-
-    <item android:id="@+id/action_camera_cv"
-        android:title="@string/action_camera_cv"
-        android:icon="@drawable/ic_action_camera"
-        android:enabled="true"
-        android:orderInCategory="100"
-        app:showAsAction="always" />
 
 </menu>
