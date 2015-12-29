@@ -98,7 +98,7 @@
     <string name="fb_error_msg">Ошибка:</string>
     <string name="fb_error">Нет доступа к сети</string>
     <string name="title_activity_register">Fast Ride: Регистрация</string>
-    <string name="passenger_confirm">Вы подтверждаете поездку с </string>
+    <string name="passenger_confirm">Вы подтверждаете поездку </string>
     <string name="passenger_advertising">Устройство будет передает информацию о себе водителю</string>
     <string name="stop">Стоп</string>
     <string name="passenger_adv_description">Устройство будет передавать информацию о себе водителю в течение 30 сек.</string>
@@ -139,6 +139,9 @@
     <string name="enable_location_question">Включить службы местоположения на этом устройстве?</string>
     <string name="geofences_inside_title">Вы находитесь в зоне контроля</string>
     <string name="permission_location_denied">Отказано в доступе к данным о местоположении устройства</string>
+    <string name="ride_uploaded">Данные о поездке загружены</string>
+    <string name="with">с</string>
+    <string name="no_passengers">Список пассажиров пуст</string>
 
 
 </resources>

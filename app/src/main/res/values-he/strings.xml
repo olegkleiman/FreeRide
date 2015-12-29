@@ -96,7 +96,7 @@
     <string name="ride_code_wrong">קוד שגוי. נסו שוב בבקשה.</string>
     <string name="fb_error_msg">שגיה:</string>
     <string name="fb_error">אין גישה לרשת</string>
-    <string name="passenger_confirm">להצטרף לנסיעה עם</string>
+    <string name="passenger_confirm">להצטרף לנסיעה</string>
     <string name="passenger_advertising">חושף את המשכיר לנהג</string>
     <string name="passenger_adv_description">משכיר יהי חשוף לנהג כ 30 שניות</string>
     <string name="stop">עצור</string>
@@ -141,6 +141,9 @@
     <string name="enable_location_question">האם לאפשר שירותי מיקום במכשיר זה?</string>
     <string name="geofences_inside_title">אתה נמצא באזור מפוקח</string>
     <string name="permission_location_denied">גישה למיקום המכשיר נדחתה</string>
+    <string name="ride_uploaded">הנסיעה נרשמה במערכת בהצלחה</string>
+    <string name="with">עם</string>
+    <string name="no_passengers">רשימת נוסעים ריקה</string>
 
 
 </resources>

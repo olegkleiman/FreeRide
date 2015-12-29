@@ -78,7 +78,7 @@
     <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
     <string name="connection_lost">The connection lost. Please try again in a few seconds</string>
     <string name="ride_code_hint">6 digits without dashes</string>
-    <string name="passenger_confirm">Do you want to join the ride with</string>
+    <string name="passenger_confirm">Do you want to join the ride</string>
     <string name="ride_code_refill"></string>
     <string name="passenger_details">passenger details</string>
     <string name="list_of_Carpooling">list of Carpooling</string>
@@ -152,6 +152,7 @@
     <string name="add_cars_caption">Add your cars</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="with">with</string>
     <string name="ok" translatable="false">OK</string>
     <string name="close">Close</string>
     <string name="stop">Stop</string>
@@ -188,6 +189,7 @@ limitations under the License.</string>
     <string name="action_debug">Debug</string>
     <string name="action_camera">FD</string>
     <string name="action_camera_cv">Camera CV</string>
+    <string name="action_remind">Remind me</string>
     <string name="passenger_tutorial_fragment">Passenger tutorial</string>
     <string name="driver_tutorial_fragment">Driver tutorial</string>
     <string name="reclaim_tutorial_fragment">Appeal tutorial</string>
@@ -298,5 +300,9 @@ limitations under the License.</string>
     <string name="instruction_not_enought_passengers">Not enough passengers to submit no-fee request</string>
     <string name="instruction_can_submit_no_fee">Now you can submit no-fee request</string>
     <string name="instruction_advanced_mode">Each passenger should make a self-picture</string>
+
+    <string name="ride_uploaded">Your ride is uploaded</string>
+    <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
+    <string name="no_passengers">No passengers yet</string>
 
 </resources>
