@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-
 import com.labs.okey.freeride.MainActivity;
 import com.labs.okey.freeride.MyRidesActivity;
 import com.labs.okey.freeride.R;
@@ -34,12 +33,12 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
     // IF the view under inflation and population is header or Item
     private static final int TYPE_ITEM = 1;
 
-    private Context mContext;
-    private String mNavTitles[];
-    private int mIcons[];
-    private String mName;
-    private String mEmail;
-    private String mPictureURL;
+    private Context         mContext;
+    private String          mNavTitles[];
+    private int             mIcons[];
+    private String          mName;
+    private String          mEmail;
+    private String          mPictureURL;
 
     public DrawerAccountAdapter(Context context,
                                 String[] titles,
@@ -69,6 +68,7 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
                 @Override
                 public void onClick(View view){
                     Intent intent = new Intent(mContext, MainActivity.class);
+                    //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     mContext.startActivity(intent);
                 }
             },
@@ -94,7 +94,7 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
                 public void onClick(View view) {
                     Intent intent = new Intent(mContext, TutorialActivity.class);
                     mContext.startActivity(intent);
-                    // mDrawerLayout.closeDrawer(Gravity.START);
+
                 }
             }
     };
