@@ -12,6 +12,9 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.freeride.DriverRoleActivity;
 import com.labs.okey.freeride.MainActivity;
 import com.labs.okey.freeride.R;
@@ -22,10 +25,10 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
 import com.microsoft.windowsazure.mobileservices.notifications.Registration;
-import com.microsoft.windowsazure.mobileservices.notifications.RegistrationCallback;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.net.MalformedURLException;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 
@@ -38,9 +41,10 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
     Context ctx;
     private static final int NOTIFICATION_ID = 1;
+    private static final String NOTIFICATIONS_HANDLER_CLASS = "WAMS_NotificationsHandlerClass";
 
     @Override
-    public void onRegistered(Context context,  final String gcmRegistrationId) {
+    public void onRegistered(final Context context,  final String gcmRegistrationId) {
         super.onRegistered(context, gcmRegistrationId);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -53,41 +57,51 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
                 try {
                     String[] tags = {userID};
+
+//                    MobileServiceClient wamsClient = new MobileServiceClient(
+//                                                                Globals.WAMS_URL,
+//                                                                Globals.WAMS_API_KEY,
+//                                                                context);
+
                     // Better use WAMS SDK v2 like:
-//                    ListenableFuture<Registration> lf = MainActivity.wamsClient.getPush().register(gcmRegistrationId, tags);
-//                    Registration _reg = lf.get();
+                    final MobileServicePush msp = MainActivity.wamsClient.getPush();
+                    ListenableFuture<Registration> lf = msp.register(gcmRegistrationId, tags);
 
-                    MobileServicePush push = MainActivity.wamsClient.getPush();
-                    if( push != null ) {
-//                        String[] tags = {userID};
-                        push.register(gcmRegistrationId, tags,
-                                new RegistrationCallback() {
+                    Futures.addCallback(lf, new FutureCallback<Registration>() {
+                        @Override
+                        public void onSuccess(Registration result) {
+                            Log.d(LOG_TAG, "Azure Notification Hub registration succeeded");
+                        }
 
-                                    @Override
-                                    public void onRegister(Registration registration,
-                                                           Exception ex) {
-                                        if (ex != null) {
-                                            String msg = ex.getMessage();
-                                            if( Crashlytics.getInstance() != null )
-                                                Crashlytics.logException(ex);
-                                            Log.e(LOG_TAG, "Registration error: " + msg);
-                                        }
-                                    }
-                                });
-                    }
+                        @Override
+                        public void onFailure(Throwable t) {
+
+                            try {
+                                verifyStorageVersion(context);
+
+                                //msp.unregister().get();
+                                //msp.unregisterAll(gcmRegistrationId).get();
+                            } catch (Exception ex) {
+                                Log.e(LOG_TAG, ex.getLocalizedMessage());
+                            }
+                        }
+                    });
+
+                    Registration _reg = lf.get();
+
                 } catch (Exception e) {
 
                     if( Crashlytics.getInstance() != null)
                         Crashlytics.logException(e);
 
-                    String msg = e.getMessage();
+                    String msg = e.getLocalizedMessage();
                     Log.e(LOG_TAG, "Registration error: " + msg);
 
                 }
 
                 return null;
             }
-        }.execute();
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     @Override
@@ -250,4 +264,31 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
         //mBuilder.setContentIntent(pendingIntent);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
+
+    private static final String STORAGE_PREFIX = "__NH_";
+    private static final String STORAGE_VERSION_KEY = "STORAGE_VERSION";
+    private static final String STORAGE_VERSION = "1.0.0";
+
+    private void verifyStorageVersion(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+        String currentStorageVersion = preferences.getString(STORAGE_PREFIX + STORAGE_VERSION_KEY, "");
+
+        //if (!currentStorageVersion.equals(STORAGE_VERSION)) {
+
+            SharedPreferences.Editor editor = preferences.edit();
+
+            Set<String> keys = preferences.getAll().keySet();
+
+            for (String key : keys) {
+                if (key.startsWith(STORAGE_PREFIX)) {
+                    editor.remove(key);
+                }
+            }
+
+            editor.commit();
+
+        //}
+
+    }
+
 }
