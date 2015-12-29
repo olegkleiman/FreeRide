@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 
 import com.labs.okey.freeride.model.GeoFence;
@@ -23,7 +24,7 @@ import java.util.concurrent.ExecutionException;
  *  http://toastdroid.com/2015/02/21/how-to-use-androids-job-scheduler/
  */
 
-@TargetApi(21)
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class GeofencesDownloadService extends JobService {
 
     private static final String LOG_TAG = "FR.gfJob";
