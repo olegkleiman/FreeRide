@@ -122,6 +122,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     private String                      mRideCode;
+    private String                      mDriverName;
     private URI                         mPictureURI;
     private UUID                        mFaceId;
 
@@ -145,40 +146,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
 
-//        new Thread() {
-//            @Override
-//            public void run(){
-//
-//                try{
-//
-//                    while (true) {
-//
-//                        runOnUiThread(new Runnable() {
-//
-//                            @Override
-//                            public void run() {
-//
-//                                String message = Globals.isInGeofenceArea() ?
-//                                        Globals.getMonitorStatus() :
-//                                        getString(R.string.geofence_outside_title);
-//
-////                                String currentGeoStatus = Globals.getMonitorStatus();
-////                                if( !currentGeoStatus.equals(message) )
-//                                    mTextSwitcher.setCurrentText(message);
-//
-//                            }
-//                        });
-//
-//                        Thread.sleep(2000);
-//                    }
-//                }
-//                catch(InterruptedException ex) {
-//                    Log.e(LOG_TAG, ex.getMessage());
-//                }
-//
-//            }
-//        }.start();
-
         mWiFiUtil = new WiFiUtil(this);
 
         if( savedInstanceState != null ) {
@@ -199,23 +166,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             refresh();
         }
 
-//        if( mRideCode == null
-//            || mRideCode.isEmpty() ) {
-//            // Start WiFi-Direct serviceDiscovery
-//            // for (hopefully) already published service
-//            mWiFiUtil = new WiFiUtil(this);
-//
-//            refresh();
-//        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, mRideCode);
+        outState.putString(Globals.PARCELABLE_KEY_DRIVER, mDriverName);
         outState.putParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS, mDrivers);
     }
 
-    @UiThread
+        @UiThread
     protected void setupUI(String title, String subTitle){
         super.setupUI(title, subTitle);
 
@@ -326,6 +286,30 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         super.onStop();
     }
 
+    // With conjunction of singleTop declaration in manifest
+    // used for handle notifications
+    @Override
+    public void onNewIntent(Intent intent) {
+
+        //Intent intent = getIntent();
+        String action = intent.getAction();
+
+        // Is launched from Notification?
+        if( action != null &&
+                action.equals(Globals.ACTION_CONFIRM) &&
+                intent.getType() == null) {
+
+            if( intent.hasExtra(Globals.NOTIFICATION_ID_EXTRA) ) {
+                int notificationID = intent.getIntExtra(Globals.NOTIFICATION_ID_EXTRA, -1);
+                cancelNotification();
+
+                clicked(null, -1); // "simulate" confirmation dialog
+            }
+        }
+
+        super.onNewIntent(intent);
+    }
+
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -385,8 +369,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         if( !Globals.DEBUG_WITHOUT_GEOFENCES ) {
 
-            if (!isAccurate(location))
+            if (!isAccurate(location)) {
+                Globals.setInGeofenceArea(false); // ?
+                mTextSwitcher.setCurrentText( getGFenceForLocation(null) );
+                Log.d(LOG_TAG, getString(R.string.location_inaccurate));
                 return;
+            }
 
             mCurrentLocation = location;
             // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
@@ -403,7 +391,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     Globals.clearRemindGeofenceEntrance();
 
-                    sendNotification(msg);
+                    sendNotification(msg, PassengerRoleActivity.class);
                 }
 
             } else {
@@ -528,7 +516,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .neutralText(R.string.code_try_later)
                     .negativeText(R.string.code_retry_action)
                     .contentColor(contentColor)
-                    .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER)
+                    .inputType(InputType.TYPE_NUMBER_VARIATION_NORMAL | InputType.TYPE_CLASS_NUMBER)
                     .inputRange(Globals.RIDE_CODE_INPUT_LENGTH, Globals.RIDE_CODE_INPUT_LENGTH)
                     .input(R.string.ride_code_hint,
                             R.string.ride_code_refill,
@@ -701,9 +689,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .show();
         } else {
 
-            WifiP2pDeviceUser driverDevice = mDrivers.get(position);
+            if( mRideCode != null
+                    && position < 0) { // Ride code was stored if the activity is invoked from notification
+                                       // In this case the position is -1 because this
+                                       // function is called manually (from within onNewIntent())
 
-            mRideCode = driverDevice.getRideCode();
+                WifiP2pDeviceUser driverDevice = mDrivers.get(position);
+
+                mRideCode = driverDevice.getRideCode();
+                mDriverName = driverDevice.getUserName();
+            }
 
             DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 
@@ -724,13 +719,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             };
 
             StringBuilder sb = new StringBuilder(getString(R.string.passenger_confirm));
-            sb.append(" ");
-            sb.append(driverDevice.getUserName());
+            if( mDriverName != null ) {
+                sb.append(" ");
+                getString(R.string.with);
+                sb.append(" ");
+                sb.append(mDriverName);
+            }
             sb.append("?");
-            String message = sb.toString();
 
             new AlertDialogWrapper.Builder(this)
-                    .setTitle(message)
+                    .setTitle(sb.toString())
                     .setNegativeButton(R.string.no, dialogClickListener)
                     .setPositiveButton(R.string.yes, dialogClickListener)
                     .show();
@@ -800,6 +798,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             @Override
             protected void onPostExecute(Void result){
+
+                cancelNotification();
 
                 // Prepare to play sound loud :)
                 AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -964,8 +964,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         final ProgressBar progress_refresh = (ProgressBar)findViewById(R.id.progress_refresh);
         if( progress_refresh != null )
             progress_refresh.setVisibility(View.VISIBLE);
-
-        //mBLEUtil.startScan();
 
         mWiFiUtil.stopDiscovery();
 
