@@ -17,7 +17,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.UiThread;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -39,6 +38,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.labs.okey.freeride.adapters.DrawerAccountAdapter;
 import com.labs.okey.freeride.model.User;
+import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
@@ -82,6 +82,8 @@ public class BaseActivity extends AppCompatActivity
 
     MediaPlayer beepSuccess;
     MediaPlayer beepError;
+
+    int mNotificationId = 777;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -300,27 +302,48 @@ public class BaseActivity extends AppCompatActivity
         }
     }
 
+    public void cancelNotification() {
+        // Get an instance of the Notification manager
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.cancel(mNotificationId);
+    }
+
     /**
      * Posts a notification in the notification bar when a transition is detected.
      * If the user clicks the notification, control goes to the MainActivity.
      */
-    public void sendNotification(String notificationDetails) {
-        // Create an explicit content Intent that starts the main Activity.
-        Intent notificationIntent = new Intent(getApplicationContext(), PassengerRoleActivity.class);
+    public void sendNotification(String notificationDetails, Class<?> cls) {
+//        // Create an explicit content Intent that starts the main Activity.
+//        Intent notificationIntent = new Intent(getApplicationContext(), cls);
+//
+//        int notificationId = new Random().nextInt();
+//        notificationIntent.putExtra(Globals.NOTIFICATION_ID_EXTRA, notificationId);
+//        notificationIntent.setAction(Globals.ACTION_CONFIRM);
+//
+//        // This stack builder object will contain an artificial back stack for the passed Activity
+//        // This ensures that navigating backward from it leads out of the application to the Start screen.
+//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+//
+//        // Add the main Activity to the task stack as the parent.
+//        stackBuilder.addParentStack(MainActivity.class);
+//
+//        // Push the content Intent onto the stack.
+//        stackBuilder.addNextIntent(notificationIntent);
 
-        // This stack builder object will contain an artificial back stack for the PassengerRoleActivity
-        // This ensures that navigating backward from it leads out of the application to the Start screen.
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+//        // Get a PendingIntent containing the entire back stack.
+//        PendingIntent notificationPendingIntent =
+//                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Add the main Activity to the task stack as the parent.
-        stackBuilder.addParentStack(MainActivity.class);
+        Intent confirmIntent = new Intent(this, cls);
+        confirmIntent.setAction(Globals.ACTION_CONFIRM);
+        confirmIntent.putExtra(Globals.NOTIFICATION_ID_EXTRA, mNotificationId);
+        PendingIntent piConfirm = PendingIntent.getActivity(this,
+                111, // request code
+                confirmIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Push the content Intent onto the stack.
-        stackBuilder.addNextIntent(notificationIntent);
-
-        // Get a PendingIntent containing the entire back stack.
-        PendingIntent notificationPendingIntent =
-                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Get a notification builder that's compatible with platform versions >= 4
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
@@ -334,20 +357,24 @@ public class BaseActivity extends AppCompatActivity
                         R.mipmap.ic_launcher2))
                 .setColor(Color.RED)
                 .setContentTitle(title)
+                .setAutoCancel(true) // Dismiss notification once the user touches it.
                 .setContentText(notificationDetails)
-                .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(title))
-                .setContentIntent(notificationPendingIntent);
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(piConfirm);
 
-        // Dismiss notification once the user touches it.
-        builder.setAutoCancel(true);
+//                .addAction(R.drawable.confirm,
+//                        "confirm", piConfirm)
+//                .addAction(R.drawable.cancel,
+//                        "cancel", piConfirm);
+
 
         // Get an instance of the Notification manager
-        NotificationManager mNotificationManager =
+        NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Issue the notification
-        mNotificationManager.notify(0, builder.build());
+        notificationManager.notify(mNotificationId, builder.build());
 
     }
 
