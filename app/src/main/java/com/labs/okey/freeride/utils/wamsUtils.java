@@ -162,7 +162,7 @@ public class wamsUtils {
      * any blocked request will receive the X-ZUMO-AUTH header added or updated to
      * that request.
      */
-    static private class RefreshTokenCacheFilter implements ServiceFilter {
+    static public class RefreshTokenCacheFilter implements ServiceFilter {
 
         AtomicBoolean mAtomicAuthenticatingFlag = new AtomicBoolean();
 
