@@ -4,6 +4,7 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -273,6 +274,8 @@ public class RegisterActivity extends FragmentActivity
         mFBLoginButton = (LoginButton) findViewById(R.id.loginButton);
         mFBLoginButton.setReadPermissions("email");
 
+        final ContentResolver contentResolver = this.getContentResolver();
+
         mFBLoginButton.setUserInfoChangedCallback(new LoginButton.UserInfoChangedCallback() {
             @Override
             public void onUserInfoFetched(final GraphUser user) {
@@ -286,6 +289,10 @@ public class RegisterActivity extends FragmentActivity
                     String pictureURL = "http://graph.facebook.com/" + fbUser.getId() + "/picture?width=100&height=100";
                     mNewUser.setPictureURL(pictureURL);
                     mNewUser.setEmail((String) fbUser.getProperty("email"));
+
+                    String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+                    mNewUser.setDeviceId(android_id);
+                    mNewUser.setPlatform(Globals.PLATFORM);
 
                     new AsyncTask<Void, Void, Void>() {
 
@@ -325,8 +332,12 @@ public class RegisterActivity extends FragmentActivity
                                         usersTable.where().field("registration_id").eq(regID)
                                                 .execute().get();
 
-                                if( _users.size() >= 1 )
-                                    mAddNewUser = false;
+                                if( _users.size() >= 1 ) {
+                                    User _user = _users.get(0);
+
+                                    if( _user.compare(mNewUser)  )
+                                        mAddNewUser = false;
+                                }
 
                             } catch (InterruptedException | ExecutionException ex) {
                                 mEx = ex;
@@ -466,12 +477,6 @@ public class RegisterActivity extends FragmentActivity
                 mNewUser.setPhone(txtUser.getText().toString());
                 CheckBox cbUsePhone = (CheckBox)findViewById(R.id.cbUsePhone);
                 mNewUser.setUsePhone(cbUsePhone.isChecked());
-
-                String android_id = Settings.Secure.getString(this.getContentResolver(),
-                                                              Settings.Secure.ANDROID_ID);
-                mNewUser.setDeviceId(android_id);
-
-                mNewUser.setPlatform(Globals.PLATFORM);
 
                 mNewUser.save(this);
 
