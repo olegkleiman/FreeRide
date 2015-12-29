@@ -81,6 +81,10 @@ public class User implements Parcelable {
         _wasSelfPictured = value;
     }
 
+    public boolean compare(User _user) {
+        return this.registration_id.compareTo(_user.registration_id) == 0
+                && this.deviceId.compareTo(_user.deviceId) == 0;
+    }
 
     public User() {
 
