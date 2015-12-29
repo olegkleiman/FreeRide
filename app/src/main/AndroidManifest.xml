@@ -67,7 +67,8 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:launchMode="singleTop">
+            android:launchMode="singleTask"
+            android:taskAffinity="">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -78,7 +79,8 @@
             android:name=".PassengerRoleActivity"
             android:label="@string/title_activity_passenger_role"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/AppTheme"
+            android:launchMode="singleTop"/>
         <activity
             android:name=".DriverRoleActivity"
             android:label="@string/title_activity_driver_role"
