@@ -225,6 +225,11 @@ public class Globals {
     // https://console.developers.google.com/project/third-apex-91200/settings
     public static final String SENDER_ID = "1041824085053";
 
+    public static final String NOTIFICATION_ID_EXTRA = "NOTIFICATION_ID";
+    public static final String ACTION_CONFIRM = "fastride.intent.action.CONFIRM";
+    public static final String ACTION_CANCEL = "fastride.intent.action.CANCEL";
+
+
     // Names of shared preferences
     public static final String USERIDPREF = "userid";
     public static final String CARS_PREF = "cars";
@@ -265,9 +270,6 @@ public class Globals {
 
     // Geofences
     public static final HashMap<String, LatLng> FWY_AREA_LANDMARKS = new HashMap<String, LatLng>();
-    //    static {
-//        FWY_AREA_LANDMARKS.put("GOOGLE", new LatLng(32.080341,34.780639));
-//    }
     public static ArrayList<Geofence> GEOFENCES = new ArrayList<>();
     public static PendingIntent GeofencePendingIntent;
 
@@ -372,7 +374,7 @@ public class Globals {
     // and zeros elsewhere.
     public static Matrix4f verificationMat = new Matrix4f();
 
-    public static int PASSENGER_DISCOVERY_PERIOD = 20;
+    public static int PASSENGER_DISCOVERY_PERIOD = 30;
     public static int PASSENGER_ADVERTISING_PERIOD = 40;
     public static int DRIVER_DISCOVERY_PERIOD = 20;
 
@@ -381,6 +383,7 @@ public class Globals {
     public static String PARCELABLE_KEY_RIDE_CODE_UPLOADED = "ride_code_uploaded_key";
     public static String PARCELABLE_KEY_PASSENGERS = "passengers_key";
     public static String PARCELABLE_KEY_DRIVERS = "drivers_key";
+    public static String PARCELABLE_KEY_DRIVER = "driver_key";
     public static String PARCELABLE_KEY_CURRENT_RIDE = "current_ride";
     public static String PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN = "cabin_button_shown";
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
