@@ -156,7 +156,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     ScheduledFuture<?>                          mCheckPassengerTimerResult;
 
 //    private Boolean                             mRideCodeUploaded = false;
-    private AtomicBoolean                       _mRideCodeUploaded = new AtomicBoolean();
+    private AtomicBoolean                       _mRideCodeUploaded = new AtomicBoolean(false);
 //    private final Object                        mRideCodeUploadedLock = new Object();
 //    private Boolean isRideCodeUploaded() {
 //        synchronized (mRideCodeUploadedLock) {
@@ -628,7 +628,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if (Globals.isInGeofenceArea()) { // set or not set inside getGFenceForLocation()
             //if (!isRideCodeUploaded() && mRideCode != null) {
-            if( _mRideCodeUploaded.compareAndSet(false, true) && mRideCode != null ) {
+            if( mRideCode != null && _mRideCodeUploaded.compareAndSet(false, true) ) {
                 //setRideCodeUploaded(true);
                 mWAMSUploadRideCodeTask.execute();
             }
@@ -714,13 +714,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mTextSwitcher.setCurrentText(msg);
 
             // Upload generated ride-code (within whole ride) once if geo-fences were initialized
-            if ( _mRideCodeUploaded.compareAndSet(false, true)
-                    && isGeoFencesInitialized() && mRideCode != null ) {
+            if ( isGeoFencesInitialized()
+                    && mRideCode != null
+                    && _mRideCodeUploaded.compareAndSet(false, true) ) {
                 mWAMSUploadRideCodeTask.execute();
             }
         } else {
 
-            if ( _mRideCodeUploaded.compareAndSet(false, true) && mRideCode != null ) {
+            if ( mRideCode != null && _mRideCodeUploaded.compareAndSet(false, true) ) {
                 mWAMSUploadRideCodeTask.execute();
             }
         }
