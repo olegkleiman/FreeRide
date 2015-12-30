@@ -956,6 +956,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public void onSubmitRidePics(View v){
 
+        cancelNotification();
+
         // Only allow no-fee request from monitored area
         if( !Globals.isInGeofenceArea() ) {
 
@@ -1035,10 +1037,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     };
 
-    public void onSubmitRide(View v) {
+    public void onSubmitRide(View view) {
 
-        if (mCurrentRide == null)
+        if (mCurrentRide == null) {
+            View v = findViewById(R.id.passenger_snackbar);
+            if( v != null )
+                Snackbar.make(v, R.string.ride_not_uploaded, Snackbar.LENGTH_SHORT)
+                        .show();
+
             return;
+        }
 
         try {
 
