@@ -77,6 +77,8 @@ import com.labs.okey.freeride.utils.WiFiUtil;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
+import junit.framework.Assert;
+
 import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.IOException;
@@ -689,12 +691,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .show();
         } else {
 
-            if( mRideCode != null
-                    && position < 0) { // Ride code was stored if the activity is invoked from notification
-                                       // In this case the position is -1 because this
-                                       // function is called manually (from within onNewIntent())
+            if( position >= 0
+                && mRideCode == null ) { // Ride code was stored if the activity is invoked from notification
+                                         // In this case the position is -1 because this
+                                         // function is called manually (from within onNewIntent())
+                Assert.assertNotNull(mDrivers);
 
                 WifiP2pDeviceUser driverDevice = mDrivers.get(position);
+                Assert.assertNotNull(driverDevice);
 
                 mRideCode = driverDevice.getRideCode();
                 mDriverName = driverDevice.getUserName();
