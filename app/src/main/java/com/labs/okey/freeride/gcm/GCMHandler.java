@@ -120,7 +120,8 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
         String extras = bundle.getString("extras");
         if( extras == null || extras.isEmpty() ) {
-            Crashlytics.logException(new Throwable(ctx.getString(R.string.no_extra)));
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(new Throwable(ctx.getString(R.string.no_extra)));
             return;
         }
 
