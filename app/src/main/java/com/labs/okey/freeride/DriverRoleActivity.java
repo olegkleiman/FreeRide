@@ -155,19 +155,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
     ScheduledFuture<?>                          mCheckPassengerTimerResult;
 
-//    private Boolean                             mRideCodeUploaded = false;
-    private AtomicBoolean                       _mRideCodeUploaded = new AtomicBoolean(false);
-//    private final Object                        mRideCodeUploadedLock = new Object();
-//    private Boolean isRideCodeUploaded() {
-//        synchronized (mRideCodeUploadedLock) {
-//            return mRideCodeUploaded;
-//        }
-//    }
-//    private void setRideCodeUploaded(Boolean value) {
-//        synchronized (mRideCodeUploadedLock) {
-//            mRideCodeUploaded = value;
-//        }
-//    }
+    private AtomicBoolean                       mRideCodeUploaded = new AtomicBoolean(false);
 
     AsyncTask<Void, Void, Void>                 mWAMSUploadRideCodeTask =  new AsyncTask<Void, Void, Void>() {
 
@@ -333,7 +321,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         setupUI(getString(R.string.title_activity_driver_role), "");
 
-        _mRideCodeUploaded.set(false);
+        mRideCodeUploaded.set(false);
 
 //        try {
 //            mCurrentLocation = getCurrentLocation(); // SecurityException may come from here
@@ -386,7 +374,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             bInitializedBeforeRotation = true;
 
             mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
-            _mRideCodeUploaded.set( savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED) );
+            mRideCodeUploaded.set( savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED) );
 
             TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
             txtRideCode.setVisibility(View.VISIBLE);
@@ -552,7 +540,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( !rideCode.isEmpty() ) {
 
             outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, rideCode);
-            outState.putBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED, _mRideCodeUploaded.get()); // isRideCodeUploaded());
+            outState.putBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED, mRideCodeUploaded.get()); // isRideCodeUploaded());
             outState.putParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS, mPassengers);
 
             outState.putParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE, mCurrentRide);
@@ -627,9 +615,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mTextSwitcher.setText(msg);
 
         if (Globals.isInGeofenceArea()) { // set or not set inside getGFenceForLocation()
-            //if (!isRideCodeUploaded() && mRideCode != null) {
-            if( mRideCode != null && _mRideCodeUploaded.compareAndSet(false, true) ) {
-                //setRideCodeUploaded(true);
+            if( mRideCode != null && mRideCodeUploaded.compareAndSet(false, true) ) {
                 mWAMSUploadRideCodeTask.execute();
             }
         }
@@ -716,12 +702,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             // Upload generated ride-code (within whole ride) once if geo-fences were initialized
             if ( isGeoFencesInitialized()
                     && mRideCode != null
-                    && _mRideCodeUploaded.compareAndSet(false, true) ) {
+                    && mRideCodeUploaded.compareAndSet(false, true) ) {
                 mWAMSUploadRideCodeTask.execute();
             }
         } else {
 
-            if ( mRideCode != null && _mRideCodeUploaded.compareAndSet(false, true) ) {
+            if ( mRideCode != null && mRideCodeUploaded.compareAndSet(false, true) ) {
                 mWAMSUploadRideCodeTask.execute();
             }
         }
