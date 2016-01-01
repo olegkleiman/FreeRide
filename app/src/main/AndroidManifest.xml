@@ -26,9 +26,6 @@
     <!-- Required for Geofences -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Required for BLE -->
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
 
     <uses-feature
         android:name="android.hardware.camera"
