@@ -283,7 +283,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             mWiFiUtil.removeGroup();
 
         // Ride Code will be re-newed on next activity's launch
-        mRideCode = "";
+        mRideCode = null;
 
         super.onStop();
     }
@@ -692,7 +692,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         } else {
 
             if( position >= 0
-                && mRideCode == null ) { // Ride code was stored if the activity is invoked from notification
+                && mRideCode == null ) {
+                                            // Ride code was stored if the activity is invoked from notification
                                          // In this case the position is -1 because this
                                          // function is called manually (from within onNewIntent())
                 Assert.assertNotNull(mDrivers);

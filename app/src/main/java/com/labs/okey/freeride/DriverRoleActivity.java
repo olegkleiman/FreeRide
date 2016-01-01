@@ -235,9 +235,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     MaterialDialog                              mOfflineDialog;
     MaterialDialog                              mAppealDialog;
-    private Boolean                             mCabinPictureButtonShown = false;
-    private Boolean                             mCabinShown = false;
-    private Boolean                             mSubmitButtonShown = false;
+    private boolean                             mCabinPictureButtonShown = false;
+    private boolean                             mCabinShown = false;
+    private boolean                             mSubmitButtonShown = false;
+
+    private boolean                             mEmptyTextShown = true;
 
     private Runnable                            mEnableCabinPictureButtonRunnable = new Runnable() {
 
@@ -508,6 +510,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         }
 
+        View vEmptyText = findViewById(R.id.empty_view);
+        if( vEmptyText != null && savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMPTY_TEXT_SHOWN )) {
+
+            mEmptyTextShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_EMPTY_TEXT_SHOWN );
+            if( mEmptyTextShown )
+                vEmptyText.setVisibility(View.VISIBLE);
+            else
+                vEmptyText.setVisibility(View.GONE);
+        }
+
+
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN)) {
             bInitializedBeforeRotation = true;
 
@@ -559,6 +572,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             outState.putBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN, mCabinShown);
 
             outState.putBoolean(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN, mSubmitButtonShown);
+
+            outState.putBoolean(Globals.PARCELABLE_KEY_EMPTY_TEXT_SHOWN, mEmptyTextShown);
 
             // Store passengers captured thumbnails, if any
             View rootView = findViewById(R.id.cabin_background_layout);
@@ -1227,8 +1242,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                                      mPassengersAdapter.notifyDataSetChanged();
 
                                                                      View v = findViewById(R.id.empty_view);
-                                                                     if( v != null )
+                                                                     if( v != null ) {
+                                                                         mEmptyTextShown = false;
                                                                          v.setVisibility(View.GONE);
+                                                                     }
 
                                                                      if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
                                                                          FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
