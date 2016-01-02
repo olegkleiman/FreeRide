@@ -303,7 +303,7 @@ limitations under the License.</string>
     <string name="instruction_advanced_mode">Each passenger should make a self-picture</string>
 
     <string name="ride_uploaded">Your ride is uploaded</string>
-    <string name="ride_not_uploaded">The ride has not benn uploaded</string>
+    <string name="ride_not_uploaded">The ride has not been uploaded</string>
     <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
     <string name="no_passengers">No passengers yet</string>
 
