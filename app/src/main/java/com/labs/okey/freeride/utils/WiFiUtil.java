@@ -12,7 +12,6 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.os.AsyncTask;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.util.Log;
 
@@ -260,7 +259,7 @@ public class WiFiUtil
 
                                 @Override
                                 public void onSuccess() {
-                                    Log.i(LOG_TAG, "Restored after discroverService() failure");
+                                    Log.i(LOG_TAG, "Restored after discoverService() failure");
                                 }
 
                                 @Override
