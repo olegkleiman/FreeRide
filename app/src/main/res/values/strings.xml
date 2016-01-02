@@ -307,4 +307,8 @@ limitations under the License.</string>
     <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
     <string name="no_passengers">No passengers yet</string>
 
+    <string name="camera_tag" translatable="false">camera_tag</string>
+    <string name="submit_tag" translatable="false">submit_tag</string>
+
+
 </resources>
