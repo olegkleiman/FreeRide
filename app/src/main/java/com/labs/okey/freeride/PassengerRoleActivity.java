@@ -831,35 +831,47 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         }
 
                         switch( responseCode ) {
-                            case 409: // HTTP 'Conflict'
-                                      // picture required
+
+                            case 403: { // HTTP 'Forbidden' means than IDs of the
+                                        // driver and passenger are same
+                                showRideCodePane(R.string.ride_same_ids,
+                                            Color.RED);
+
+                                lt.error();
+                                beepError.start();
+                            }
+                            break;
+
+                            case 404: { // HTTP 'Not found' means 'no such ride code'
+                                        // i.e.
+                                        // try again with appropriate message
+                                showRideCodePane(R.string.ride_code_wrong,
+                                                Color.RED);
+
+                                lt.error();
+                                beepError.start();
+                            }
+                            break;
+
+                            case 409: {// HTTP 'Conflict'
+                                // picture required
                                 // Ride code was successfully validated,
                                 // but selfie is required
 
                                 lt.success();
 
                                 onCameraCV(null);
+                            }
+                            break;
 
-                                break;
-
-                            case 404: // HTTP 'Not found' means 'no such ride code'
-                                      // i.e.
-                                // try again with appropriate message
-                                showRideCodePane(R.string.ride_code_wrong,
-                                                 Color.RED);
-                                lt.error();
-                                beepError.start();
-
-                                break;
-
-                            case 503: // HTTP 'Service Unavailable' interpreted as 'Connection Lost'
+                            case 503: { // HTTP 'Service Unavailable' interpreted as 'Connection Lost'
                                 // Try again
                                 showRideCodePane(R.string.connection_lost,
-                                                 Color.RED);
+                                        Color.RED);
                                 lt.error();
                                 beepError.start();
-
-                                break;
+                            }
+                            break;
 
                             default:
                                 lt.error();
