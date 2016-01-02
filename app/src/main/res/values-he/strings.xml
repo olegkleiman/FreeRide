@@ -144,6 +144,7 @@
     <string name="ride_uploaded">הנסיעה נרשמה במערכת בהצלחה</string>
     <string name="with">עם</string>
     <string name="no_passengers">רשימת נוסעים ריקה</string>
+    <string name="ride_same_ids">שימוש באותה זהות לנהג והנוסע אסור </string>
 
 
 </resources>

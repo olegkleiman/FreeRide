@@ -142,6 +142,7 @@
     <string name="ride_uploaded">Данные о поездке загружены</string>
     <string name="with">с</string>
     <string name="no_passengers">Список пассажиров пуст</string>
+    <string name="ride_same_ids">Использование одной и той же регистрации для водителя и пассажира не разрешается.</string>
 
 
 </resources>
