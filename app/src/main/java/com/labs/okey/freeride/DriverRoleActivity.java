@@ -412,6 +412,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
                     Context ctx = getApplicationContext();
                     fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+                    fab.setTag(getString(R.string.submit_tag));
                 }
 
             }
@@ -1052,7 +1053,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         try {
 
-            checkCameraAndStoragePermissions();
+            FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
+            String tag = (String)fab.getTag();
+            if( tag.equals(getString(R.string.camera_tag))) {
+                checkCameraAndStoragePermissions();
+            }
+
             onSubmitRideInternal();
 
         } catch(SecurityException sex) {
@@ -1252,6 +1258,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                                                                          Context ctx =  getApplicationContext();
                                                                          fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+                                                                         fab.setTag(getString(R.string.submit_tag));
 
                                                                          mTextSwitcher.setText(getString(R.string.instruction_can_submit_no_fee));
                                                                      }

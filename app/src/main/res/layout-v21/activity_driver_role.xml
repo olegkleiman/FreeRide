@@ -97,6 +97,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_action_camera"
+                android:tag="camera_tag"
                 app:elevation="4dp"
 
                 app:layout_anchor="@id/recyclerViewPeers"
