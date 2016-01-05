@@ -21,7 +21,7 @@ buildscript {
 //        minSdkVersion 16
 //        targetSdkVersion 23
 //        versionCode 4
-//        versionName "4.5.5"
+//        versionName "4.5.6"
 //        multiDexEnabled true
 //    }
 //    sourceSets {
@@ -57,7 +57,7 @@ model {
             minSdkVersion.apiLevel = 16
             targetSdkVersion.apiLevel = 23
             versionCode = 4
-            versionName = "4.5.5"
+            versionName = "4.5.6"
             multiDexEnabled = true
         }
     }
