@@ -80,7 +80,7 @@ public class WiFiUtil
         // Indicates this device's details have changed.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        mManager = (WifiP2pManager)context.getSystemService(context.WIFI_P2P_SERVICE);
+        mManager = (WifiP2pManager)context.getSystemService(Context.WIFI_P2P_SERVICE);
         if( mManager != null ) {
             mChannel = mManager.initialize(context, context.getMainLooper(), null);
         }
