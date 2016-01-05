@@ -189,7 +189,6 @@ public class Globals {
 
     static final public int SERVER_PORT = 4545;
     static final public int SOCKET_TIMEOUT = 5000;
-    public static final String TXTRECORD_PROP_AVAILABLE = "available";
     public static final String TXTRECORD_PROP_USERID = "userid";
     public static final String TXTRECORD_PROP_USERNAME = "username";
     public static final String TXTRECORD_PROP_RIDECODE = "ridecode";
