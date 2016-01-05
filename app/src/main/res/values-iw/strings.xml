@@ -92,7 +92,7 @@
     <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
     <string name="detection_center_desc">לשמור?</string>
     <string name="please_wait">נא להמתין</string>
-    <string name="ride_code_wrong">קוד שגוי. נסו שוב בבקשה.</string>
+    <string name="ride_code_wrong">.קוד לא קיים במערכת. נסו שוב בבקשה.</string>
     <string name="passenger_progress_dialog">מחפש התקן של הנהג</string>
     <string name="fb_error_msg">שגיה:</string>
     <string name="fb_error">אין גישה לרשת</string>
