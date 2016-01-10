@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.labs.okey.freeride.AppealDetailsActivity;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.RideDetailsActivity;
 import com.labs.okey.freeride.adapters.MyAppealAdapter;

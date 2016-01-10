@@ -49,7 +49,7 @@
                             android:layout_width="fill_parent"
                             android:layout_height="40dp"
                             android:textAppearance="?android:attr/textAppearanceMedium"
-                            android:text="@string/drive_details"
+                            android:text="@string/ride_details"
                             android:id="@+id/textView4"
                             android:layout_gravity="center_vertical" />
 
@@ -197,13 +197,14 @@
                         android:layout_height="40dp"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:text="@string/list_of_passengers"
-                        android:id="@+id/textViewListPass"
+                        android:id="@+id/titleDetails"
                         android:layout_gravity="center_vertical" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="?attr/colorPrimary" />
+                        android:background="?attr/colorPrimary"
+                        android:id="@+id/lineView"/>
 
                 </LinearLayout>
 
@@ -217,7 +218,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/linearLayout6"
-                    android:id="@+id/selfi"/>
+                    android:id="@+id/picture"/>
+
+                    <ProgressBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/progressBarAppealPicture"
+                        android:layout_alignTop="@+id/recyclerPassengers"
+                        android:layout_centerHorizontal="true" />
+
 
                 </RelativeLayout>
             </android.support.v7.widget.CardView>

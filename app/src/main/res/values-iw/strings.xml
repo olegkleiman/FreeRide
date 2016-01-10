@@ -88,7 +88,6 @@
     <string name="edit_car_dialog_caption">תאור רכב</string>
     <string name="edit_phone_dialog_caption">מספר טלפון</string>
     <string name="title_section_cars">רכבים</string>
-    <string name="title_activity_ride_detail">פרטי נסיעה</string>
     <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
     <string name="detection_center_desc">לשמור?</string>
     <string name="please_wait">נא להמתין</string>
@@ -144,6 +143,11 @@
     <string name="with">עם</string>
     <string name="no_passengers">רשימת נוסעים ריקה</string>
     <string name="ride_same_ids">שימוש באותה זהות לנהג והנוסע אסור </string>
+    <string name="passenger_details">פרטי נוסעים</string>
+    <string name="ride_denied">פרטי נסיעה</string>
+    <string name="try_again">נסה שנית</string>
+    <string name="title_section_user">פרופיל משתמש</string>
+    <string name="title_activity_ride_details">פרטי נסיעה</string>
 
 
 </resources>
