@@ -12,12 +12,13 @@ import android.view.ViewGroup;
 
 import com.labs.okey.freeride.AppealDetailsActivity;
 import com.labs.okey.freeride.R;
+import com.labs.okey.freeride.RideDetailsActivity;
 import com.labs.okey.freeride.adapters.MyAppealAdapter;
-import com.labs.okey.freeride.model.Appeal;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,7 +30,6 @@ import java.util.List;
  */
 public class RejectedMyRidesFragment extends Fragment {
 
-    List<Appeal> mAppeals = new ArrayList<>();
 
     List<Ride> mRides = new ArrayList<>();
     private static final String ARG_POSITION = "position";
@@ -46,27 +46,28 @@ public class RejectedMyRidesFragment extends Fragment {
         }
         return FragmentInstance;
     }
-    public void setAppeals(List<Appeal> appeals) {
+    public void setAppeals(List<Ride> rides) {
 
-        if (appeals == null || appeals.isEmpty())
+        if (rides == null || rides.isEmpty())
             return;
 
-        mAppeals.clear();
-        mAppeals.addAll(appeals);
+        mRides.clear();
+        mRides.addAll(rides);
+        FilteringUnAppealAndOtherDrivers();
         sort();
-        //FilteringApproveAndOtherDrivers();
+
     }
 
-    public void updateAppeals(List<Appeal> appeals){
+    public void updateAppeals(List<Ride> rides){
 
-        if (appeals == null || appeals.isEmpty())
+        if (rides == null || rides.isEmpty())
             return;
 
-        mAppeals.clear();
-        mAppeals.addAll(appeals);
+        mRides.clear();
+        mRides.addAll(rides);
         sort();
 
-        //FilteringApproveAndOtherDrivers();
+        FilteringUnAppealAndOtherDrivers();
 
         adapter.notifyDataSetChanged();
     }
@@ -84,18 +85,18 @@ public class RejectedMyRidesFragment extends Fragment {
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         recycler.setItemAnimator(new DefaultItemAnimator());
 
-        adapter = new MyAppealAdapter(mAppeals);
+        adapter = new MyAppealAdapter(mRides);
         adapter.setOnClickListener(new IRecyclerClickListener() {
 
 
             @Override
             public void clicked(View v, int position) {
 
-                Appeal currentAppeal = mAppeals.get(position);
-                Intent intent = new Intent(getActivity(), AppealDetailsActivity.class);
+                Ride currentRide = mRides.get(position);
+                Intent intent = new Intent(getActivity(), RideDetailsActivity.class);
 
 
-                intent.putExtra("appeal",  currentAppeal);
+                intent.putExtra("ride", (Serializable) currentRide);
                 startActivity(intent);
             }
         });
@@ -104,20 +105,23 @@ public class RejectedMyRidesFragment extends Fragment {
         return rootView;
     }
 
-    private  void FilteringApproveAndOtherDrivers(){
+    private  void FilteringUnAppealAndOtherDrivers(){
         List<Ride> tempList = new ArrayList<Ride>();
         String userId = Globals.userID;
 
         for (Ride ride : mRides ){
 
-            if (ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal() &&
-                    ride.getDriverId().equals(userId)) {
+            if (           (ride.getApproved() == Globals.RIDE_STATUS.APPEAL.ordinal() ||
+                            ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()) &&
+                            ride.getDriverId().equals(userId)) {
+
                 tempList.add(ride);
             }
         }
         mRides.clear();
         mRides.addAll(tempList);
     }
+
 
     private void sort(){
 

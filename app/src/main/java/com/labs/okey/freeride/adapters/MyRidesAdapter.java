@@ -59,7 +59,7 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
         Ride ride = items.get(position);
 
-        //TODO: need to enter the real name of driver
+
         if(!ride.getDriverId().equals( Globals.userID))
         {
             holder.driverName.setText(ride.getDriverName());
@@ -69,6 +69,8 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
         else {
 
             holder.driverName.setVisibility(View.GONE);
+            //TODO I hide the SteeringWheel
+            holder.SteeringWheel.setVisibility(View.GONE);
 
             int approveStatus = ride.getApproved();
 
@@ -77,35 +79,40 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
             } else if( approveStatus == Globals.RIDE_STATUS.APPROVED.ordinal()
                    || approveStatus == Globals.RIDE_STATUS.APPROVED_BY_SELFY.ordinal() ){
                 holder.ApprovedSing.setImageResource(R.drawable.v_sing_26);
-            } else if ( ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()) {
+            } else if ( ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()
+                   ||approveStatus == Globals.RIDE_STATUS.APPEAL.ordinal() ) {
                 holder.ApprovedSing.setImageResource(R.drawable.ex_sing_26);
             }
-        }
-
-        try {
-            User user = User.load(context);
 
 
+            try {
+                User user = User.load(context);
 
-            Drawable drawable =
-                    (Globals.drawMan.userDrawable(context,
-                            "1",
-                            user.getPictureURL())).get();
-            if( drawable != null ) {
-                drawable = RoundedDrawable.fromDrawable(drawable);
-                ((RoundedDrawable) drawable)
-                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                        .setBorderColor(Color.WHITE)
-                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                        .setOval(true);
 
-                holder.DriverImage.setImageDrawable(drawable);
 
+                Drawable drawable =
+                        (Globals.drawMan.userDrawable(context,
+                                "1",
+                                user.getPictureURL())).get();
+                if( drawable != null ) {
+                    drawable = RoundedDrawable.fromDrawable(drawable);
+                    ((RoundedDrawable) drawable)
+                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                            .setBorderColor(Color.WHITE)
+                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                            .setOval(true);
+
+                    holder.DriverImage.setImageDrawable(drawable);
+
+                }
+            } catch (Exception e) {
+                //TODO LOG_TAG is from main activity, nedd
+                Log.e(LOG_TAG, e.getMessage());
             }
-        } catch (Exception e) {
-            //TODO LOG_TAG is from main activity, nedd
-            Log.e(LOG_TAG, e.getMessage());
+
         }
+
+
 
         if( ride.getCreated() != null ) {
             DateFormat df = new SimpleDateFormat("MM.dd.yy");

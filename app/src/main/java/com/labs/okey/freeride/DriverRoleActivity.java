@@ -1796,6 +1796,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     public  void sendAppeal(){
+        mCurrentRide.setApproved(Globals.RIDE_STATUS.APPEAL.ordinal());
         new wamsAddAppeal(DriverRoleActivity.this,
                             getUser().getFullName(),
                             "appeals",

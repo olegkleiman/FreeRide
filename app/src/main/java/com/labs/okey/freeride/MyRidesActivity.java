@@ -14,7 +14,6 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.labs.okey.freeride.adapters.MyRideTabAdapter;
-import com.labs.okey.freeride.model.Appeal;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.wamsUtils;
@@ -34,7 +33,6 @@ public class MyRidesActivity extends BaseActivity
 
     MyRideTabAdapter mTabAdapter;
     private String titles[];
-    List<Appeal> mAppeals;
     List<Ride> mRides;
     ViewPager mViewPager;
     SlidingTabLayout slidingTabLayout;
@@ -66,10 +64,9 @@ public class MyRidesActivity extends BaseActivity
 
         //TODO the array is empty, please implement with cache table
         mRides = new ArrayList<Ride>();
-        mAppeals = new ArrayList<Appeal>();
 
         mTabAdapter= new MyRideTabAdapter(getSupportFragmentManager(),
-                titles, mRides, mAppeals);
+                titles, mRides);
         mViewPager.setAdapter(mTabAdapter);
 
         slidingTabLayout.setViewPager(mViewPager);
@@ -102,7 +99,7 @@ public class MyRidesActivity extends BaseActivity
                 if (myRidesProgressRefresh.getVisibility() == View.VISIBLE) {
                     myRidesProgressRefresh.setVisibility(View.GONE);
                 }
-                mTabAdapter.updateRides(mRides, mAppeals);
+                mTabAdapter.updateRides(mRides);
             }
 
             @Override
@@ -127,13 +124,6 @@ public class MyRidesActivity extends BaseActivity
 
                     final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQueryRides).get();
 
-                    MobileServiceTable<Appeal> appealsTable = getMobileServiceClient()
-                            .getTable("appeal", Appeal.class);
-
-                    final MobileServiceList<Appeal> appealsList =
-                            appealsTable.where().field("driverid").eq(Globals.userID).execute().get();
-
-                    mAppeals = appealsList;
                     mRides = ridesList;
 
                     Globals.f_update_required = false;

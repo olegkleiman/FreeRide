@@ -12,7 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.labs.okey.freeride.R;
-import com.labs.okey.freeride.model.Appeal;
+import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
@@ -29,12 +29,12 @@ import java.util.List;
 
 public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHolder> {
 
-    private List<Appeal> items;
+    private List<Ride> items;
     IRecyclerClickListener mClickListener;
     Context context;
     private static final String LOG_TAG = "FR.MyAppealAdapter";
 
-    public MyAppealAdapter(List<Appeal> objects) {
+    public MyAppealAdapter(List<Ride> objects) {
         items = objects;
     }
 
@@ -58,9 +58,17 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
 
-        Appeal appeal = items.get(position);
+        Ride ride = items.get(position);
 
+        int approveStatus = ride.getApproved();
 
+        if( approveStatus == Globals.RIDE_STATUS.APPEAL.ordinal()) {
+            holder.ApprovedSing.setImageResource(R.drawable.gavel);
+        } else if( approveStatus == Globals.RIDE_STATUS.DENIED.ordinal()){
+            holder.ApprovedSing.setImageResource(R.drawable.ex_sing_26);
+        }
+
+        holder.driverName.setVisibility(View.GONE);
         try {
             User user = User.load(context);
 
@@ -79,7 +87,7 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
                         .setOval(true);
 
                 holder.DriverImage.setImageDrawable(drawable);
-                holder.driverName.setText(user.getFirstName() + user.getLastName());
+                //holder.driverName.setText(user.getFirstName() + user.getLastName());
 
             }
         } catch (Exception e) {
@@ -88,9 +96,12 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
 
 
 
+        if( ride.getCreated() != null ) {
+            DateFormat df = new SimpleDateFormat("MM.dd.yy");
+            holder.created.setText(df.format(ride.getCreated()));
+        }
 
-        DateFormat df = new SimpleDateFormat("MM.dd.yy");
-        holder.created.setText(df.format(appeal.getCreatedAt()));
+
 
     }
 
@@ -105,6 +116,7 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
         ImageView DriverImage;
         TextView driverName;
         TextView created;
+        ImageView ApprovedSing;
         LayoutRipple rowLayout;
 
         IRecyclerClickListener mClickListener;
@@ -116,8 +128,9 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
             mClickListener = clickListener;
             DriverImage = (ImageView) itemView.findViewById(R.id.imageDriver);
             driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
+            ApprovedSing = (ImageView) itemView.findViewById(R.id.ApprovedSing);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
-            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myAppealRaw);
+            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myAppealRow);
 
             rowLayout.setOnClickListener(this);
         }

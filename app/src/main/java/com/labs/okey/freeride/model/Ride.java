@@ -109,7 +109,7 @@ public class Ride implements Serializable, Parcelable {
         setDriverName( in.readString() );
         setCarNumber( in.readString() );
         setRideCode( in.readString() );
-        //setApproved(in.readInt());
+        setApproved(in.readInt());
         isPictureRequired  = in.readByte() != 0;
         setGFenceName( in.readString() );
     }
@@ -132,12 +132,12 @@ public class Ride implements Serializable, Parcelable {
         parcel.writeString(getDriverName());
         parcel.writeString(getCarNumber());
         parcel.writeString(getRideCode());
-        //parcel.writeInt(getApproved());
+        parcel.writeInt(getApproved());
         parcel.writeByte((byte) (isPictureRequired() ? 1: 0) );
         parcel.writeString(getGFenceName());
     }
 
-    public static final Parcelable.Creator<Ride> CREATOR = new Parcelable.Creator<Ride>() {
+    public static final Creator<Ride> CREATOR = new Creator<Ride>() {
         public Ride createFromParcel(Parcel in) {
             return new Ride(in);
         }

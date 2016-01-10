@@ -43,7 +43,9 @@ public class Globals {
         WAIT, // = 0
         APPROVED, // = 1
         APPROVED_BY_SELFY, // = 2
-        DENIED // = 3
+        DENIED, // = 3
+        APPEAL // = 4
+
     }; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
 
     public enum LayoutManagerType {
@@ -189,6 +191,7 @@ public class Globals {
 
     static final public int SERVER_PORT = 4545;
     static final public int SOCKET_TIMEOUT = 5000;
+    public static final String TXTRECORD_PROP_AVAILABLE = "available";
     public static final String TXTRECORD_PROP_USERID = "userid";
     public static final String TXTRECORD_PROP_USERNAME = "username";
     public static final String TXTRECORD_PROP_RIDECODE = "ridecode";

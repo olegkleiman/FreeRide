@@ -8,6 +8,9 @@
     android:fitsSystemWindows="true"
     tools:context="com.maximum.fastride.MyRidesActivity" >
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -22,6 +25,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <ProgressBar
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/myrides_progress_refresh"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone"/>
+
         <android.support.v4.view.ViewPager
             android:id="@+id/viewpager"
             android:layout_width="match_parent"
@@ -29,17 +40,19 @@
             android:layout_weight="1"
             android:background="@android:color/white" />
 
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/myrides_progress_refresh"
-            android:layout_gravity="center_horizontal"
-            android:visibility="gone" />
+
+
 
     </LinearLayout>
+
+
+    </RelativeLayout>
 
     <!-- The navigation drawer -->
     <include
         layout="@layout/nav_drawer" />
+
+
+
 
 </android.support.v4.widget.DrawerLayout>
