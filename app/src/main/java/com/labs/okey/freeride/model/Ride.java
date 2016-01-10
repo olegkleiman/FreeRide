@@ -18,6 +18,7 @@ public class Ride implements Serializable, Parcelable {
     public Ride(){
         driverName = "";
         isPictureRequired = false;
+        approved = 0;
     }
 
     @Expose
