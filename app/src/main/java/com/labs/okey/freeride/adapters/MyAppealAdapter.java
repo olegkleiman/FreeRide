@@ -22,6 +22,7 @@ import com.labs.okey.freeride.views.LayoutRipple;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
+
 /**
  * Created by eli max on 01/11/2015.
  */
@@ -49,7 +50,7 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
 
         View v = LayoutInflater
                 .from(parent.getContext())
-                .inflate(R.layout.rides_appeal_item, parent, false);
+                .inflate(R.layout.rides_general_item, parent, false);
 
         return new ViewHolder(v, mClickListener);
 
@@ -130,7 +131,7 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
             driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
             ApprovedSing = (ImageView) itemView.findViewById(R.id.ApprovedSing);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
-            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myAppealRow);
+            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myRideRow);
 
             rowLayout.setOnClickListener(this);
         }

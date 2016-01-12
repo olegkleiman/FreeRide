@@ -26,6 +26,8 @@ import java.util.List;
 /**
  * Created by eli max on 22/06/2015.
  */
+
+
 public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHolder> {
 
     private List<Ride> items;
@@ -64,13 +66,14 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
         {
             holder.driverName.setText(ride.getDriverName());
             holder.ApprovedSing.setVisibility(View.GONE);
-            holder.SteeringWheel.setVisibility(View.GONE);
+            //holder.SteeringWheel.setVisibility(View.GONE);
         }
-        else {
+        else
+        {
 
             holder.driverName.setVisibility(View.GONE);
             //TODO I hide the SteeringWheel
-            holder.SteeringWheel.setVisibility(View.GONE);
+            //holder.SteeringWheel.setVisibility(View.GONE);
 
             int approveStatus = ride.getApproved();
 
@@ -131,7 +134,7 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
         ImageView DriverImage;
         ImageView ApprovedSing;
-        ImageView SteeringWheel;
+        //ImageView SteeringWheel;
         TextView driverName;
         TextView carNumber;
         TextView created;
@@ -146,10 +149,10 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
             mClickListener = clickListener;
             DriverImage = (ImageView) itemView.findViewById(R.id.imageDriver);
             ApprovedSing = (ImageView) itemView.findViewById(R.id.ApprovedSing);
-            SteeringWheel = (ImageView) itemView.findViewById(R.id.SteeringWheel);
+            //SteeringWheel = (ImageView) itemView.findViewById(R.id.SteeringWheel);
             driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
-            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myRideRaw);
+            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myRideRow);
 
             rowLayout.setOnClickListener(this);
         }
