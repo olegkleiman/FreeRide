@@ -115,6 +115,13 @@ public class MainActivity extends BaseActivity
         // Setup up Crashlytics as app monitor
         Globals.initializeMonitor(this);
 
+//        // Initialize the FB SDK before executing any other operations,
+//        // especially, if you're using Facebook UI elements.
+//        FacebookSdk.sdkInitialize(getApplicationContext());
+//        AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
+
+//        if( fbAccessToken == null || fbAccessToken.isExpired() ) {
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
         if( userRegistrationId.isEmpty() ) {
@@ -132,7 +139,7 @@ public class MainActivity extends BaseActivity
                                                      GCMHandler.class);
 
             String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
-            String accessTokenSecret = sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
+            String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
 
             // Don't mess with BaseActivity.wamsInit();
             wamsInit(accessToken, accessTokenSecret);
