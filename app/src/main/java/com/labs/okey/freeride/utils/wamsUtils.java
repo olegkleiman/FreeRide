@@ -3,6 +3,7 @@ package com.labs.okey.freeride.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -10,6 +11,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.mobileservices.http.NextServiceFilterCallback;
@@ -21,9 +24,13 @@ import com.microsoft.windowsazure.mobileservices.table.sync.localstore.ColumnDat
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.MobileServiceLocalStoreException;
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.SQLiteLocalStore;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -113,21 +120,87 @@ public class wamsUtils {
             String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
             if( userID.isEmpty() )
                 return false;
-            String token = sharedPrefs.getString(Globals.WAMSTOKENPREF, "");
-            if( token.isEmpty() )
+            String jwtToken = sharedPrefs.getString(Globals.WAMSTOKENPREF, "");
+            if( jwtToken.isEmpty() )
+                return false;
+
+            // Check if the token was expired
+            if( isJWTTokenExpired(jwtToken) )
                 return false;
 
             MobileServiceUser wamsUser = new MobileServiceUser(userID);
-            wamsUser.setAuthenticationToken(token);
+            wamsUser.setAuthenticationToken(jwtToken);
             wamsClient.setCurrentUser(wamsUser);
 
             return true;
         } catch(Exception ex) {
 
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(ex);
+
             Log.e(LOG_TAG, ex.getMessage());
 
             return false;
         }
+    }
+
+    static public boolean isJWTTokenExpired(String jwtToken) throws Exception{
+        StringTokenizer jwtTokens = new StringTokenizer(jwtToken, ".");
+
+        // JWT (http://self-issued.info/docs/draft-ietf-oauth-json-web-token-25.html) is a concatenation of
+        // 1) a JSON Object Signing and Encryption (JOSE) header,
+        // 2) a JWT claim set,
+        // 3) and a signature over the two.
+        // Totally, it must contain exactly 3 tokens
+        if( jwtTokens.countTokens() != 3 )
+            return false;
+
+        jwtTokens.nextToken(); // skip JOSE header
+        String jwtClaims = jwtTokens.nextToken(); // find JWT claims
+
+        // JWT claims is converted to base64 and made URL friendly by decoding
+
+        // Undo the URL encoding
+        jwtClaims = jwtClaims.replace("-", "+");
+        jwtClaims = jwtClaims.replace("_", "/");
+
+        switch ( jwtClaims.length() % 4 ) {
+            case 0:
+                break;
+
+            case 2:
+                jwtClaims += "==";
+                break;
+
+            case 3:
+                jwtClaims += "=";
+                break;
+
+            default:
+                Log.e(LOG_TAG, "JWT token is invalid");
+                return false;
+
+        }
+
+        // decode base64 & extract expiration date
+        try {
+            byte[] jwtData = Base64.decode(jwtClaims, Base64.DEFAULT);
+            String jsonString = new String(jwtData, "UTF-8");
+            JsonObject jsonObj = (new JsonParser()).parse(jsonString).getAsJsonObject();
+            String exp = jsonObj.get("exp").getAsString();
+            // 'exp' in JWT represents the number of seconds since Jan 1, 1970 UTC
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(Long.parseLong(exp) * 1000);
+            Date expiryDate = calendar.getTime();
+            if( expiryDate.before(new Date()) )
+                return false;
+
+        } catch(UnsupportedEncodingException ex) {
+            throw new Exception(ex);
+        }
+
+        return true;
+
     }
 
     static public MobileServiceClient init(Context context) throws MalformedURLException {

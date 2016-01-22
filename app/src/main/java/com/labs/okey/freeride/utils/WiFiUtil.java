@@ -312,7 +312,8 @@ public class WiFiUtil
                     deviceUser.setUserId(advRide.getUserId());
                     deviceUser.setRideCode(advRide.getRideCode());
 
-                    mPeersChangedListener.add(deviceUser);
+                    if( mPeersChangedListener != null )
+                        mPeersChangedListener.add(deviceUser);
                 }
             }
         } else {
@@ -330,7 +331,7 @@ public class WiFiUtil
                                           WifiP2pDevice device) {
         Log.d(LOG_TAG, "onDnsSdTxtRecordAvailable() called");
 
-        String traceMessage = "DNS-SD TXT Records: " + device.deviceName;
+        String traceMessage = "DNS-SD TXT Record: " + device.deviceName;
         String userId = record.get(Globals.TXTRECORD_PROP_USERID);
         traceMessage += "\nUser Id: " + userId;
         String userName = record.get(Globals.TXTRECORD_PROP_USERNAME);
