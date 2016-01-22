@@ -24,7 +24,7 @@
         android:layout_alignEnd="@+id/register_form"
         android:visibility="visible">
 
-        <com.facebook.widget.LoginButton
+        <com.facebook.login.widget.LoginButton
             android:id="@+id/loginButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

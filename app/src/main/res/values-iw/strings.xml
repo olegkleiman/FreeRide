@@ -76,7 +76,7 @@
     <string name="prompt_use_phone">אפשר להציג מספר זה למשתמשים אחרים</string>
     <string name="edit_car_dialog_caption2">בחר\י את רכב הנוסע</string>
     <string name="edit_car_dialog_text">טרם בחרת את הרכבים </string>
-    <string name="registration_add_status">רושם את הנתונים שלך</string>
+    <string name="registration_add_status">מאמת את הנתונים שלך</string>
     <string name="registration_add_title">רישום מתבצע</string>
     <string name="registration_add_status_wait">נשאר רק כמה שניות</string>
     <string name="download_geofences">אתחול הגדרות המיקום</string>

@@ -78,7 +78,7 @@
     <string name="add_car_nick">Название</string>
     <string name="prompt_use_phone">Показывать этот номер другим пользователям</string>
     <string name="edit_car_dialog_text">Не указаны машины, на которых осуществляются поездки.</string>
-    <string name="registration_add_status">Ваши данные регистрируются</string>
+    <string name="registration_add_status">Ваши данные проверяются</string>
     <string name="registration_add_title">Выполняется регистрация</string>
     <string name="registration_add_status_wait">Подождите несколько секунд</string>
     <string name="download_geofences">Инициализация</string>
