@@ -376,7 +376,7 @@ public class Globals {
     // and zeros elsewhere.
     public static Matrix4f verificationMat = new Matrix4f();
 
-    public static int PASSENGER_DISCOVERY_PERIOD = 30;
+    public static int PASSENGER_DISCOVERY_PERIOD = 10;
     public static int PASSENGER_ADVERTISING_PERIOD = 40;
     public static int DRIVER_DISCOVERY_PERIOD = 20;
 

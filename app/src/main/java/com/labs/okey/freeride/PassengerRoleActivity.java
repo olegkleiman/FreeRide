@@ -2,11 +2,6 @@ package com.labs.okey.freeride;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -60,10 +55,13 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
+import com.facebook.AccessToken;
+import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
-import com.labs.okey.freeride.utils.BLEUtil;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.GroupOwnerSocketHandler;
@@ -73,7 +71,9 @@ import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
-import com.labs.okey.freeride.utils.WiFiUtil;
+import com.labs.okey.freeride.utils.wifip2p.IConversation;
+import com.labs.okey.freeride.utils.wifip2p.P2pConversator;
+import com.labs.okey.freeride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
@@ -81,11 +81,16 @@ import junit.framework.Assert;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -94,9 +99,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         Handler.Callback,
         IRecyclerClickListener,
         IRefreshable,
-        WiFiUtil.IPeersChangedListener,
-        BLEUtil.IDeviceDiscoveredListener,
         WifiP2pManager.ConnectionInfoListener,
+        P2pConversator.IPeersChangedListener,
         WAMSVersionTable.IVersionMismatchListener,
         IInitializeNotifier, // used for geo-fence initialization
         android.location.LocationListener
@@ -114,7 +118,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     MobileServiceTable<Join>            joinsTable;
 
-    WiFiUtil                            mWiFiUtil;
+    private P2pPreparer                 mP2pPreparer;
+    private P2pConversator              mP2pConversator;
+
     WiFiPeersAdapter2                   mDriversAdapter;
     public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
 
@@ -135,6 +141,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_passenger);
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
@@ -147,8 +155,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mUserID = sharedPrefs.getString(Globals.USERIDPREF, "");
-
-        mWiFiUtil = new WiFiUtil(this);
 
         if( savedInstanceState != null ) {
 
@@ -252,18 +258,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         }
 
-        if( mWiFiUtil != null)
-            mWiFiUtil.registerReceiver(this);
     }
 
     @Override
     @CallSuper
     public void onPause() {
-        if( mWiFiUtil != null ) {
-            mWiFiUtil.unregisterReceiver();
-            mWiFiUtil.stopDiscovery();
-        }
-
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
 
@@ -279,8 +278,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     protected void onStop() {
-        if( mWiFiUtil != null )
-            mWiFiUtil.removeGroup();
 
         // Ride Code will be re-newed on next activity's launch
         mRideCode = null;
@@ -946,25 +943,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }.execute();
     }
 
-    private void startAdvertise() {
-
-        TextView txtCaption = (TextView) findViewById(R.id.drivers_caption);
-        if( txtCaption != null )
-            txtCaption.setText("Now adverising");
-
-        mWiFiUtil.startRegistrationAndDiscovery(this,
-                getUser().getRegistrationId(),
-                getUser().getFullName(),
-                // provide empty rideCode to distinguish
-                // this broadcast from the driver's one
-                "",
-                getHandler(),
-                1000);
-
-        mTextSwitcher.setText(getString(R.string.passenger_adv_description));
-    }
-
-
     //
     // Implementation of IRefreshable
     //
@@ -982,16 +960,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         if( progress_refresh != null )
             progress_refresh.setVisibility(View.VISIBLE);
 
-        mWiFiUtil.stopDiscovery();
-
-        mWiFiUtil.startRegistrationAndDiscovery(this,
+        startAdvertise(this,
                 getUser().getRegistrationId(),
-                getUser().getFullName(),
-                // provide empty rideCode to distinguish
-                // this broadcast from the driver's one
-                "",
-                getHandler(),
-                1000);
+                ""); // empty ride code!
 
         getHandler().postDelayed(
                 new Runnable() {
@@ -1058,6 +1029,34 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     }
 
+    private void startAdvertise(final P2pConversator.IPeersChangedListener peersListener,
+                                final String userID,
+                                final String rideCode) {
+
+        mP2pPreparer = new P2pPreparer(this);
+        mP2pPreparer.prepare(new P2pPreparer.P2pPreparerListener() {
+            @Override
+            public void prepared() {
+                Map<String, String> record = new HashMap<>();
+                record.put(Globals.TXTRECORD_PROP_PORT, "4545");
+                if (!rideCode.isEmpty())
+                    record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
+                record.put(Globals.TXTRECORD_PROP_USERID, userID);
+
+                mP2pConversator = new P2pConversator(PassengerRoleActivity.this,
+                        (IConversation) mP2pPreparer,
+                        getHandler());
+                mP2pConversator.startConversation(record, peersListener);
+
+            }
+
+            @Override
+            public void interrupted() {
+
+            }
+        });
+    }
+
     @Override
     public boolean handleMessage(Message msg) {
         String strMessage;
@@ -1107,23 +1106,74 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     // Implementations of WifiUtil.IPeersChangedListener
     //
     @Override
-    public void add(final WifiP2pDeviceUser device) {
+    public void addDeviceUser(final WifiP2pDeviceUser device) {
 
         if( device.getRideCode() == null )
             return;
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDriversAdapter.add(device);
-                mDriversAdapter.notifyDataSetChanged();
+        String remoteUserID = device.getUserId();
+        if( remoteUserID == null || remoteUserID.isEmpty() ) {
+            // remote user id was not transmitted
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mDriversAdapter.add(device);
+                    mDriversAdapter.notifyDataSetChanged();
+                }
+            });
+        } else {
 
-                // remove 'type code' menu item
-                mDriversShown = true;
-                invalidateOptionsMenu();
-            }
-        });
+            String[] tokens = remoteUserID.split(":");
+            Assert.assertTrue(tokens.length == 2);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mDriversAdapter.add(device);
+                    mDriversAdapter.notifyDataSetChanged();
+
+                    // remove 'type code' menu item
+                    mDriversShown = true;
+                }
+            });
+
+            AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
+            GraphRequest request = GraphRequest.newGraphPathRequest(
+                    fbAccessToken,
+                    tokens[1],
+                    new GraphRequest.Callback() {
+                        @Override
+                        public void onCompleted(GraphResponse response) {
+
+                            try {
+
+                                JSONObject object = response.getJSONObject();
+                                if (response.getError() == null) {
+                                    String userName = (String) object.get("name");
+                                    device.setUserName(userName);
+
+                                    mDriversAdapter.replaceItem(device);
+                                    mDriversAdapter.notifyDataSetChanged();
+                                } else {
+                                    if( Crashlytics.getInstance() != null )
+                                        Crashlytics.log(response.getError().getErrorMessage());
+
+                                    Log.e(LOG_TAG, response.getError().getErrorMessage());
+                                }
+
+                            } catch (JSONException e) {
+                                Log.e(LOG_TAG, e.getLocalizedMessage());
+                            }
+                        }
+                    });
+
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "id,name");
+            request.setParameters(parameters);
+            request.executeAsync();
+        }
     }
+
 
     //
     // Implementation of WifiP2pManager.ConnectionInfoListener
@@ -1168,63 +1218,5 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
 
     }
-
-    //
-    // Implementation of BLEUtil.IDeviceDiscoveredListener
-    //
-    @Override
-    public void discovered(final BluetoothDevice device) {
-        String deviceName = device.getName();
-        String deviceAddress = device.getAddress();
-        int state = device.getBondState(); // != BluetoothDevice.BOND_BONDED)
-
-        checkAndConnect(device);
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void checkAndConnect(BluetoothDevice device) {
-        if( device.getType() == BluetoothDevice.DEVICE_TYPE_LE ) {
-            device.connectGatt(this, true, new BluetoothGattCallback() {
-                @Override
-                public void onConnectionStateChange(BluetoothGatt gatt,
-                                                    int status,
-                                                    int newState) {
-                    super.onConnectionStateChange(gatt, status, newState);
-
-                    String intentAction;
-                    if (newState == BluetoothProfile.STATE_CONNECTED) {
-                        Log.i(LOG_TAG, "Connected to GATT server.");
-                        Log.i(LOG_TAG, "Attempting to start service discovery:" +
-                                gatt.discoverServices());
-                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        Log.i(LOG_TAG, "Disconnected from GATT server.");
-                    }
-                }
-
-                @Override
-                // New services discovered
-                public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        Log.d(LOG_TAG, "GATT_SUCCESS");
-                    } else {
-                        Log.d(LOG_TAG, "onServicesDiscovered received: " + status);
-                    }
-                }
-
-                @Override
-                // Result of a characteristic read operation
-                public void onCharacteristicRead(BluetoothGatt gatt,
-                                                 BluetoothGattCharacteristic characteristic,
-                                                 int status) {
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        Log.d(LOG_TAG, "GATT_SUCCESS");
-                    }
-
-                }
-            });
-        }
-    }
-
-
 
 }

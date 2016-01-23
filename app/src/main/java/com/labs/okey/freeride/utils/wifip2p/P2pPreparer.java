@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
  */
 public class P2pPreparer implements IConversation {
 
-    interface P2pPreparerListener {
+    public interface P2pPreparerListener {
         void prepared();
         void interrupted();
 
