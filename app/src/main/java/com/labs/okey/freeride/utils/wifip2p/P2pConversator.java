@@ -198,7 +198,7 @@ public class P2pConversator
                         stopDiscovery();
 
                         if( mHandler != null ) {
-                            Message message = Message.obtain(null, 111);
+                            Message message = Message.obtain(null, Globals.MESSAGE_DISCOVERY_FAILED);
                             Bundle data = new Bundle();
                             data.putString("error", msg);
                             message.setData(data);
@@ -363,7 +363,7 @@ public class P2pConversator
             mHandler.sendMessage(message);
         }
 
-        AdvertisedRide advRide = new AdvertisedRide(userId, "Anonym", rideCode);
+        AdvertisedRide advRide = new AdvertisedRide(userId, "No name", rideCode);
         mBuddies.put(wifiP2pDevice.deviceName, advRide);
      }
 

@@ -267,7 +267,7 @@ public class Globals {
 
     // Driver/passenger 'chat' messages
     public static final int MESSAGE_READ = 0x400 + 1;
-    public static final int MY_HANDLE = 0x400 + 2;
+    public static final int MESSAGE_DISCOVERY_FAILED = 0x400 + 2;
     public static final int TRACE_MESSAGE = 0x400 + 3;
 
     // Geofences

@@ -786,7 +786,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mP2pConversator = new P2pConversator(DriverRoleActivity.this,
                                                     (IConversation)mP2pPreparer,
                                                     getHandler());
-                mP2pConversator.startConversation(record, peersListener);
+                mP2pConversator.startConversation(record,
+                        null); // This param is null because Driver is not interested in peers findings
+                //peersListener);
 
             }
 
@@ -854,6 +856,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     public void onPause() {
+
+        if( mP2pPreparer != null ) {
+
+            mP2pPreparer.restore(new Runnable() {
+                @Override
+                public void run() {
+                    mP2pConversator.stopConversation();
+                }
+            });
+        }
+
         try {
             stopLocationUpdates(this);
         } catch (SecurityException sex) {
@@ -1920,7 +1933,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     //
-    // Implementations of WifiUtil.IPeersChangedListener
+    // Implementations of P2pConversator.IPeersChangedListener
     //
     @Override
     public void addDeviceUser(final WifiP2pDeviceUser device) {

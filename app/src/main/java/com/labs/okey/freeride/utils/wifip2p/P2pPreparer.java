@@ -60,31 +60,6 @@ public class P2pPreparer implements IConversation {
 
             }
 
-
-//            if (intent.hasExtra(WifiManager.EXTRA_NEW_STATE)) {
-//                SupplicantState state = intent.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
-//                Log.i(LOG_TAG, "" + state);
-//
-////                NetworkInfo.DetailedState detailedState = WifiInfo.getDetailedStateOf(state);
-////                Log.i(LOG_TAG, "" + detailedState);
-//
-//                WifiInfo wifiInfo = mWiFiManager.getConnectionInfo();
-//                wifiInfo.
-//
-//                if( state == SupplicantState.COMPLETED) {
-//                    if( mRestoreRunnable != null ) {
-//
-//                        //mActivity.unregisterReceiver(mBroadcastReceiver);
-//
-//                        mRestoreRunnable.run();
-//                    }
-//                }
-////                NetworkInfo.DetailedState detailedState = WifiInfo.getDetailedStateOf(state);
-////                if( state == SupplicantState.COMPLETED ) {
-////                    Log.i(LOG_TAG, "Supplicant completed");
-////                    prepareInternal();
-////                }
-//            }
         }
     }
 
@@ -163,40 +138,6 @@ public class P2pPreparer implements IConversation {
         if( mListener != null)
             mListener.prepared();
 
-//
-//        deletePersistentGroups();
-//
-//        WifiInfo wifiInfo =  mWiFiManager.getConnectionInfo();
-//        SupplicantState supplicantState = wifiInfo.getSupplicantState();
-//
-//        mWiFiManager.disconnect(); // disassociate from the currently active access point
-//
-//        if( mLogger != null )
-//            mLogger.i("Disconnected from " + wifiInfo.getSSID());
-//
-//        mNetworkID = wifiInfo.getNetworkId();
-//        mWiFiManager.disableNetwork(mNetworkID); // analogue to 'forget' network:
-//
-////        if( supplicantState == SupplicantState.COMPLETED) {
-////
-////            mWiFiManager.disconnect(); // disassociate from the currently active access point
-////
-////            if( mLogger != null )
-////                mLogger.i("Disconnected from " + wifiInfo.getSSID());
-////
-////            mNetworkID = wifiInfo.getNetworkId();
-////            mWiFiManager.disableNetwork(mNetworkID); // analogue to 'forget' network:
-////            // Prevents the wpa_supplicant's attempts to
-////            // associate this network for further
-////        } else {
-////            if( mLogger != null ) {
-////                int nRssi = wifiInfo.getRssi();
-////                mLogger.i("Active Wi-Fi Network: " + wifiInfo.toString());
-////            }
-////        }
-//
-//        if( mListener != null)
-//            mListener.prepared();
     }
 
     public void prepare(P2pPreparerListener listener) {
@@ -205,42 +146,6 @@ public class P2pPreparer implements IConversation {
 
         prepareInternal();
 
-//        mListener = listener;
-//
-//        ConnectivityManager connManager = (ConnectivityManager)
-//                mActivity.getSystemService(Context.CONNECTIVITY_SERVICE);
-//        NetworkInfo info = connManager.getActiveNetworkInfo();
-//
-//        if( info != null
-//            && info.getType() == ConnectivityManager.TYPE_MOBILE
-//            && info.isConnected() ) {
-//
-//            // if connected through mobile, just make it sure Wi-Fi is turned on
-//            if( !mWiFiManager.isWifiEnabled() ) {
-//                mWiFiManager.setWifiEnabled(true); // prepareInternal() be called on Intent with
-//                                                   // COMPLETED supplicant state
-//
-//                mActivity.registerReceiver(mBroadcastReceiver,
-//                        new IntentFilter(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION));
-//
-//            } else {
-//               if (mListener != null)
-//                    mListener.prepared();
-//            }
-//            return;
-//        }
-//
-//        // Connected through WiFi
-//        if( mWiFiManager.isWifiEnabled() ) {
-//            prepareInternal();
-//        } else {
-//            mWiFiManager.setWifiEnabled(true); // prepareInternal() be called on Intent with
-//                                               // COMPLETED supplicant state
-//
-//            mActivity.registerReceiver(mBroadcastReceiver,
-//                    new IntentFilter(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION));
-//
-//        }
     }
 
     private void deletePersistentGroups() {
@@ -263,6 +168,5 @@ public class P2pPreparer implements IConversation {
             Log.e(LOG_TAG, e.getMessage());
         }
     }
-
 
 }

@@ -121,6 +121,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private P2pPreparer                 mP2pPreparer;
     private P2pConversator              mP2pConversator;
 
+    MaterialDialog                      mSearchDriverDialog;
+    CountDownTimer                      mSearDriverCountDownTimer;
+
     WiFiPeersAdapter2                   mDriversAdapter;
     public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
 
@@ -263,6 +266,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     public void onPause() {
+
+        stopAdvertise();
+
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
 
@@ -960,6 +966,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         if( progress_refresh != null )
             progress_refresh.setVisibility(View.VISIBLE);
 
+        stopAdvertise();
+
         startAdvertise(this,
                 getUser().getRegistrationId(),
                 ""); // empty ride code!
@@ -977,49 +985,59 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 Globals.PASSENGER_DISCOVERY_PERIOD * 1000);
 
         try {
-            boolean showMinMax = true;
-            final MaterialDialog dialog = new MaterialDialog.Builder(this)
-                    .title(R.string.passenger_progress_dialog)
-                    .content(R.string.please_wait)
-                    .iconRes(R.drawable.ic_wait)
-                    .cancelable(false)
-                    .autoDismiss(false)
-                    .progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, showMinMax)
-                    .show();
 
-            new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
+            if( mSearchDriverDialog == null ) {
+                mSearchDriverDialog = new MaterialDialog.Builder(this)
+                        .title(R.string.passenger_progress_dialog)
+                        .content(R.string.please_wait)
+                        .iconRes(R.drawable.ic_wait)
+                        .cancelable(false)
+                        .autoDismiss(false)
+                        .progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
+                        .show();
+            } else {
+                mSearchDriverDialog.show();
+            }
 
-                public void onTick(long millisUntilFinished) {
+            if( mSearDriverCountDownTimer == null ) {
 
-                    Log.d(LOG_TAG,
-                            String.format("CountDown tick. Remains %d Drivers size: %d",
+                mSearDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
+
+                    public void onTick(long millisUntilFinished) {
+
+                        Log.d(LOG_TAG,
+                                String.format("CountDown tick. Remains %d Drivers size: %d",
                                         millisUntilFinished, mDrivers.size()));
 
 
-                    if (mDrivers.size() == 0)
-                        dialog.incrementProgress(1);
-                    else {
-                        this.cancel();
-                        dialog.dismiss();
-                        Log.d(LOG_TAG, "Cancelling timer");
+                        if (mDrivers.size() == 0)
+                            mSearchDriverDialog.incrementProgress(1);
+                        else {
+                            this.cancel();
+                            mSearchDriverDialog.dismiss();
+                            Log.d(LOG_TAG, "Cancelling timer");
+                        }
                     }
-                }
 
-                public void onFinish() {
-                    if (mDrivers.size() == 0)
-                        showRideCodePane(R.string.ride_code_dialog_content,
-                                Color.BLACK);
+                    public void onFinish() {
+                        if (mDrivers.size() == 0)
+                            showRideCodePane(R.string.ride_code_dialog_content,
+                                    Color.BLACK);
 
-                    try {
-                        dialog.dismiss();
-                    } catch(IllegalArgumentException ex) {
-                        // Safely dismiss when called due to
-                        // 'Not attached to window manager'.
-                        // In this case the activity just was passed by
-                        // to some other activity
+                        try {
+                            mSearchDriverDialog.dismiss();
+                        } catch (IllegalArgumentException ex) {
+                            // Safely dismiss when called due to
+                            // 'Not attached to window manager'.
+                            // In this case the activity just was passed by
+                            // to some other activity
+                        }
                     }
-                }
-            }.start();
+                };
+            }
+
+            mSearDriverCountDownTimer.start();
+
         } catch( Exception ex) {
             if( Crashlytics.getInstance() != null )
                 Crashlytics.logException(ex);
@@ -1057,6 +1075,18 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         });
     }
 
+    private void stopAdvertise() {
+        if( mP2pPreparer != null ) {
+            mP2pPreparer.restore(new Runnable() {
+                @Override
+                public void run() {
+                    if( mP2pConversator != null)
+                        mP2pConversator.stopConversation();
+                }
+            });
+        }
+    }
+
     @Override
     public boolean handleMessage(Message msg) {
         String strMessage;
@@ -1072,6 +1102,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 byte[] buffer = (byte[] )msg.obj;
                 strMessage = new String(buffer);
                 trace(strMessage);
+                break;
+
+            case Globals.MESSAGE_DISCOVERY_FAILED:
+                if( mSearchDriverDialog != null && mSearchDriverDialog.isShowing()) {
+                    mSearchDriverDialog.dismiss();
+                    mSearDriverCountDownTimer.cancel();
+
+                    showRideCodePane(R.string.ride_code_wrong,
+                                     Color.RED);
+                }
                 break;
         }
 
@@ -1103,7 +1143,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     //
-    // Implementations of WifiUtil.IPeersChangedListener
+    // Implementations of P2pConversator.IPeersChangedListener
     //
     @Override
     public void addDeviceUser(final WifiP2pDeviceUser device) {
