@@ -21,7 +21,6 @@ import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 
-
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -157,6 +156,11 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
     public void add(WifiP2pDeviceUser device){
         if( !items.contains(device) )
             items.add(device);
+    }
+
+    public void replaceItem(WifiP2pDeviceUser device) {
+        items.remove(device);
+        items.add(device);
     }
 
     public void updateItem(WifiP2pDeviceUser device){
