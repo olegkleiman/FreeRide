@@ -24,15 +24,16 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.facebook.AppEventsLogger;
-import com.facebook.FacebookAuthorizationException;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.FacebookOperationCanceledException;
-import com.facebook.Session;
-import com.facebook.SessionState;
-import com.facebook.UiLifecycleHelper;
-import com.facebook.model.GraphUser;
-import com.facebook.widget.LoginButton;
+import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.Profile;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.labs.okey.freeride.fragments.ConfirmRegistrationFragment;
 import com.labs.okey.freeride.fragments.RegisterCarsFragment;
 import com.labs.okey.freeride.model.GeoFence;
@@ -44,6 +45,9 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -63,9 +67,8 @@ public class RegisterActivity extends FragmentActivity
 
     User                        mNewUser;
 
-    private UiLifecycleHelper   uiHelper;
+    private CallbackManager     mFBCallbackManager;
     private LoginButton         mFBLoginButton;
-    private GraphUser           fbUser;
 
 //    DigitsAuthButton        mDigitsButton;
 //    private AuthCallback    mDigitsAuthCallback;
@@ -75,15 +78,8 @@ public class RegisterActivity extends FragmentActivity
 //    TwitterLoginButton      mTwitterloginButton;
 
     String                  mAccessToken;
-    String                  mAcessTokenSecret;
+    String                  mAcessTokenSecret; // used by Twitter
     private boolean         mAddNewUser = true;
-
-    private Session.StatusCallback callback = new Session.StatusCallback() {
-        @Override
-        public void call(Session session, SessionState state, Exception exception) {
-            onSessionStateChange(session, state, exception);
-        }
-    };
 
     private AsyncTask<User, Void, Void> mCheckUsersTask = new AsyncTask<User, Void, Void>() {
 
@@ -188,10 +184,9 @@ public class RegisterActivity extends FragmentActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
 
-        uiHelper = new UiLifecycleHelper(this, callback);
-        uiHelper.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        setContentView(R.layout.activity_register);
 
         if (savedInstanceState != null) {
             String name = savedInstanceState.getString(PENDING_ACTION_BUNDLE_KEY);
@@ -271,100 +266,129 @@ public class RegisterActivity extends FragmentActivity
 //        });
 
         // FB stuff
+        mFBCallbackManager = CallbackManager.Factory.create();
+
         mFBLoginButton = (LoginButton) findViewById(R.id.loginButton);
         mFBLoginButton.setReadPermissions("email");
 
         final ContentResolver contentResolver = this.getContentResolver();
 
-        mFBLoginButton.setUserInfoChangedCallback(new LoginButton.UserInfoChangedCallback() {
+        // Callback registration
+        mFBLoginButton.registerCallback(mFBCallbackManager, new FacebookCallback<LoginResult>() {
             @Override
-            public void onUserInfoFetched(final GraphUser user) {
-                if (user != null) {
-                    RegisterActivity.this.fbUser = user;
+            public void onSuccess(LoginResult loginResult) {
 
-                    mNewUser = new User();
-                    mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + fbUser.getId());
-                    mNewUser.setFirstName(fbUser.getFirstName());
-                    mNewUser.setLastName(fbUser.getLastName());
-                    String pictureURL = "http://graph.facebook.com/" + fbUser.getId() + "/picture?width=100&height=100";
-                    mNewUser.setPictureURL(pictureURL);
-                    mNewUser.setEmail((String) fbUser.getProperty("email"));
+                mAccessToken = loginResult.getAccessToken().getToken();
 
-                    String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-                    mNewUser.setDeviceId(android_id);
-                    mNewUser.setPlatform(Globals.PLATFORM);
+                final Profile profile = Profile.getCurrentProfile();
 
-                    new AsyncTask<Void, Void, Void>() {
+                mNewUser = new User();
+                mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + profile.getId());
 
-                        Exception mEx;
-                        ProgressDialog progress;
+                mNewUser.setFirstName(profile.getFirstName());
+                mNewUser.setLastName(profile.getLastName());
+                String pictureURL = "http://graph.facebook.com/" + profile.getId() + "/picture?width=100&height=100";
+                mNewUser.setPictureURL(pictureURL);
 
-                        @Override
-                        protected void onPreExecute() {
+                String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+                mNewUser.setDeviceId(android_id);
+                mNewUser.setPlatform(Globals.PLATFORM);
 
-                            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-                            if (loginLayout != null)
-                                loginLayout.setVisibility(View.GONE);
+                GraphRequest request = GraphRequest.newMeRequest(
+                        loginResult.getAccessToken(),
+                        new GraphRequest.GraphJSONObjectCallback() {
+                            @Override
+                            public void onCompleted(
+                                    JSONObject object,
+                                    GraphResponse response) {
 
-                            progress = ProgressDialog.show(RegisterActivity.this,
-                                    getString(R.string.registration_add_status),
-                                    getString(R.string.registration_add_status_wait));
-                        }
+                                try {
+                                    JSONObject gUser = response.getJSONObject();
+                                    String email = gUser.getString("email");
+                                    mNewUser.setEmail(email);
 
-                        @Override
-                        protected void onPostExecute(Void result) {
-                            progress.dismiss();
+                                    new AsyncTask<Void, Void, Void>() {
 
-                            if (mEx == null)
-                                showRegistrationForm();
+                                        Exception mEx;
+                                        ProgressDialog progress;
 
-                        }
+                                        @Override
+                                        protected void onPreExecute() {
 
-                        @Override
-                        protected Void doInBackground(Void... params) {
+                                            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+                                            if (loginLayout != null)
+                                                loginLayout.setVisibility(View.GONE);
 
-                            String regID = Globals.FB_PROVIDER_FOR_STORE + user.getId();
-                            try {
+                                            progress = ProgressDialog.show(RegisterActivity.this,
+                                                    getString(R.string.registration_add_status),
+                                                    getString(R.string.registration_add_status_wait));
+                                        }
 
-                                saveProviderAccessToken(Globals.FB_PROVIDER);
+                                        @Override
+                                        protected void onPostExecute(Void result) {
+                                            progress.dismiss();
 
-                                MobileServiceList<User> _users =
-                                        usersTable.where().field("registration_id").eq(regID)
-                                                .execute().get();
+                                            if (mEx == null)
+                                                showRegistrationForm();
 
-                                if( _users.size() >= 1 ) {
-                                    User _user = _users.get(0);
+                                        }
 
-                                    if( _user.compare(mNewUser)  )
-                                        mAddNewUser = false;
+                                        @Override
+                                        protected Void doInBackground(Void... params) {
+
+                                            String regID = Globals.FB_PROVIDER_FOR_STORE + profile.getId();
+                                            try {
+
+                                                saveProviderAccessToken(Globals.FB_PROVIDER);
+
+                                                MobileServiceList<User> _users =
+                                                        usersTable.where().field("registration_id").eq(regID)
+                                                                .execute().get();
+
+                                                if (_users.size() >= 1) {
+                                                    User _user = _users.get(0);
+
+                                                    if (_user.compare(mNewUser))
+                                                        mAddNewUser = false;
+                                                }
+
+                                            } catch (InterruptedException | ExecutionException ex) {
+                                                mEx = ex;
+                                                Log.e(LOG_TAG, ex.getMessage());
+                                            }
+
+                                            return null;
+                                        }
+                                    }.execute();
+
+                                } catch (JSONException ex) {
+                                    Log.e(LOG_TAG, ex.getLocalizedMessage());
                                 }
 
-                            } catch (InterruptedException | ExecutionException ex) {
-                                mEx = ex;
-                                Log.e(LOG_TAG, ex.getMessage());
                             }
+                        });
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "id,name,email");
+                request.setParameters(parameters);
+                request.executeAsync();
 
-                            return null;
-                        }
-                    }.execute();
-
-                }
             }
-        });
-
-        mFBLoginButton.setOnErrorListener(new LoginButton.OnErrorListener() {
 
             @Override
-            public void onError(FacebookException error) {
+            public void onCancel() {
+                // App code
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
                 String msg = getResources().getString(R.string.fb_error_msg)
-                        + error.getMessage().trim();
+                        + exception.getMessage().trim();
 
                 new AlertDialog.Builder(RegisterActivity.this)
                         .setTitle(getResources().getString(R.string.fb_error))
                         .setMessage(msg)
                         .setPositiveButton("OK", null)
                         .show();
-
             }
         });
 
@@ -383,7 +407,7 @@ public class RegisterActivity extends FragmentActivity
     @Override
     public void onResume() {
         super.onResume();
-        uiHelper.onResume();
+//        uiHelper.onResume();
 
         // Call the 'activateApp' method to log an app event for use in analytics and advertising reporting.  Do so in
         // the onResume methods of the primary Activities that an app may be launched into.
@@ -394,26 +418,23 @@ public class RegisterActivity extends FragmentActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        uiHelper.onActivityResult(requestCode, resultCode, data);
+        mFBCallbackManager.onActivityResult(requestCode, resultCode, data);
         //mTwitterloginButton.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        uiHelper.onPause();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        uiHelper.onDestroy();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        uiHelper.onSaveInstanceState(outState);
     }
 
     private void saveProviderAccessToken(String provider) {
@@ -431,19 +452,6 @@ public class RegisterActivity extends FragmentActivity
 
     private void handlePendingAction() {
         pendingAction = PendingAction.NONE;
-    }
-
-    private void onSessionStateChange(Session session, SessionState state, Exception exception) {
-        if (pendingAction != PendingAction.NONE &&
-                (exception instanceof FacebookOperationCanceledException ||
-                        exception instanceof FacebookAuthorizationException)) {
-            pendingAction = PendingAction.NONE;
-        } else if (state == SessionState.OPENED_TOKEN_UPDATED) {
-            handlePendingAction();
-        } else if( state == SessionState.OPENED ) {
-            mAccessToken = session.getAccessToken();
-        }
-
     }
 
     private void showRegistrationForm() {

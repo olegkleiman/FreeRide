@@ -267,7 +267,7 @@ public class Globals {
 
     // Driver/passenger 'chat' messages
     public static final int MESSAGE_READ = 0x400 + 1;
-    public static final int MY_HANDLE = 0x400 + 2;
+    public static final int MESSAGE_DISCOVERY_FAILED = 0x400 + 2;
     public static final int TRACE_MESSAGE = 0x400 + 3;
 
     // Geofences
@@ -376,7 +376,7 @@ public class Globals {
     // and zeros elsewhere.
     public static Matrix4f verificationMat = new Matrix4f();
 
-    public static int PASSENGER_DISCOVERY_PERIOD = 30;
+    public static int PASSENGER_DISCOVERY_PERIOD = 10;
     public static int PASSENGER_ADVERTISING_PERIOD = 40;
     public static int DRIVER_DISCOVERY_PERIOD = 20;
 

@@ -48,6 +48,23 @@
                     android:layout_width="match_parent"
                     android:scrollbars="vertical"/>
 
+                <!--<com.github.glomadrian.loadingballs.BallView-->
+                    <!--android:id="@+id/wait_search_driver"-->
+                    <!--android:layout_width="100dp"-->
+                    <!--android:layout_height="100dp"-->
+                    <!--android:visibility="gone"-->
+                    <!--app:balls="5"-->
+                    <!--app:movement_cycle_time="1200"-->
+                    <!--app:enable_size_animation="true"-->
+                    <!--app:size_cycle_time="500"-->
+                    <!--app:min_ball_size="5dp"-->
+                    <!--app:max_ball_size="12dp"-->
+                    <!--app:ball_colors="@array/colors"-->
+                    <!--app:path="circle"-->
+                    <!--android:layout_gravity="center"-->
+                    <!--android:layout_marginTop="128dp"-->
+                    <!--android:layout_alignParentTop="true"-->
+                    <!--android:layout_centerHorizontal="true" />-->
 
                 <FrameLayout
                     android:layout_width="wrap_content"

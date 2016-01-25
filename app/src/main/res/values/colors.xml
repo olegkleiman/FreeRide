@@ -6,8 +6,10 @@
     <color name="black">#000</color>
     <color name="gray">#ffb9b9b9</color>
     <color name="green">#4CAF50</color>
+    <color name="yellow">#FFD91C</color>
     <color name="light_gray">#ddd</color>
     <color name="red">#bf360c</color>
+
     <color name="ripple_red">#ffbf5232</color>
 
     <!-- Blue palette. 500 -->

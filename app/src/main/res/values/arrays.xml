@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="ball1">@color/ColorPrimaryDark</color>
+  <color name="ball2">@color/ColorAccent</color>
+  <color name="ball3">@color/yellow</color>
+
+  <integer-array name="colors">
+    <item>@color/ball1</item>
+    <item>@color/ball2</item>
+    <item>@color/ball3</item>
+  </integer-array>
+</resources>

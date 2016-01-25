@@ -82,6 +82,9 @@ import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.labs.okey.freeride.utils.faceapiUtils;
 import com.labs.okey.freeride.utils.wamsAddAppeal;
+import com.labs.okey.freeride.utils.wifip2p.IConversation;
+import com.labs.okey.freeride.utils.wifip2p.P2pConversator;
+import com.labs.okey.freeride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
@@ -120,6 +123,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         WiFiUtil.IPeersChangedListener,
         WifiP2pManager.PeerListListener,
         WifiP2pManager.ConnectionInfoListener,
+        P2pConversator.IPeersChangedListener,
         WAMSVersionTable.IVersionMismatchListener,
         IUploader,
         IInitializeNotifier, // used for geo-fence initialization
@@ -128,14 +132,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private static final String                 LOG_TAG = "FR.Driver";
 
-    PassengersAdapter                           mPassengersAdapter;
+    private PassengersAdapter                   mPassengersAdapter;
     SwipeableRecyclerViewTouchListener          mSwipeTouchListener;
     private ArrayList<User>                     mPassengers = new ArrayList<>();
     private int                                 mLastPassengersLength;
 
     private ArrayList<Integer>                  mCapturedPassengersIDs = new ArrayList<>();
 
-    WiFiUtil                                    mWiFiUtil;
+    private P2pPreparer                         mP2pPreparer;
+    private P2pConversator                      mP2pConversator;
 
     TextSwitcher                                mTextSwitcher;
     RecyclerView                                mPeersRecyclerView;
@@ -152,8 +157,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private MobileServiceTable<Ride>            mRidesTable;
     private String                              mRideCode;
 
-    ScheduledExecutorService                    mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
-    ScheduledFuture<?>                          mCheckPassengerTimerResult;
+    private ScheduledExecutorService            mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?>                  mCheckPassengerTimerResult;
 
     private AtomicBoolean                       mRideCodeUploaded = new AtomicBoolean(false);
 
@@ -359,12 +364,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 setupNetwork();
             }
         }
-
-        if( mWiFiUtil == null ) {
-            mWiFiUtil = new WiFiUtil(this);
-        }
-
-        mWiFiUtil.deletePersistentGroups();
 
     }
 
@@ -770,21 +769,34 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    private void startAdvertise(String userID,
-                                String userName,
-                                String rideCode) {
+    private void startAdvertise(final P2pConversator.IPeersChangedListener peersListener,
+                                final String userID,
+                                final String rideCode) {
 
-        if( mWiFiUtil == null )
-            mWiFiUtil = new WiFiUtil(this);
+        mP2pPreparer = new P2pPreparer(this);
+        mP2pPreparer.prepare(new P2pPreparer.P2pPreparerListener() {
+            @Override
+            public void prepared() {
+                Map<String, String> record = new HashMap<>();
+                record.put(Globals.TXTRECORD_PROP_PORT, "4545");
+                if( !rideCode.isEmpty() )
+                    record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
+                record.put(Globals.TXTRECORD_PROP_USERID, userID);
 
-        // This will publish the service in DNS-SD and start serviceDiscovery()
-        mWiFiUtil.startRegistrationAndDiscovery(this,
-                userID,
-                userName,
-                rideCode,
-                getHandler(),
-                500);
+                mP2pConversator = new P2pConversator(DriverRoleActivity.this,
+                                                    (IConversation)mP2pPreparer,
+                                                    getHandler());
+                mP2pConversator.startConversation(record,
+                        null); // This param is null because Driver is not interested in peers findings
+                //peersListener);
 
+            }
+
+            @Override
+            public void interrupted() {
+
+            }
+        });
     }
 
     @Override
@@ -839,17 +851,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Log.e(LOG_TAG, ex.getMessage());
         }
 
-        if( mWiFiUtil != null )
-            mWiFiUtil.registerReceiver(this);
     }
 
     @Override
     @CallSuper
     public void onPause() {
 
-        if( mWiFiUtil != null) {
-            mWiFiUtil.unregisterReceiver();
-            mWiFiUtil.stopDiscovery();
+        if( mP2pPreparer != null ) {
+
+            mP2pPreparer.restore(new Runnable() {
+                @Override
+                public void run() {
+                    mP2pConversator.stopConversation();
+                }
+            });
         }
 
         try {
@@ -864,8 +879,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     protected void onStop() {
-        if( mWiFiUtil != null )
-            mWiFiUtil.removeGroup();
 
         super.onStop();
     }
@@ -1172,8 +1185,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
         animationDrawable.start();
 
-        startAdvertise(getUser().getRegistrationId(),
-                        getUser().getFullName(),
+        startAdvertise(this,
+                        getUser().getRegistrationId(),
                         mRideCode);
 
         getHandler().postDelayed(mEnableCabinPictureButtonRunnable,
@@ -1602,9 +1615,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
         String rideCode = txtRideCode.getText().toString();
 
-        startAdvertise(getUser().getRegistrationId(),
-                getUser().getFullName(),
-                rideCode);
+        startAdvertise(this,
+                        getUser().getRegistrationId(),
+                        rideCode);
 
         getHandler().postDelayed(
                 new Runnable() {
@@ -1844,8 +1857,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public void onConnectionInfoAvailable(WifiP2pInfo p2pInfo) {
         Thread handler;
 
-        mWiFiUtil.requestPeers(this);
-
          /*
          * The group owner accepts connections using a server socket and then spawns a
          * client socket for every client. This is handled by {@code
@@ -1918,6 +1929,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             View v = findViewById(R.id.drawer_layout);
             Snackbar.make(v, ex.getMessage(), Snackbar.LENGTH_LONG);
         }
+
+    }
+
+    //
+    // Implementations of P2pConversator.IPeersChangedListener
+    //
+    @Override
+    public void addDeviceUser(final WifiP2pDeviceUser device) {
 
     }
 

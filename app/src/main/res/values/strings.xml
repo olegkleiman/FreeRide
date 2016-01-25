@@ -33,7 +33,7 @@
     <string name="error_field_required">This field is required</string>
     <string name="action_register">Register</string>
     <string name="registration_add_title">Performing registration</string>
-    <string name="registration_add_status">Accessing your account</string>
+    <string name="registration_add_status">Verifying your account</string>
     <string name="registration_add_status_wait">Just few seconds</string>
     <string name="default_value">no value</string>
 
@@ -76,6 +76,7 @@
     <string name="ride_code_title">Type in Ride Code</string>
     <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>
     <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
+    <string name="discovery_failure" translatable="false">Discovery failure</string>
     <string name="ride_same_ids">Same identity for driver and passenger is prohibited</string>
     <string name="connection_lost">The connection lost. Please try again in a few seconds</string>
     <string name="ride_code_hint">6 digits without dashes</string>
@@ -116,6 +117,7 @@
 
     <string name="edit_car_button_title">Edit</string>
     <string name="edit_car_button_title2">Specify</string>
+    <string name="driver_no_name">No name</string>
     <string name="offline">You are offline</string>
     <string name="offline_prompt">Connect your device to the network</string>
     <string name="edit_car_dialog_caption1">Choose a riding car</string>
