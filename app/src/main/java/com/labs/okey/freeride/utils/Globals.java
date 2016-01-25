@@ -397,6 +397,8 @@ public class Globals {
     public static String PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN = "submit_button_shown";
     public static String PARCELABLE_KEY_PASSENGER_PREFIX = "thumb_";
     public static String PARCELABLE_KEY_APPEAL_DIALOG_SHOWN = "appeak_shown";
+    public static String PARCELABLE_KEY_RIDES_HISTORY = "rides_history";
+
 
     public static String TWITTER_CONSUMER_KEY = "jxvXE5xHG84JvuI4bLJApTzYb";
     public static String TWITTER_CONSUMER_SECRET = "EzJlpFBvSkeaoPA28wJT9sHvEnxAEpvKDOLTImwM0Jk9wLsnQK";

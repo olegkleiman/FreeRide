@@ -3,10 +3,12 @@ package com.labs.okey.freeride;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,12 +17,19 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.labs.okey.freeride.adapters.AboutTabAdapter;
+import com.labs.okey.freeride.adapters.MyRideTabAdapter;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
+import com.labs.okey.freeride.views.SlidingTabLayout;
 
 public class AboutActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener{
 
     private static final String LOG_TAG = "FR.About";
+    AboutTabAdapter mTabAdapter;
+    private String titles[];
+    ViewPager mViewPager;
+    SlidingTabLayout slidingTabLayout;
 
     @Override
     @CallSuper
@@ -41,6 +50,23 @@ public class AboutActivity extends BaseActivity
         } finally {
             setupUI(title, "");
         }
+
+        titles = getResources().getStringArray(R.array.about_titles);
+        mViewPager = (ViewPager) findViewById(R.id.viewpager);
+        slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
+
+        mTabAdapter= new AboutTabAdapter(getSupportFragmentManager(),
+                titles);
+        mViewPager.setAdapter(mTabAdapter);
+
+        slidingTabLayout.setViewPager(mViewPager);
+        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return Color.WHITE;
+            }
+        });
+
     }
 
 
