@@ -147,6 +147,7 @@ repositories {
     mavenCentral()
     maven { url "https://jitpack.io" }
     maven { url 'https://maven.fabric.io/public' }
+    maven { url "http://dl.bintray.com/glomadrian/maven" }
     flatDir {
         dirs 'aars'
     }
@@ -205,6 +206,6 @@ dependencies {
 //    }
 
     compile 'com.github.brnunes:swipeablerecyclerview:1.0.1'
-    //compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
+//    compile 'com.github.glomadrian:loadingballs:1.1@aar'
 }
 

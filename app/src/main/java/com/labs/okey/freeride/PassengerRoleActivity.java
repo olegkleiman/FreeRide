@@ -122,7 +122,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private P2pConversator              mP2pConversator;
 
     MaterialDialog                      mSearchDriverDialog;
-    CountDownTimer                      mSearDriverCountDownTimer;
+    CountDownTimer                      mSearchDriverCountDownTimer;
 
     WiFiPeersAdapter2                   mDriversAdapter;
     public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
@@ -986,36 +986,38 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         try {
 
-            if( mSearchDriverDialog == null ) {
-                mSearchDriverDialog = new MaterialDialog.Builder(this)
+//            final BallView waitView = (BallView)findViewById(R.id.wait_search_driver);
+//            waitView.setVisibility(View.VISIBLE);
+
+            mSearchDriverDialog = new MaterialDialog.Builder(this)
                         .title(R.string.passenger_progress_dialog)
                         .content(R.string.please_wait)
                         .iconRes(R.drawable.ic_wait)
                         .cancelable(false)
                         .autoDismiss(false)
-                        .progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
+                        //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
+                        .progress(true, 0)
                         .show();
-            } else {
-                mSearchDriverDialog.show();
-            }
 
-            if( mSearDriverCountDownTimer == null ) {
+            if( mSearchDriverCountDownTimer == null ) {
 
-                mSearDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
+                mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
 
                     public void onTick(long millisUntilFinished) {
 
                         Log.d(LOG_TAG,
-                                String.format("CountDown tick. Remains %d Drivers size: %d",
+                                String.format("CountDown tick. Remains %d sec. Drivers size: %d",
                                         millisUntilFinished, mDrivers.size()));
 
-
-                        if (mDrivers.size() == 0)
-                            mSearchDriverDialog.incrementProgress(1);
-                        else {
+                        if (mDrivers.size() != 0) {
                             this.cancel();
+                            //waitView.setVisibility(View.GONE);
                             mSearchDriverDialog.dismiss();
+
                             Log.d(LOG_TAG, "Cancelling timer");
+                        } else {
+                            if( !mSearchDriverDialog.isIndeterminateProgress() )
+                                mSearchDriverDialog.incrementProgress(1);
                         }
                     }
 
@@ -1026,6 +1028,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         try {
                             mSearchDriverDialog.dismiss();
+                            //waitView.setVisibility(View.GONE);
                         } catch (IllegalArgumentException ex) {
                             // Safely dismiss when called due to
                             // 'Not attached to window manager'.
@@ -1036,7 +1039,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 };
             }
 
-            mSearDriverCountDownTimer.start();
+            mSearchDriverCountDownTimer.start();
 
         } catch( Exception ex) {
             if( Crashlytics.getInstance() != null )
@@ -1087,6 +1090,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    private Integer mCountDiscoveryFailures = 0;
+
     @Override
     public boolean handleMessage(Message msg) {
         String strMessage;
@@ -1107,10 +1112,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             case Globals.MESSAGE_DISCOVERY_FAILED:
                 if( mSearchDriverDialog != null && mSearchDriverDialog.isShowing()) {
                     mSearchDriverDialog.dismiss();
-                    mSearDriverCountDownTimer.cancel();
+                    mSearchDriverCountDownTimer.cancel();
 
-                    showRideCodePane(R.string.ride_code_wrong,
-                                     Color.RED);
+                    if( mCountDiscoveryFailures++ < 3 ) {
+                        mSearchDriverDialog = null;
+                        refresh();
+                    }
+                    else {
+                        mCountDiscoveryFailures = 0;
+                        showRideCodePane(R.string.discovery_failure,
+                                        Color.RED);
+                    }
                 }
                 break;
         }

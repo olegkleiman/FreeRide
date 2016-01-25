@@ -150,6 +150,7 @@
     <string name="try_again">נסה שנית</string>
     <string name="title_section_user">פרופיל משתמש</string>
     <string name="title_activity_ride_details">פרטי נסיעה</string>
+    <string name="driver_no_name">ללא שם</string>
 
 
 </resources>
