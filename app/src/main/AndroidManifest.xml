@@ -109,6 +109,7 @@
             android:label="@string/title_activity_tutorial" />
         <activity
             android:name=".MyRidesActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_my_rides" />
         <activity
             android:name=".RideDetailsActivity"
@@ -116,9 +117,6 @@
         <activity
             android:name=".AppealCameraActivity"
             android:label="@string/title_activity_camera_appeal" />
-        <activity
-            android:name=".AppealDetailsActivity"
-            android:label="" />
         <activity android:name=".GFActivity"/>
 
         <receiver
