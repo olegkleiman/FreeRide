@@ -11,10 +11,13 @@ import com.crashlytics.android.Crashlytics;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.microsoft.projectoxford.face.FaceServiceClient;
+import com.microsoft.projectoxford.face.FaceServiceRestClient;
 import com.microsoft.projectoxford.face.contract.VerifyResult;
-import com.microsoft.projectoxford.face.rest.RESTException;
+import com.microsoft.projectoxford.face.rest.ClientException;
 
 import net.steamcrafted.loadtoast.LoadToast;
+
+import java.io.IOException;
 
 /**
  * Created by Oleg Kleiman on 8/24/15.
@@ -67,7 +70,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
         if( mDepth < 2 )
             return null;
 
-        FaceServiceClient faceServiceClient = new FaceServiceClient(mContext.getString(R.string.oxford_subscription_key));
+        FaceServiceClient faceServiceClient = new FaceServiceRestClient(mContext.getString(R.string.oxford_subscription_key));
 
         try {
 
@@ -103,7 +106,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
                 }
 
             }
-        } catch(RESTException e) {
+        } catch(IOException | ClientException e) {
             if(Crashlytics.getInstance() != null )
                 Crashlytics.logException(e);
 

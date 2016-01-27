@@ -192,7 +192,8 @@ dependencies {
 
     compile 'net.steamcrafted:load-toast:1.0.9'
     compile project(':libraries:opencv')
-    compile project(':libraries:faceapilibrary')
+    //compile project(':libraries:faceapilibrary')
+    compile 'com.microsoft.projectoxford:face:1.0.0'
 
     // Twitter
 //    compile('com.twitter.sdk.android:twitter:1.10.0@aar') {

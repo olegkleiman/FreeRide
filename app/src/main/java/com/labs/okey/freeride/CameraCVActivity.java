@@ -32,7 +32,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
@@ -46,6 +45,7 @@ import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.projectoxford.face.FaceServiceClient;
+import com.microsoft.projectoxford.face.FaceServiceRestClient;
 import com.microsoft.projectoxford.face.contract.Face;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -707,17 +707,24 @@ public class CameraCVActivity extends Activity
                 mInputStream = params[0];
 
                 // Get an instance of face service client to detect faces in image.
-                FaceServiceClient faceServiceClient = new FaceServiceClient(getString(R.string.oxford_subscription_key));
+                FaceServiceClient faceServiceClient = new FaceServiceRestClient(getString(R.string.oxford_subscription_key));
 
                 // Start detection.
                 try {
 
                     Face[] faces = faceServiceClient.detect(
-                                                mInputStream,  /* Input stream of image to detect */
-                                                true,       /* Whether to analyzes facial landmarks */
-                                                false,       /* Whether to analyzes age */
-                                                false,       /* Whether to analyzes gender */
-                                                false);      /* Whether to analyzes head pose */
+                            mInputStream,  /* Input stream of image to detect */
+                            true,       /* Whether to return face ID */
+                            false,       /* Whether to return face landmarks */
+                             /* Which face attributes to analyze, currently we support:
+                            age,gender,headPose,smile,facialHair */
+                            new FaceServiceClient.FaceAttributeType[] {
+                                    FaceServiceClient.FaceAttributeType.Age,
+                                    FaceServiceClient.FaceAttributeType.Gender,
+                                    FaceServiceClient.FaceAttributeType.FacialHair,
+                                    FaceServiceClient.FaceAttributeType.Smile,
+                                    FaceServiceClient.FaceAttributeType.HeadPose
+                            });
 
                     // Upload face image to blog (may be redundant, used here primarily for tests)
                     if( faces.length > 0 ) {
