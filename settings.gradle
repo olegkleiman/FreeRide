@@ -1,3 +1,2 @@
-include ':app', ':libraries'
+include ':app'
 include ':libraries:opencv'
-include ':libraries:faceapilibrary'
