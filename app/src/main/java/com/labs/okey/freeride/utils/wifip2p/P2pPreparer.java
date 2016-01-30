@@ -25,7 +25,6 @@ public class P2pPreparer implements IConversation {
     public interface P2pPreparerListener {
         void prepared();
         void interrupted();
-
     }
 
     public class P2pPreparerReceiver extends BroadcastReceiver {
@@ -70,7 +69,8 @@ public class P2pPreparer implements IConversation {
     public boolean established() {
 
         try {
-            mActivity.unregisterReceiver(mBroadcastReceiver);
+            if( mNetworkID != -1 )
+                mActivity.unregisterReceiver(mBroadcastReceiver);
         } catch(Exception ex) {
             Log.e(LOG_TAG, ex.getLocalizedMessage());
         }
@@ -85,7 +85,7 @@ public class P2pPreparer implements IConversation {
         return false;
     }
 
-    public void restore(Runnable r) {
+    public void undo(Runnable r) {
 
         if( mNetworkID != -1 ) {
 
@@ -144,7 +144,39 @@ public class P2pPreparer implements IConversation {
 
         mListener = listener;
 
+//        deletePersistentGroups();
+//        setWiFiP2pChannel(4);
+
         prepareInternal();
+    }
+
+    private void setWiFiP2pChannel(final int channelNumber) {
+        WifiP2pManager wiFiP2pManager = (WifiP2pManager) mActivity.getSystemService(Context.WIFI_P2P_SERVICE);
+        WifiP2pManager.Channel channel = wiFiP2pManager.initialize(mActivity, mActivity.getMainLooper(), null);
+
+        try {
+
+            Method setWifiP2pChannels = wiFiP2pManager.getClass().getMethod("setWifiP2pChannels",
+                                                WifiP2pManager.Channel.class,
+                                                int.class,
+                                                int.class,
+                                                WifiP2pManager.ActionListener.class);
+
+            setWifiP2pChannels.invoke(wiFiP2pManager, channel, 0, channelNumber, new WifiP2pManager.ActionListener(){
+                @Override
+                public void onSuccess() {
+
+                    Log.d(LOG_TAG, "Changed channel (" + channelNumber + ") succeeded");
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    Log.d(LOG_TAG, "Changed channel (" + channelNumber + ")  failed");
+                }
+            });
+        } catch (Exception ex) {
+            Log.e(LOG_TAG, ex.getLocalizedMessage());
+        }
 
     }
 

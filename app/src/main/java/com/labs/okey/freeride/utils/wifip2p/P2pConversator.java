@@ -69,32 +69,35 @@ public class P2pConversator
 
         mChannel = mWiFiP2pManager.initialize(mActivity, mActivity.getMainLooper(), this);
         if (mChannel != null) {
-            mWiFiP2pManager.clearLocalServices(mChannel,
-                    new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
-                            String msg = "Local Service cleared";
-                            Log.i(LOG_TAG, msg);
 
-                            registerDnsSdService(record);
-                        }
+            registerDnsSdService(record);
 
-                        @Override
-                        public void onFailure(int reason) {
-                            String msg = "Failed to clear Local Service. Error: " +
-                                            failureReasonToString(reason);
-                            Log.e(LOG_TAG, msg);
-
-                            Message message = Message.obtain(null, 111);
-                            if( mHandler != null ) {
-
-                                Bundle data = new Bundle();
-                                data.putString("error", msg);
-                                message.setData(data);
-                                mHandler.sendMessage(message);
-                            }
-                        }
-                    });
+//            mWiFiP2pManager.clearLocalServices(mChannel,
+//                    new WifiP2pManager.ActionListener() {
+//                        @Override
+//                        public void onSuccess() {
+//                            String msg = "Local Service cleared";
+//                            Log.i(LOG_TAG, msg);
+//
+//                            registerDnsSdService(record);
+//                        }
+//
+//                        @Override
+//                        public void onFailure(int reason) {
+//                            String msg = "Failed to clear Local Service. Error: " +
+//                                    failureReasonToString(reason);
+//                            Log.e(LOG_TAG, msg);
+//
+//                            Message message = Message.obtain(null, 111);
+//                            if (mHandler != null) {
+//
+//                                Bundle data = new Bundle();
+//                                data.putString("error", msg);
+//                                message.setData(data);
+//                                mHandler.sendMessage(message);
+//                            }
+//                        }
+//                    });
         }
 
     }
@@ -111,7 +114,7 @@ public class P2pConversator
 
         if( mServiceInfo != null ) {
 
-                Log.i(LOG_TAG, "ServiceInfo created");
+            Log.d(LOG_TAG, "ServiceInfo created");
 
             mWiFiP2pManager.addLocalService(mChannel, mServiceInfo,
                     new WifiP2pManager.ActionListener() {
@@ -185,19 +188,19 @@ public class P2pConversator
                 new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                         Log.i(LOG_TAG, "Discovery started.");
+                        Log.i(LOG_TAG, "Discovery started.");
                     }
 
                     @Override
                     public void onFailure(int reason) {
 
                         String msg = "Discovery failed. Error: "
-                                    + failureReasonToString(reason);
+                                + failureReasonToString(reason);
                         Log.e(LOG_TAG, msg);
 
                         stopDiscovery();
 
-                        if( mHandler != null ) {
+                        if (mHandler != null) {
                             Message message = Message.obtain(null, Globals.MESSAGE_DISCOVERY_FAILED);
                             Bundle data = new Bundle();
                             data.putString("error", msg);
@@ -209,55 +212,32 @@ public class P2pConversator
                 });
     }
 
-    public void stopConversation() {
+    public void stopConversation(){
         stopDiscovery();
     }
 
     private void stopDiscovery(){
+
         if( mServiceRequest != null ) {
-            mWiFiP2pManager.removeLocalService(mChannel, mServiceInfo,
-                    new WifiP2pManager.ActionListener() {
-
-                        @Override
-                        public void onSuccess() {
-                            String msg = "LocalService removed";
-                            Log.i(LOG_TAG, msg);
-                        }
-
-                        @Override
-                        public void onFailure(int reason) {
-
-                            String msg = "Failed to remove LocalService. Error: "
-                                    + failureReasonToString(reason);
-                            Log.e(LOG_TAG, msg);
-
-                            if( mHandler != null ) {
-
-                                Message message = Message.obtain(null, 111);
-                                Bundle data = new Bundle();
-                                data.putString("error", msg);
-                                message.setData(data);
-                                mHandler.sendMessage(message);
-                            }
-                        }
-                    });
 
             mWiFiP2pManager.clearServiceRequests(mChannel,
                     new WifiP2pManager.ActionListener() {
                         @Override
                         public void onSuccess() {
                             String msg = "ServiceRequest cleared";
-                            Log.i(LOG_TAG, msg);
+                            Log.d(LOG_TAG, msg);
+
+                            clearLocalServices();
                         }
 
                         @Override
                         public void onFailure(int reason) {
 
                             String msg = "Failed to clear ServiceRequest. Error: "
-                                        + failureReasonToString(reason);
+                                    + failureReasonToString(reason);
                             Log.e(LOG_TAG, msg);
 
-                            if( mHandler != null ) {
+                            if (mHandler != null) {
                                 Message message = Message.obtain(null, 111);
                                 Bundle data = new Bundle();
                                 data.putString("error", msg);
@@ -265,13 +245,45 @@ public class P2pConversator
                                 mHandler.sendMessage(message);
                             }
                         }
+
                     });
         }
 
         if( mConversation != null )
             mConversation.established();
 
+    }
 
+    private void clearLocalServices() {
+        mWiFiP2pManager.clearLocalServices(mChannel,
+                new WifiP2pManager.ActionListener() {
+
+                    @Override
+                    public void onSuccess() {
+                        String msg = "LocalService removed";
+                        Log.d(LOG_TAG, msg);
+
+                    }
+
+                    @Override
+                    public void onFailure(int reason) {
+
+                        String msg = "Failed to remove LocalService. Error: "
+                                + failureReasonToString(reason);
+                        Log.e(LOG_TAG, msg);
+
+                        if (mHandler != null) {
+
+                            Message message = Message.obtain(null, 111);
+                            Bundle data = new Bundle();
+                            data.putString("error", msg);
+                            message.setData(data);
+                            mHandler.sendMessage(message);
+                        }
+
+                    }
+
+                });
     }
 
     //
