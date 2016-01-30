@@ -57,7 +57,7 @@ model {
             minSdkVersion.apiLevel = 16
             targetSdkVersion.apiLevel = 23
             versionCode = 4
-            versionName = "4.5.6"
+            versionName = "4.6"
             multiDexEnabled = true
         }
     }
@@ -166,13 +166,10 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.1.1'
 
     compile 'com.facebook.android:facebook-android-sdk:4.9.0'
-//    compile ('com.facebook.android:facebook-android-sdk:3.21.1') {
-//        exclude module: 'support-v4'
-//    }
 
     compile 'com.google.code.gson:gson:2.4'
     compile 'com.google.guava:guava:18.0'
-    //compile files('libs/mobileservices-2.0.3.jar')
+
     compile 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
     compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
 
@@ -180,8 +177,8 @@ dependencies {
 
     // See here: https://developers.google.com/android/guides/setup
     // for detailed discussion about setting up GMS
-    compile 'com.google.android.gms:play-services-location:7.5.0'
-    compile 'com.google.android.gms:play-services-gcm:7.5.0'
+    compile 'com.google.android.gms:play-services-location:8.4.0'
+    compile 'com.google.android.gms:play-services-gcm:8.4.0'
     compile('com.afollestad.material-dialogs:core:0.8.5.3@aar') {
         transitive = true
     }
@@ -192,7 +189,7 @@ dependencies {
 
     compile 'net.steamcrafted:load-toast:1.0.9'
     compile project(':libraries:opencv')
-    //compile project(':libraries:faceapilibrary')
+
     compile 'com.microsoft.projectoxford:face:1.0.0'
 
     // Twitter
