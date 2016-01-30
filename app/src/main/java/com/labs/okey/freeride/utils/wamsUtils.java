@@ -133,6 +133,7 @@ public class wamsUtils {
             wamsClient.setCurrentUser(wamsUser);
 
             return true;
+
         } catch(Exception ex) {
 
             if( Crashlytics.getInstance() != null)
@@ -192,14 +193,11 @@ public class wamsUtils {
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(Long.parseLong(exp) * 1000);
             Date expiryDate = calendar.getTime();
-            if( expiryDate.before(new Date()) )
-                return false;
+            return !expiryDate.before(new Date());
 
         } catch(UnsupportedEncodingException ex) {
             throw new Exception(ex);
         }
-
-        return true;
 
     }
 

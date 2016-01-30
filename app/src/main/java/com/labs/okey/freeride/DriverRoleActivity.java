@@ -778,7 +778,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             @Override
             public void prepared() {
                 Map<String, String> record = new HashMap<>();
-                record.put(Globals.TXTRECORD_PROP_PORT, "4545");
+                record.put(Globals.TXTRECORD_PROP_PORT, Globals.SERVER_PORT);
                 if( !rideCode.isEmpty() )
                     record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
                 record.put(Globals.TXTRECORD_PROP_USERID, userID);
@@ -788,7 +788,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                     getHandler());
                 mP2pConversator.startConversation(record,
                         null); // This param is null because Driver is not interested in peers findings
-                //peersListener);
 
             }
 
@@ -859,7 +858,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if( mP2pPreparer != null ) {
 
-            mP2pPreparer.restore(new Runnable() {
+            mP2pPreparer.undo(new Runnable() {
                 @Override
                 public void run() {
                     mP2pConversator.stopConversation();

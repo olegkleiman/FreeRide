@@ -51,6 +51,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
@@ -121,10 +122,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private P2pPreparer                 mP2pPreparer;
     private P2pConversator              mP2pConversator;
 
-    MaterialDialog                      mSearchDriverDialog;
-    CountDownTimer                      mSearchDriverCountDownTimer;
+    private MaterialDialog              mSearchDriverDialog;
+    private CountDownTimer              mSearchDriverCountDownTimer;
+    private Integer                     mCountDiscoveryFailures = 0;
+    private Integer                     mCountDiscoveryTrials = 1;
 
-    WiFiPeersAdapter2                   mDriversAdapter;
+    private WiFiPeersAdapter2           mDriversAdapter;
     public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
 
     private Handler handler = new Handler(this);
@@ -267,7 +270,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @CallSuper
     public void onPause() {
 
-        stopAdvertise();
+        try {
+            stopDiscovery(null);
+        } catch(Exception ex) {
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.log(ex.getLocalizedMessage());
+
+            Log.e(LOG_TAG, ex.getLocalizedMessage());
+        }
 
         Globals.clearMyPassengerIds();
         Globals.clearMyPassengers();
@@ -497,6 +507,92 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     @UiThread
+    private void showCountDownDialog() {
+        try {
+
+//            final BallView waitView = (BallView)findViewById(R.id.wait_search_driver);
+//            waitView.setVisibility(View.VISIBLE);
+
+            mSearchDriverDialog = new MaterialDialog.Builder(this)
+                    .title(R.string.passenger_progress_dialog)
+                    .content(R.string.please_wait)
+                    .iconRes(R.drawable.ic_wait)
+                    .cancelable(false)
+                    .autoDismiss(false)
+                            //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
+                    .progress(true, 0)
+                    .negativeText(R.string.cancel)
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                            showRideCodePane(R.string.ride_code_dialog_content,
+                                    Color.BLACK);
+                        }
+                    })
+                    .show();
+
+            if( mSearchDriverCountDownTimer == null ) {
+
+                mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
+
+                    public void onTick(long millisUntilFinished) {
+
+                        Log.d(LOG_TAG,
+                                String.format("CountDown tick. Remains %d sec. Drivers size: %d",
+                                        millisUntilFinished, mDrivers.size()));
+
+                        if (mDrivers.size() != 0) {
+                            this.cancel();
+                            //waitView.setVisibility(View.GONE);
+                            mSearchDriverDialog.dismiss();
+
+                            Log.d(LOG_TAG, "Cancelling timer");
+                        } else {
+                            if( !mSearchDriverDialog.isIndeterminateProgress() )
+                                mSearchDriverDialog.incrementProgress(1);
+                        }
+                    }
+
+                    public void onFinish() {
+
+                        try {
+                            mSearchDriverDialog.dismiss();
+                            //waitView.setVisibility(View.GONE);
+                        } catch (IllegalArgumentException ex) {
+                            // Safely dismiss when called due to
+                            // 'Not attached to window manager'.
+                            // In this case the activity just was passed by
+                            // to some other activity
+                        }
+
+                        if (mDrivers.size() == 0) {
+
+                            if( mCountDiscoveryTrials++ > Globals.MAX_DISCOVERY_TRIALS ) {
+                               showRideCodePane(R.string.ride_code_dialog_content,
+                                                Color.BLACK);
+                                mCountDiscoveryTrials = 1;
+                            } else {
+                                refresh();
+                            }
+                        }
+
+                    }
+                };
+            }
+
+            mSearchDriverCountDownTimer.start();
+
+        } catch( Exception ex) {
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.logException(ex);
+
+            Log.e(LOG_TAG, ex.getMessage());
+        }
+
+    }
+
+    @UiThread
     private void showRideCodePane(@StringRes int contentStringResId,
                                   @ColorInt int contentColor){
 
@@ -504,17 +600,18 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             String dialogContent = getString(contentStringResId);
 
             new MaterialDialog.Builder(this)
-                    .callback(new MaterialDialog.ButtonCallback() {
+                    .onNegative((new MaterialDialog.SingleButtonCallback() {
                         @Override
-                        public void onNegative(MaterialDialog dialog) {
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             refresh();
                         }
-
+                    }))
+                    .onNeutral((new MaterialDialog.SingleButtonCallback() {
                         @Override
-                        public void onNeutral(MaterialDialog dialog) {
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
 
                         }
-                    })
+                    }))
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
                     .positiveText(R.string.ok)
@@ -966,91 +1063,42 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         if( progress_refresh != null )
             progress_refresh.setVisibility(View.VISIBLE);
 
-        stopAdvertise();
-
-        startAdvertise(this,
-                getUser().getRegistrationId(),
-                ""); // empty ride code!
-
-        getHandler().postDelayed(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        if (btnRefresh != null)
-                            btnRefresh.setVisibility(View.VISIBLE);
-                        if (progress_refresh != null)
-                            progress_refresh.setVisibility(View.GONE);
-                    }
-                },
-                Globals.PASSENGER_DISCOVERY_PERIOD * 1000);
-
         try {
+            stopDiscovery(new Runnable() {
+                @Override
+                public void run(){
 
-//            final BallView waitView = (BallView)findViewById(R.id.wait_search_driver);
-//            waitView.setVisibility(View.VISIBLE);
+                    startDiscovery(PassengerRoleActivity.this,
+                                    getUser().getRegistrationId(),
+                                    ""); // empty ride code!
 
-            mSearchDriverDialog = new MaterialDialog.Builder(this)
-                        .title(R.string.passenger_progress_dialog)
-                        .content(R.string.please_wait)
-                        .iconRes(R.drawable.ic_wait)
-                        .cancelable(false)
-                        .autoDismiss(false)
-                        //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
-                        .progress(true, 0)
-                        .show();
+                    getHandler().postDelayed(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (btnRefresh != null)
+                                        btnRefresh.setVisibility(View.VISIBLE);
+                                    if (progress_refresh != null)
+                                        progress_refresh.setVisibility(View.GONE);
+                                }
+                            },
+                            Globals.PASSENGER_DISCOVERY_PERIOD * 1000);
 
-            if( mSearchDriverCountDownTimer == null ) {
+                    showCountDownDialog();
 
-                mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
+                }
+            });
 
-                    public void onTick(long millisUntilFinished) {
-
-                        Log.d(LOG_TAG,
-                                String.format("CountDown tick. Remains %d sec. Drivers size: %d",
-                                        millisUntilFinished, mDrivers.size()));
-
-                        if (mDrivers.size() != 0) {
-                            this.cancel();
-                            //waitView.setVisibility(View.GONE);
-                            mSearchDriverDialog.dismiss();
-
-                            Log.d(LOG_TAG, "Cancelling timer");
-                        } else {
-                            if( !mSearchDriverDialog.isIndeterminateProgress() )
-                                mSearchDriverDialog.incrementProgress(1);
-                        }
-                    }
-
-                    public void onFinish() {
-                        if (mDrivers.size() == 0)
-                            showRideCodePane(R.string.ride_code_dialog_content,
-                                    Color.BLACK);
-
-                        try {
-                            mSearchDriverDialog.dismiss();
-                            //waitView.setVisibility(View.GONE);
-                        } catch (IllegalArgumentException ex) {
-                            // Safely dismiss when called due to
-                            // 'Not attached to window manager'.
-                            // In this case the activity just was passed by
-                            // to some other activity
-                        }
-                    }
-                };
-            }
-
-            mSearchDriverCountDownTimer.start();
-
-        } catch( Exception ex) {
+        } catch(Exception ex) {
             if( Crashlytics.getInstance() != null )
-                Crashlytics.logException(ex);
+                Crashlytics.log(ex.getLocalizedMessage());
 
-            Log.e(LOG_TAG, ex.getMessage());
+            Log.e(LOG_TAG, ex.getLocalizedMessage());
         }
 
     }
 
-    private void startAdvertise(final P2pConversator.IPeersChangedListener peersListener,
+    private void startDiscovery(final P2pConversator.IPeersChangedListener peersListener,
                                 final String userID,
                                 final String rideCode) {
 
@@ -1059,14 +1107,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             @Override
             public void prepared() {
                 Map<String, String> record = new HashMap<>();
-                record.put(Globals.TXTRECORD_PROP_PORT, "4545");
+                record.put(Globals.TXTRECORD_PROP_PORT, Globals.SERVER_PORT);
                 if (!rideCode.isEmpty())
                     record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
                 record.put(Globals.TXTRECORD_PROP_USERID, userID);
 
                 mP2pConversator = new P2pConversator(PassengerRoleActivity.this,
-                        (IConversation) mP2pPreparer,
-                        getHandler());
+                                                    (IConversation) mP2pPreparer,
+                                                    getHandler());
                 mP2pConversator.startConversation(record, peersListener);
 
             }
@@ -1078,19 +1126,29 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         });
     }
 
-    private void stopAdvertise() {
-        if( mP2pPreparer != null ) {
-            mP2pPreparer.restore(new Runnable() {
-                @Override
-                public void run() {
-                    if( mP2pConversator != null)
-                        mP2pConversator.stopConversation();
-                }
-            });
+    private void stopDiscovery(final Runnable r) throws Exception{
+        if( mP2pPreparer == null && r != null) {
+            r.run();
+            return;
         }
-    }
 
-    private Integer mCountDiscoveryFailures = 0;
+        mP2pPreparer.undo(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (mP2pConversator != null) {
+                        mP2pConversator.stopConversation();
+                    }
+
+                    if( r != null )
+                        r.run();
+
+                } catch(Exception ex) {
+                    Log.e(LOG_TAG, ex.getLocalizedMessage());
+                }
+            }
+        });
+    }
 
     @Override
     public boolean handleMessage(Message msg) {
@@ -1114,7 +1172,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     mSearchDriverDialog.dismiss();
                     mSearchDriverCountDownTimer.cancel();
 
-                    if( mCountDiscoveryFailures++ < 3 ) {
+                    if( mCountDiscoveryFailures++ < Globals.MAX_ALLOWED_DISCOVERY_FAILURES ) {
                         mSearchDriverDialog = null;
                         refresh();
                     }

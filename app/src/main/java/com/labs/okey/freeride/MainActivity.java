@@ -488,9 +488,9 @@ public class MainActivity extends BaseActivity
                 }
 
                 final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
-                ListenableFuture<MobileServiceUser> mLogin =
+                ListenableFuture<MobileServiceUser> login =
                         wamsClient.login(tokenProvider, body);
-                Futures.addCallback(mLogin, new FutureCallback<MobileServiceUser>() {
+                Futures.addCallback(login, new FutureCallback<MobileServiceUser>() {
                     @Override
                     public void onSuccess(MobileServiceUser mobileServiceUser) {
                         cacheUserToken(mobileServiceUser);

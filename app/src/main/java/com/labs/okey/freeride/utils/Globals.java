@@ -189,9 +189,10 @@ public class Globals {
     static final public int LOCATION_PERMISSION_REQUEST = 1;
     static final public int CAMERA_PERMISSION_REQUEST = 2;
 
-    static final public int SERVER_PORT = 4545;
+    static final public int MAX_DISCOVERY_TRIALS = 3;
+    static final public Integer MAX_ALLOWED_DISCOVERY_FAILURES = 5;
+    static final public String SERVER_PORT = "4545";
     static final public int SOCKET_TIMEOUT = 5000;
-    public static final String TXTRECORD_PROP_AVAILABLE = "available";
     public static final String TXTRECORD_PROP_USERID = "userid";
     public static final String TXTRECORD_PROP_USERNAME = "username";
     public static final String TXTRECORD_PROP_RIDECODE = "ridecode";

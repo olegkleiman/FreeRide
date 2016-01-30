@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
 
-
 import com.labs.okey.freeride.utils.Globals;
 
 import java.io.BufferedReader;
@@ -25,7 +24,7 @@ public class TransferService extends IntentService {
     protected void onHandleIntent(Intent intent) {
 
         try {
-            ServerSocket serverSocket = new ServerSocket(Globals.SERVER_PORT);
+            ServerSocket serverSocket = new ServerSocket(Integer.parseInt(Globals.SERVER_PORT));
 
             String traceMessage = "Server: Socket opened on port " + Globals.SERVER_PORT;
             Log.d(LOG_TAG, traceMessage);

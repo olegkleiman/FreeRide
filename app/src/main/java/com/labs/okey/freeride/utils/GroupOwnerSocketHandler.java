@@ -21,7 +21,7 @@ public class GroupOwnerSocketHandler extends Thread{
     private static final String TAG = "GroupOwnerSocketHandler";
 
     public GroupOwnerSocketHandler(Handler handler) throws IOException {
-        socket = new ServerSocket(Globals.SERVER_PORT);
+        socket = new ServerSocket(Integer.parseInt(Globals.SERVER_PORT));
         this.handler = handler;
     }
 

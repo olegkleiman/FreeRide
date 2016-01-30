@@ -47,7 +47,7 @@ public class ClientSocketHandler extends Thread {
             mTracer.trace(traceMessage);
 
             socket.connect(new InetSocketAddress(mAddress.getHostAddress(),
-                                                Globals.SERVER_PORT), 5000);
+                                                Integer.parseInt(Globals.SERVER_PORT)), 5000);
 
             OutputStream os = socket.getOutputStream();
             os.write(mMessage.getBytes());

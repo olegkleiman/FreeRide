@@ -195,7 +195,7 @@ public class WiFiUtil
         record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
         if( rideCode != null && !rideCode.isEmpty())
             record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
-        record.put(Globals.TXTRECORD_PROP_PORT, Integer.toString(Globals.SERVER_PORT));
+        record.put(Globals.TXTRECORD_PROP_PORT, Globals.SERVER_PORT);
 
         // Service information for Bonjour.
         // Pass it an instance name, service type
@@ -484,7 +484,7 @@ public class WiFiUtil
 
                 socket.connect(
                         new InetSocketAddress(mGroupHostAddress.getHostAddress(),
-                                              Globals.SERVER_PORT),
+                                              Integer.parseInt(Globals.SERVER_PORT)),
                         Globals.SOCKET_TIMEOUT);
 
                 traceMessage = "Client socket connected";
@@ -537,7 +537,7 @@ public class WiFiUtil
 
             String traceMessage = "Server: Socket opened on port " + Globals.SERVER_PORT;
             try {
-                ServerSocket serverSocket = new ServerSocket(Globals.SERVER_PORT);
+                ServerSocket serverSocket = new ServerSocket(Integer.parseInt(Globals.SERVER_PORT));
 
                 Log.d(LOG_TAG, traceMessage);
                 ((ITrace)mContext).trace(traceMessage);
