@@ -1,2 +1,2 @@
 # FreeRide
-Android version of FastRide application for detecting passengers in the ride
+Android version of FastRide application for detecting passengers in the vehicle
