@@ -2,10 +2,13 @@ package com.labs.okey.freeride;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
@@ -25,6 +28,9 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.labs.okey.freeride.adapters.CarsAdapter;
 import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.RegisteredCar;
@@ -145,10 +151,10 @@ public class SettingsActivity extends BaseActivity
     private void displayUser() {
         mUser = getUser();
 
-        ImageView userPicture = (ImageView)findViewById(R.id.imageProfileView);
+
 
         Drawable drawable = null;
-        try {
+//        try {
 
             TextView txtView = (TextView)findViewById(R.id.textUserName);
             txtView.setText(String.format("%s %s", mUser.getFirstName(), mUser.getLastName()));
@@ -159,21 +165,120 @@ public class SettingsActivity extends BaseActivity
             txtView = (TextView)findViewById(R.id.textUserPhone);
             txtView.setText(mUser.getPhone());
 
-            drawable = (Globals.drawMan.userDrawable(this,
-                    "1",
-                    mUser.getPictureURL())).get();
-            drawable = RoundedDrawable.fromDrawable(drawable);
-            ((RoundedDrawable) drawable)
-                    .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                    .setBorderColor(Color.LTGRAY)
-                    .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                    .setOval(true);
+            ImageView providerLogoImageView = (ImageView) findViewById(R.id.provider_logo);
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            String provider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
+            int drawableLogoId = 0;
+            if( provider.equals(Globals.FB_PROVIDER)) {
+                drawableLogoId = R.drawable.facebook_logo;
+            } else if( provider.equals(Globals.MICROSOFT_PROVIDER)) {
+                drawableLogoId = R.drawable.microsoft_logo;
+            } else if( provider.equals(Globals.GOOGLE_PROVIDER)) {
+                drawableLogoId = R.drawable.googleplus_logo;
+            }
+            if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                providerLogoImageView.setImageDrawable(getResources()
+                                    .getDrawable(drawableLogoId,
+                                                getApplicationContext().getTheme()));
+            } else {
+                providerLogoImageView.setImageDrawable(getResources()
+                                    .getDrawable(drawableLogoId));
+            }
 
-            userPicture.setImageDrawable(drawable);
-        } catch(InterruptedException | ExecutionException ex) {
-            Log.e(LOG_TAG, ex.getMessage());
-        }
+            // Retrieves an image thru Volley
+//            com.android.volley.toolbox.ImageRequest request =
+//                    new com.android.volley.toolbox.ImageRequest(mUser.getPictureURL(),
+//                            new Response.Listener<Bitmap>() {
+//                                @Override
+//                                public void onResponse(Bitmap bitmap) {
+//                                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+//
+//                                    drawable = RoundedDrawable.fromDrawable(drawable);
+//                                    ((RoundedDrawable) drawable)
+//                                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+//                                            .setBorderColor(Color.WHITE)
+//                                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+//                                            .setOval(true);
+//
+//                                    userPicture.setImageDrawable(drawable);
+//                                }
+//                            }, 0, 0, null,
+//                            new Response.ErrorListener(){
+//                                public void onErrorResponse(VolleyError error){
+//                                    Toast.makeText(SettingsActivity.this,
+//                                            error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+//                                }
+//                            });
 
+            if( Globals.volley.getImageLoader().isCached(mUser.getPictureURL(), 100, 100) ) {
+                Globals.volley.getImageLoader().get(mUser.getPictureURL(),
+                        new ImageLoader.ImageListener(){
+
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Toast.makeText(SettingsActivity.this,
+                                        error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onResponse(ImageLoader.ImageContainer response,
+                                                   boolean isImmediate) {
+                                Bitmap bitmap = response.getBitmap();
+                                if( bitmap != null )
+                                    setUserPicture(bitmap);
+                            }
+                        });
+            } else {
+                com.android.volley.toolbox.ImageRequest request =
+                        new com.android.volley.toolbox.ImageRequest(mUser.getPictureURL(),
+                                new Response.Listener<Bitmap>() {
+                                    @Override
+                                    public void onResponse(Bitmap bitmap) {
+                                        setUserPicture(bitmap);
+                                    }
+                                }, 0, 0, null,
+                                new Response.ErrorListener(){
+                                    public void onErrorResponse(VolleyError error){
+                                        Toast.makeText(SettingsActivity.this,
+                                                error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
+                Globals.volley.addToRequestQueue(request);
+            }
+
+
+
+//            drawable = (Globals.drawMan.userDrawable(this,
+//                    "1",
+//                    mUser.getPictureURL())).get();
+//
+//            drawable = RoundedDrawable.fromDrawable(drawable);
+//            ((RoundedDrawable) drawable)
+//                    .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+//                    .setBorderColor(Color.LTGRAY)
+//                    .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+//                    .setOval(true);
+//
+//            userPicture.setImageDrawable(drawable);
+//        } catch(InterruptedException | ExecutionException ex) {
+//            Log.e(LOG_TAG, ex.getMessage());
+//        }
+
+    }
+
+    private void setUserPicture(Bitmap bitmap) {
+        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+
+        drawable = RoundedDrawable.fromDrawable(drawable);
+        ((RoundedDrawable) drawable)
+                .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                .setBorderColor(Color.WHITE)
+                .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                .setOval(true);
+
+        ImageView userPicture = (ImageView)findViewById(R.id.imageProfileView);
+        userPicture.setImageDrawable(drawable);
     }
 
     @Override

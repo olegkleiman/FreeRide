@@ -4,7 +4,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -16,15 +19,17 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
-import com.crashlytics.android.answers.CustomEvent;
 import com.crashlytics.android.answers.LoginEvent;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -50,6 +55,8 @@ import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTab
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import java.net.MalformedURLException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -71,8 +78,16 @@ public class MainActivity extends BaseActivity
             // Needed to detect HashCode for FB registration
             PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(),
                     PackageManager.GET_SIGNATURES);
+            Signature[] signs = packageInfo.signatures;
+            for (Signature signature : signs) {
+                MessageDigest md;
+                md = MessageDigest.getInstance("SHA");
+                md.update(signature.toByteArray());
+                String strSignature = new String(Base64.encode(md.digest(), 0));
+                Log.d(LOG_TAG, strSignature);
+            }
         }
-        catch (PackageManager.NameNotFoundException ex) {
+        catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ex) {
             Log.e(LOG_TAG, ex.toString());
         }
 
@@ -112,112 +127,102 @@ public class MainActivity extends BaseActivity
 
         setContentView(R.layout.activity_main);
 
-        // Setup up Crashlytics as app monitor
-        Globals.initializeMonitor(this);
-
-//        // Initialize the FB SDK before executing any other operations,
-//        // especially, if you're using Facebook UI elements.
-//        FacebookSdk.sdkInitialize(getApplicationContext());
-//        AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
-
-//        if( fbAccessToken == null || fbAccessToken.isExpired() ) {
-
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
-        if( userRegistrationId.isEmpty() ) {
+//        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
+//        if( userRegistrationId.isEmpty() ) {
+//
+//            Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
+//            startActivityForResult(intent, REGISTER_USER_REQUEST);
+//
+//            Answers.getInstance().logCustom(new CustomEvent(getString(R.string.registration_answer_name)));
+//
+//            // To be continued on onActivityResult()
+//
+//        } else {
 
-            Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
-            startActivityForResult(intent, REGISTER_USER_REQUEST);
+        NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
+                                                 GCMHandler.class);
 
-            Answers.getInstance().logCustom(new CustomEvent(getString(R.string.registration_answer_name)));
+        String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
+        String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
 
-            // To be continued on onActivityResult()
+        // Don't mess with BaseActivity.wamsInit();
+        wamsInit(accessToken, accessTokenSecret);
 
-        } else {
+        WAMSVersionTable wamsVersionTable = new WAMSVersionTable(this, this);
+        try {
 
-            NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
-                                                     GCMHandler.class);
+            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String packageVersionName = info.versionName;
+            if (!packageVersionName.isEmpty()) {
 
-            String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
-            String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
+                StringTokenizer tokens = new StringTokenizer(packageVersionName, ".");
+                if( tokens.countTokens() > 0 ) {
+                    int majorPackageVersion = Integer.parseInt(tokens.nextToken());
+                    int minorPackageVersion = Integer.parseInt(tokens.nextToken());
 
-            // Don't mess with BaseActivity.wamsInit();
-            wamsInit(accessToken, accessTokenSecret);
-
-            WAMSVersionTable wamsVersionTable = new WAMSVersionTable(this, this);
-            try {
-
-                PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
-                String packageVersionName = info.versionName;
-                if (!packageVersionName.isEmpty()) {
-
-                    StringTokenizer tokens = new StringTokenizer(packageVersionName, ".");
-                    if( tokens.countTokens() > 0 ) {
-                        int majorPackageVersion = Integer.parseInt(tokens.nextToken());
-                        int minorPackageVersion = Integer.parseInt(tokens.nextToken());
-
-                        wamsVersionTable.compare(majorPackageVersion, minorPackageVersion);
-                    }
+                    wamsVersionTable.compare(majorPackageVersion, minorPackageVersion);
                 }
-
-            }catch(PackageManager.NameNotFoundException ex) {
-                if( Crashlytics.getInstance() != null)
-                    Crashlytics.logException(ex);
-
-                Log.e(LOG_TAG, ex.getMessage());
             }
 
-            setupUI(getString(R.string.title_activity_main), "");
+        }catch(PackageManager.NameNotFoundException ex) {
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(ex);
 
-            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
+            Log.e(LOG_TAG, ex.getMessage());
+        }
 
-            new AsyncTask<Void, Void, Void>() {
+        setupUI(getString(R.string.title_activity_main), "");
 
-                MobileServiceSyncTable<GeoFence> gFencesSyncTable;
-                MobileServiceClient wamsClient;
+        Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
 
-                @Override
-                protected void onPreExecute() {
-                    try {
-                        wamsClient = new MobileServiceClient(
-                                        Globals.WAMS_URL,
-                                        Globals.WAMS_API_KEY,
-                                        getApplicationContext());
-                        gFencesSyncTable = wamsClient.getSyncTable("geofences", GeoFence.class);
-                    }
-                    catch(Exception ex){
-                        Log.e(LOG_TAG, ex.getMessage());
-                    }
+        new AsyncTask<Void, Void, Void>() {
+
+            MobileServiceSyncTable<GeoFence> gFencesSyncTable;
+            MobileServiceClient wamsClient;
+
+            @Override
+            protected void onPreExecute() {
+                try {
+                    wamsClient = new MobileServiceClient(
+                                    Globals.WAMS_URL,
+                                    Globals.WAMS_API_KEY,
+                                    getApplicationContext());
+                    gFencesSyncTable = wamsClient.getSyncTable("geofences", GeoFence.class);
+                }
+                catch(Exception ex){
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+
+                    wamsUtils.sync(wamsClient, "geofences");
+
+                    Query query = wamsClient.getTable(GeoFence.class).where();
+
+                    MobileServiceList<GeoFence> geoFences = gFencesSyncTable.read(query).get();
+                    if(geoFences.getTotalCount() == 0 ) {
+                        query = wamsClient.getTable(GeoFence.class).where().field("isactive").ne(false);
+
+                        gFencesSyncTable.purge(query);
+                        gFencesSyncTable.pull(query).get();
+
+                        Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_updated));
+                    } else
+                        Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_uptodate));
+
+
+                } catch(ExecutionException | InterruptedException ex) {
+                    Log.e(LOG_TAG, ex.getMessage());
                 }
 
-                @Override
-                protected Void doInBackground(Void... voids) {
-
-                    try {
-
-                        wamsUtils.sync(wamsClient, "geofences");
-
-                        Query query = wamsClient.getTable(GeoFence.class).where();
-
-                        MobileServiceList<GeoFence> geoFences = gFencesSyncTable.read(query).get();
-                        if(geoFences.getTotalCount() == 0 ) {
-                            query = wamsClient.getTable(GeoFence.class).where().field("isactive").ne(false);
-
-                            gFencesSyncTable.purge(query);
-                            gFencesSyncTable.pull(query).get();
-
-                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_updated));
-                        } else
-                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_uptodate));
-
-
-                    } catch(ExecutionException | InterruptedException ex) {
-                        Log.e(LOG_TAG, ex.getMessage());
-                    }
-
-                    return null;
-                }
-            }.execute();
+                return null;
+            }
+        }.execute();
 
 //            if( !ensureGeoFences() ) {
 //
@@ -279,7 +284,7 @@ public class MainActivity extends BaseActivity
 //
 //                }.execute();
 //            }
-        }
+
     }
 
     //
@@ -334,22 +339,49 @@ public class MainActivity extends BaseActivity
         try {
             User user = User.load(this);
 
-            ImageView imageAvatar = (ImageView) findViewById(R.id.userAvatarView);
+            final ImageView imageAvatar = (ImageView) findViewById(R.id.userAvatarView);
 
-            Drawable drawable =
-                    (Globals.drawMan.userDrawable(this,
-                            "1",
-                            user.getPictureURL())).get();
-            if( drawable != null ) {
-                drawable = RoundedDrawable.fromDrawable(drawable);
-                ((RoundedDrawable) drawable)
-                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                        .setBorderColor(Color.WHITE)
-                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                        .setOval(true);
+            // Retrieves an image thru Volley
+            com.android.volley.toolbox.ImageRequest request =
+                    new com.android.volley.toolbox.ImageRequest(user.getPictureURL(),
+                            new Response.Listener<Bitmap>() {
+                                @Override
+                                public void onResponse(Bitmap bitmap) {
+                                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
 
-                imageAvatar.setImageDrawable(drawable);
-            }
+                                    drawable = RoundedDrawable.fromDrawable(drawable);
+                                    ((RoundedDrawable) drawable)
+                                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                                            .setBorderColor(Color.WHITE)
+                                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                                            .setOval(true);
+
+                                    imageAvatar.setImageDrawable(drawable);
+                                }
+                            }, 0, 0, null,
+                            new Response.ErrorListener(){
+                                public void onErrorResponse(VolleyError error){
+                                    Toast.makeText(MainActivity.this,
+                                            error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+
+            Globals.volley.addToRequestQueue(request);
+
+//            Drawable drawable =
+//                    (Globals.drawMan.userDrawable(this,
+//                            "1",
+//                            user.getPictureURL())).get();
+//            if( drawable != null ) {
+//                drawable = RoundedDrawable.fromDrawable(drawable);
+//                ((RoundedDrawable) drawable)
+//                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+//                        .setBorderColor(Color.WHITE)
+//                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+//                        .setOval(true);
+//
+//                imageAvatar.setImageDrawable(drawable);
+//            }
         } catch (Exception e) {
             if( Crashlytics.getInstance() != null)
                 Crashlytics.logException(e);
@@ -444,29 +476,29 @@ public class MainActivity extends BaseActivity
         NotificationsManager.stopHandlingNotifications(this);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch( requestCode ) {
-            case REGISTER_USER_REQUEST: {
-                if (resultCode == RESULT_OK) {
-                    Bundle bundle = data.getExtras();
-                    String accessToken = bundle.getString(Globals.TOKENPREF);
-                    String accessTokenSecret = bundle.getString(Globals.TOKENSECRETPREF);
-
-                    wamsInit(accessToken, accessTokenSecret);
-                    NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
-                            GCMHandler.class);
-                    setupUI(getString(R.string.title_activity_main), "");
-
-                }
-            }
-            break;
-
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        switch( requestCode ) {
+//            case REGISTER_USER_REQUEST: {
+//                if (resultCode == RESULT_OK) {
+//                    Bundle bundle = data.getExtras();
+//                    String accessToken = bundle.getString(Globals.TOKENPREF);
+//                    String accessTokenSecret = bundle.getString(Globals.TOKENSECRETPREF);
+//
+//                    wamsInit(accessToken, accessTokenSecret);
+//                    NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
+//                            GCMHandler.class);
+//                    setupUI(getString(R.string.title_activity_main), "");
+//
+//                }
+//            }
+//            break;
+//
+//        }
+//    }
 
     public void wamsInit(String accessToken, String accessTokenSecret){
 
@@ -478,18 +510,28 @@ public class MainActivity extends BaseActivity
                     Globals.WAMS_URL,
                     Globals.WAMS_API_KEY,
                     this);
+                    //.withFilter(new wamsUtils.RefreshTokenCacheFilter());
 
             if( !wamsUtils.loadUserTokenCache(wamsClient, this) ) {
 
+                final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
+                assert( tokenProvider != null );
+
                 final JsonObject body = new JsonObject();
-                body.addProperty("access_token", accessToken);
-                if (accessTokenSecret != null && !accessTokenSecret.isEmpty()) {
-                    body.addProperty("access_token_secret", accessTokenSecret);
+                if( tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
+                    body.addProperty("authenticationToken", accessToken);
+                } else if( tokenProvider == MobileServiceAuthenticationProvider.Google ) {
+                    body.addProperty("id_token", accessToken);
+                } else {
+
+                    body.addProperty("access_token", accessToken);
+                    if (!accessTokenSecret.isEmpty())
+                        body.addProperty("access_token_secret", accessTokenSecret);
                 }
 
-                final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
                 ListenableFuture<MobileServiceUser> login =
                         wamsClient.login(tokenProvider, body);
+
                 Futures.addCallback(login, new FutureCallback<MobileServiceUser>() {
                     @Override
                     public void onSuccess(MobileServiceUser mobileServiceUser) {
@@ -525,8 +567,11 @@ public class MainActivity extends BaseActivity
 
         if( accessTokenProvider.equals(Globals.FB_PROVIDER))
             return MobileServiceAuthenticationProvider.Facebook;
-        else if( accessTokenProvider.equals(Globals.TWITTER_PROVIDER))
+        else if( accessTokenProvider.equals(Globals.TWITTER_PROVIDER) ||
+                accessTokenProvider.equals(Globals.DIGITS_PROVIDER) )
             return MobileServiceAuthenticationProvider.Twitter;
+        else if( accessTokenProvider.equals(Globals.MICROSOFT_PROVIDER))
+            return MobileServiceAuthenticationProvider.MicrosoftAccount;
         else
             return null;
     }

@@ -1,6 +1,5 @@
 package com.labs.okey.freeride;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -26,15 +25,12 @@ import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
-import com.microsoft.windowsazure.mobileservices.table.query.Query;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +72,7 @@ public class RideDetailsActivity extends BaseActivity
 
 
         if( ride.getCreated() != null ) {
-            DateFormat df = new SimpleDateFormat("MM.dd.yy");
+            DateFormat df = DateFormat.getDateTimeInstance();
             created.setText(df.format(ride.getCreated()));
         }
 

@@ -66,8 +66,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -607,11 +605,6 @@ public class CameraCVActivity extends Activity
             Exception       mEx;
             InputStream     mInputStream;
             URI             blobPublishedUri;
-
-            private String getTempFileName() {
-                String timeStamp = new SimpleDateFormat("yyyyMMdd+HHmmss").format(new Date());
-                return "FR_" + timeStamp;
-            }
 
             @Override
             protected void onPreExecute() {
