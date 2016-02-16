@@ -319,5 +319,9 @@ limitations under the License.</string>
     <string name="camera_tag" translatable="false">camera_tag</string>
     <string name="submit_tag" translatable="false">submit_tag</string>
 
+    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
 
 </resources>
