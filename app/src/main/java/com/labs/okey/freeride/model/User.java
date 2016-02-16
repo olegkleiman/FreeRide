@@ -58,7 +58,7 @@ public class User implements Parcelable {
     public void setPhone(String value) { this.phone = value; }
 
     @com.google.gson.annotations.SerializedName("use_phone")
-    private Boolean usePhone;
+    private Boolean usePhone = true;
     public Boolean getUsePhone() { return this.usePhone; }
     public void setUsePhone(Boolean value) { this.usePhone = value; }
 
