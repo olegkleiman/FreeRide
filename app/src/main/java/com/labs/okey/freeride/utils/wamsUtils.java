@@ -145,6 +145,38 @@ public class wamsUtils {
         }
     }
 
+    static private String doUrlEncoding(String input) {
+        input = input.replace("+", "-");
+        input = input.replace("/", "_");
+        input.replace("=", "");
+
+        return input;
+    }
+
+    static private String undoUrlEncoding(String input) {
+        input = input.replace("-", "+");
+        input = input.replace("_", "/");
+
+        switch ( input.length() % 4 ) {
+            case 0:
+                break;
+
+            case 2:
+                input += "==";
+                break;
+
+            case 3:
+                input += "=";
+                break;
+
+            default:
+                return "";
+
+        }
+
+        return input;
+    }
+
     static public boolean isJWTTokenExpired(String jwtToken) throws Exception{
         StringTokenizer jwtTokens = new StringTokenizer(jwtToken, ".");
 
@@ -161,26 +193,10 @@ public class wamsUtils {
 
         // JWT claims is converted to base64 and made URL friendly by decoding
 
-        // Undo the URL encoding
-        jwtClaims = jwtClaims.replace("-", "+");
-        jwtClaims = jwtClaims.replace("_", "/");
-
-        switch ( jwtClaims.length() % 4 ) {
-            case 0:
-                break;
-
-            case 2:
-                jwtClaims += "==";
-                break;
-
-            case 3:
-                jwtClaims += "=";
-                break;
-
-            default:
-                Log.e(LOG_TAG, "JWT token is invalid");
-                return false;
-
+        jwtClaims = undoUrlEncoding(jwtClaims);
+        if( jwtClaims.isEmpty() ) {
+            Log.e(LOG_TAG, "JWT token is invalid");
+            return false;
         }
 
         // decode base64 & extract expiration date
@@ -188,12 +204,20 @@ public class wamsUtils {
             byte[] jwtData = Base64.decode(jwtClaims, Base64.DEFAULT);
             String jsonString = new String(jwtData, "UTF-8");
             JsonObject jsonObj = (new JsonParser()).parse(jsonString).getAsJsonObject();
+
             String exp = jsonObj.get("exp").getAsString();
             // 'exp' in JWT represents the number of seconds since Jan 1, 1970 UTC
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(Long.parseLong(exp) * 1000);
             Date expiryDate = calendar.getTime();
-            return !expiryDate.before(new Date());
+            if( expiryDate.before(new Date()) ) {
+                Log.d(LOG_TAG, "WAMS token expired");
+                return true;
+            } else {
+                Log.d(LOG_TAG, "WAMS token is valid");
+                return false;
+            }
+            //return !expiryDate.before(new Date());
 
         } catch(UnsupportedEncodingException ex) {
             throw new Exception(ex);

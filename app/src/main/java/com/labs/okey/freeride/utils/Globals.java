@@ -7,10 +7,14 @@ import android.renderscript.Matrix4f;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.FacebookSdk;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
+import com.microsoft.live.LiveAuthClient;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,6 +30,8 @@ import io.fabric.sdk.android.Fabric;
 
 
 public class Globals {
+
+    private static final String LOG_TAG = "FR";
 
     public static int REQUIRED_PASSENGERS_NUMBER = 3;
 
@@ -67,6 +73,33 @@ public class Globals {
         }
     }
     public static final DrawMan drawMan = DManClassFactory.getDrawMan();
+
+    public static VolleySingletone volley;
+    public static void InitializeVolley(Context context){
+        volley = VolleySingletone.getInstance(context);
+    }
+
+    private static AccessTokenTracker mFbAccessTokenTracker;
+    public static void initializeTokenTracker(Context context) {
+
+        if( !FacebookSdk.isInitialized() )
+            FacebookSdk.sdkInitialize(context);
+
+        mFbAccessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken,
+                                                       AccessToken currentAccessToken) {
+                Log.d(LOG_TAG, "Current access token was changed");
+                AccessToken.setCurrentAccessToken(currentAccessToken);
+            }
+        };
+
+        mFbAccessTokenTracker.startTracking();
+    }
+    public static void stopTokenTracker() {
+        if( mFbAccessTokenTracker != null )
+            mFbAccessTokenTracker.stopTracking();
+    }
 
     private static Boolean _monitorInitialized = false;
     private static Boolean isMonitorInitialized() {
@@ -216,10 +249,13 @@ public class Globals {
     public static final String USE_PHONE_PFER = "usephone";
 
     public static final String FB_PROVIDER = "Facebook";
+    public static final String GOOGLE_PROVIDER = "Google";
     public static final String TWITTER_PROVIDER = "Twitter";
+    public static final String DIGITS_PROVIDER = "Digits";
+    public static final String MICROSOFT_PROVIDER = "Microsoft";
     public static final String FB_PROVIDER_FOR_STORE = "Facebook:";
     public static final String GOOGLE_PROVIDER_FOR_STORE = "Google:";
-    public static final String MS_PROVIDER_FOR_STORE = "MS:";
+    public static final String MICROSOFT_PROVIDER_FOR_STORE = "MS:";
     public static final String TWITTER_PROVIDER_FOR_STORE = "Twitter:";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
 
@@ -322,7 +358,7 @@ public class Globals {
         }
     }
 
-    public static  String CASCADE_URL = "http://maximum.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
+    public static  String CASCADE_URL = "http://fastride.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
     private static String CASCADE_PATH;
     public static void initCascadePath(Context ctx) {
         String DEFAULT_CASCADE_NAME = "haarcascade_frontalface_default.xml";
@@ -399,6 +435,16 @@ public class Globals {
     public static String PARCELABLE_KEY_PASSENGER_PREFIX = "thumb_";
     public static String PARCELABLE_KEY_APPEAL_DIALOG_SHOWN = "appeak_shown";
     public static String PARCELABLE_KEY_RIDES_HISTORY = "rides_history";
+
+    // Check out http://go.microsoft.com/fwlink/p/?LinkId=193157 to get your own client id
+    public static final String MICROSOFT_CLIENT_ID = "0000000048137798";
+    public static LiveAuthClient liveAuthClient;
+    public static final String[] LIVE_SCOPES = {
+            "wl.signin",
+//            "wl.basic",
+            "wl.emails",
+            "wl.offline_access"
+    };
 
 
     public static String TWITTER_CONSUMER_KEY = "jxvXE5xHG84JvuI4bLJApTzYb";
