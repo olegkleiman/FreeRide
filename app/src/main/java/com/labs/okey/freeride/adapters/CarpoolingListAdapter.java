@@ -13,7 +13,6 @@ import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassByDate;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class CarpoolingListAdapter extends RecyclerView.Adapter<CarpoolingListAdapter.ViewHolder>  {
@@ -40,7 +39,7 @@ public class CarpoolingListAdapter extends RecyclerView.Adapter<CarpoolingListAd
 
 
         PassByDate passByDate = items.get(position);
-        DateFormat df = new SimpleDateFormat("MM.dd.yy");
+        DateFormat df = DateFormat.getDateTimeInstance();
         holder.DateRide.setText(df.format(passByDate.getDateRide()));
 
         if (passByDate.getAsDriver()){

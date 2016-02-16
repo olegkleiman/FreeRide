@@ -14,6 +14,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.facebook.FacebookSdk;
+import com.facebook.Profile;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.Globals;
@@ -196,7 +198,12 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
         String[] tokens = userId.split(":");
         if( tokens.length > 1 ){
             if( Globals.FB_PROVIDER.equals(tokens[0]) ) {
-                return "http://graph.facebook.com/" + tokens[1] + "/picture?type=large";
+                if( !FacebookSdk.isInitialized() )
+                    FacebookSdk.sdkInitialize(mContext);
+
+                com.facebook.Profile profile = Profile.getCurrentProfile();
+                return profile.getProfilePictureUri(100, 100).toString();
+                //return "http://graph.facebook.com/" + tokens[1] + "/picture?type=large";
             } else {
                 return "";
             }

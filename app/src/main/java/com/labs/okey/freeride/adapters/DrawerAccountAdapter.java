@@ -2,7 +2,9 @@ package com.labs.okey.freeride.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -12,6 +14,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.labs.okey.freeride.MainActivity;
 import com.labs.okey.freeride.MyRidesActivity;
 import com.labs.okey.freeride.R;
@@ -19,8 +23,6 @@ import com.labs.okey.freeride.SettingsActivity;
 import com.labs.okey.freeride.TutorialActivity;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.RoundedDrawable;
-
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Oleg Kleiman on 25-Apr-15.
@@ -118,28 +120,54 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
 
         if (holder.holderId == TYPE_HEADER) {
 
             Drawable drawable = null;
-            try {
-                drawable = (Globals.drawMan.userDrawable(mContext,
-                        "1",
-                        mPictureURL)).get();
-                if( drawable != null ) {
-                    drawable = RoundedDrawable.fromDrawable(drawable);
-                    ((RoundedDrawable) drawable)
-                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                            .setBorderColor(Color.LTGRAY)
-                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                            .setOval(true);
+//            try {
+//                drawable = (Globals.drawMan.userDrawable(mContext,
+//                        "1",
+//                        mPictureURL)).get();
+//                if( drawable != null ) {
+//                    drawable = RoundedDrawable.fromDrawable(drawable);
+//                    ((RoundedDrawable) drawable)
+//                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+//                            .setBorderColor(Color.LTGRAY)
+//                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+//                            .setOval(true);
+//
+//                    holder.imageProfile.setImageDrawable(drawable);
+//                }
+//            } catch (InterruptedException | ExecutionException e) {
+//                Log.e(LOG_TAG, e.getMessage());
+//            }
 
-                    holder.imageProfile.setImageDrawable(drawable);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                Log.e(LOG_TAG, e.getMessage());
-            }
+            // Retrieves an image thru Volley
+            com.android.volley.toolbox.ImageRequest request =
+                    new com.android.volley.toolbox.ImageRequest(mPictureURL,
+                            new Response.Listener<Bitmap>() {
+                                @Override
+                                public void onResponse(Bitmap bitmap) {
+                                    Drawable drawable = new BitmapDrawable(mContext.getResources(), bitmap);
+
+                                    drawable = RoundedDrawable.fromDrawable(drawable);
+                                    ((RoundedDrawable) drawable)
+                                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+                                            .setBorderColor(Color.WHITE)
+                                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+                                            .setOval(true);
+
+                                    holder.imageProfile.setImageDrawable(drawable);
+                                }
+                            }, 0, 0, null,
+                            new Response.ErrorListener(){
+                                public void onErrorResponse(VolleyError error){
+                                    Log.e(LOG_TAG, error.getLocalizedMessage());
+                                }
+                            });
+            request.setShouldCache(true);
+            Globals.volley.addToRequestQueue(request);
 
             holder.txtName.setText(mName);
             holder.txtEmail.setText(mEmail);

@@ -20,7 +20,6 @@ import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.views.LayoutRipple;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -118,7 +117,7 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
 
         if( ride.getCreated() != null ) {
-            DateFormat df = new SimpleDateFormat("MM.dd.yy");
+            DateFormat df = DateFormat.getDateTimeInstance();
             holder.created.setText(df.format(ride.getCreated()));
         }
 
