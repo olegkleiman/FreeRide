@@ -62,22 +62,29 @@
             android:value="AIzaSyD37YzErMvAnKivCGboitPPAOSLqby5aC0" />
 
         <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name"
-            android:launchMode="singleTask"
-            android:taskAffinity="">
+            android:name=".SplashScreen"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/FullscreenTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:taskAffinity="">
+
+        </activity>
         <activity
             android:name=".PassengerRoleActivity"
             android:label="@string/title_activity_passenger_role"
+            android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme"
-            android:launchMode="singleTop"/>
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".DriverRoleActivity"
             android:label="@string/title_activity_driver_role"
@@ -93,11 +100,11 @@
             android:name=".RegisterActivity"
             android:label="@string/title_activity_register"
             android:theme="@style/AppTheme" />
-        <activity android:name="com.facebook.FacebookActivity"
-            android:configChanges=
-                "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:label="@string/app_name" />
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
             android:name=".AboutActivity"
             android:label="@string/title_activity_about" />
@@ -109,15 +116,15 @@
             android:label="@string/title_activity_tutorial" />
         <activity
             android:name=".MyRidesActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/title_activity_my_rides" />
+            android:label="@string/title_activity_my_rides"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".RideDetailsActivity"
             android:label="@string/title_activity_ride_details" />
         <activity
             android:name=".AppealCameraActivity"
             android:label="@string/title_activity_camera_appeal" />
-        <activity android:name=".GFActivity"/>
+        <activity android:name=".GFActivity" />
 
         <receiver
             android:name="com.microsoft.windowsazure.notifications.NotificationsBroadcastReceiver"
