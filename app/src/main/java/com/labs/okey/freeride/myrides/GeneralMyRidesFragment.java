@@ -55,7 +55,6 @@ public class GeneralMyRidesFragment extends Fragment{
 
     public void updateRides(List<Ride> rides){
 
-
         if (rides == null || rides.isEmpty())
             return;
 
@@ -66,14 +65,11 @@ public class GeneralMyRidesFragment extends Fragment{
         adapter.notifyDataSetChanged();
     }
 
-
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -94,12 +90,11 @@ public class GeneralMyRidesFragment extends Fragment{
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         recycler.setItemAnimator(new DefaultItemAnimator());
 
-
         adapter = new MyRidesAdapter(mRides);
         adapter.setOnClickListener(new IRecyclerClickListener() {
             @Override
             public void clicked(View v, int position) {
-                // TODO:
+
                 Ride currentRide = mRides.get(position);
                 Intent intent = new Intent(getActivity(), RideDetailsActivity.class);
 

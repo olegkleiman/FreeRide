@@ -239,6 +239,7 @@ public class Globals {
     public static final String FB_USERNAME_PREF = "username";
     public static final String FB_LASTNAME_PREF = "lastUsername";
     public static final String REG_PROVIDER_PREF = "registrationProvider";
+    public static final String UPDATE_MYRIDES_REQUIRED = "myRides_update_required";
 
     public static final String FIRST_NAME_PREF = "firstname";
     public static final String LAST_NAME_PREF = "lastname";
@@ -292,7 +293,7 @@ public class Globals {
     }
 
     // TODO: synchronize with Geo-Fences
-    public static boolean f_update_required;
+    public static boolean myRides_update_required = true;
 
     private static String _currentGeoFenceName;
     public static void set_CurrentGeoFenceName(String value){
