@@ -1,8 +1,7 @@
 package com.labs.okey.freeride.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,16 +10,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
-import com.labs.okey.freeride.utils.RoundedDrawable;
-import com.labs.okey.freeride.views.LayoutRipple;
 
-import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by eli max on 01/11/2015.
@@ -56,49 +57,44 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
 
         Ride ride = items.get(position);
 
         int approveStatus = ride.getApproved();
 
         if( approveStatus == Globals.RIDE_STATUS.APPEAL.ordinal()) {
-            holder.ApprovedSing.setImageResource(R.drawable.gavel);
+            holder.approvedSign.setImageResource(R.drawable.gavel);
         } else if( approveStatus == Globals.RIDE_STATUS.DENIED.ordinal()){
-            holder.ApprovedSing.setImageResource(R.drawable.ex_sing_26);
+            holder.approvedSign.setImageResource(R.drawable.ex_sing_26);
         }
 
         holder.driverName.setVisibility(View.GONE);
         try {
             User user = User.load(context);
 
+            ImageLoader imageLoader = Globals.volley.getImageLoader();
+            imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
+                @Override
+                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                    Bitmap bitmap = response.getBitmap();
+                    holder.driverImage.setImageBitmap(bitmap);
+                }
 
+                @Override
+                public void onErrorResponse(VolleyError error) {
 
-            Drawable drawable =
-                    (Globals.drawMan.userDrawable(context,
-                            "1",
-                            user.getPictureURL())).get();
-            if( drawable != null ) {
-                drawable = RoundedDrawable.fromDrawable(drawable);
-                ((RoundedDrawable) drawable)
-                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                        .setBorderColor(Color.WHITE)
-                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                        .setOval(true);
+                }
+            });
 
-                holder.DriverImage.setImageDrawable(drawable);
-                //holder.driverName.setText(user.getFirstName() + user.getLastName());
-
-            }
         } catch (Exception e) {
             Log.e(LOG_TAG, e.getMessage());
         }
 
-
-
         if( ride.getCreated() != null ) {
-            DateFormat df = DateFormat.getDateTimeInstance();
-            holder.created.setText(df.format(ride.getCreated()));
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm", Locale.getDefault());
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            holder.created.setText(sdf.format(ride.getCreated()));
         }
 
     }
@@ -111,11 +107,11 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
     public static class ViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
-        ImageView DriverImage;
-        TextView driverName;
-        TextView created;
-        ImageView ApprovedSing;
-        LayoutRipple rowLayout;
+        ImageView   driverImage;
+        TextView    driverName;
+        TextView    created;
+        ImageView   approvedSign;
+        View        rowLayout;
 
         IRecyclerClickListener mClickListener;
 
@@ -124,12 +120,11 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
             super(itemView);
 
             mClickListener = clickListener;
-            DriverImage = (ImageView) itemView.findViewById(R.id.imageDriver);
+            driverImage = (ImageView) itemView.findViewById(R.id.imageDriver);
             driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
-            ApprovedSing = (ImageView) itemView.findViewById(R.id.ApprovedSing);
+            approvedSign = (ImageView) itemView.findViewById(R.id.approvedSign);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
-            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myRideRow);
-
+            rowLayout = itemView.findViewById(R.id.user_details_card);
             rowLayout.setOnClickListener(this);
         }
 

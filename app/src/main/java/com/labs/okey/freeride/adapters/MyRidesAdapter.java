@@ -1,8 +1,7 @@
 package com.labs.okey.freeride.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,27 +10,28 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
-import com.labs.okey.freeride.utils.RoundedDrawable;
-import com.labs.okey.freeride.views.LayoutRipple;
+import com.pkmmte.view.CircularImageView;
 
-import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by eli max on 22/06/2015.
  */
-
-
 public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHolder> {
 
-    private List<Ride> items;
-    IRecyclerClickListener mClickListener;
-    Context context;
+    private List<Ride>          items;
+    IRecyclerClickListener      mClickListener;
+    Context                     context;
     private static final String LOG_TAG = "FR.MyRidesAdapter";
 
     public MyRidesAdapter(List<Ride> objects) {
@@ -42,7 +42,6 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
         mClickListener = listener;
     }
 
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         context = parent.getContext();
@@ -52,73 +51,62 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
                 .inflate(R.layout.rides_general_item, parent, false);
 
         return new ViewHolder(v, mClickListener);
-
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
 
         Ride ride = items.get(position);
-
 
         if(!ride.getDriverId().equals( Globals.userID))
         {
             holder.driverName.setText(ride.getDriverName());
-            holder.ApprovedSing.setVisibility(View.GONE);
-            //holder.SteeringWheel.setVisibility(View.GONE);
+            holder.approvedSign.setVisibility(View.GONE);
         }
         else
         {
-
             holder.driverName.setVisibility(View.GONE);
-            //TODO I hide the SteeringWheel
-            //holder.SteeringWheel.setVisibility(View.GONE);
 
             int approveStatus = ride.getApproved();
 
             if( approveStatus == Globals.RIDE_STATUS.WAIT .ordinal()) {
-                holder.ApprovedSing.setImageResource(R.drawable.attention_26);
+                holder.approvedSign.setImageResource(R.drawable.attention_26);
             } else if( approveStatus == Globals.RIDE_STATUS.APPROVED.ordinal()
                    || approveStatus == Globals.RIDE_STATUS.APPROVED_BY_SELFY.ordinal() ){
-                holder.ApprovedSing.setImageResource(R.drawable.v_sing_26);
+                holder.approvedSign.setImageResource(R.drawable.v_sing_26);
             } else if ( ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()
                    ||approveStatus == Globals.RIDE_STATUS.APPEAL.ordinal() ) {
-                holder.ApprovedSing.setImageResource(R.drawable.ex_sing_26);
+                holder.approvedSign.setImageResource(R.drawable.ex_sing_26);
             }
-
 
             try {
                 User user = User.load(context);
 
+                ImageLoader imageLoader = Globals.volley.getImageLoader();
+                imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
+                    @Override
+                    public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                        Bitmap bitmap = response.getBitmap();
+                        holder.driverImage.setImageBitmap(bitmap);
+                    }
 
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
 
-                Drawable drawable =
-                        (Globals.drawMan.userDrawable(context,
-                                "1",
-                                user.getPictureURL())).get();
-                if( drawable != null ) {
-                    drawable = RoundedDrawable.fromDrawable(drawable);
-                    ((RoundedDrawable) drawable)
-                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                            .setBorderColor(Color.WHITE)
-                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                            .setOval(true);
+                    }
+                });
 
-                    holder.DriverImage.setImageDrawable(drawable);
-
-                }
             } catch (Exception e) {
-                //TODO LOG_TAG is from main activity, nedd
                 Log.e(LOG_TAG, e.getMessage());
             }
 
         }
 
-
-
         if( ride.getCreated() != null ) {
-            DateFormat df = DateFormat.getDateTimeInstance();
-            holder.created.setText(df.format(ride.getCreated()));
+            //DateFormat df = DateFormat.getDateInstance();
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm", Locale.getDefault());
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            holder.created.setText(sdf.format(ride.getCreated()));
         }
 
     }
@@ -131,13 +119,12 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
     public static class ViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
-        ImageView DriverImage;
-        ImageView ApprovedSing;
-        //ImageView SteeringWheel;
-        TextView driverName;
-        TextView carNumber;
-        TextView created;
-        LayoutRipple rowLayout;
+        CircularImageView   driverImage;
+        ImageView           approvedSign;
+        TextView            driverName;
+        TextView            carNumber;
+        TextView            created;
+        View                rowLayout;
 
         IRecyclerClickListener mClickListener;
 
@@ -146,13 +133,11 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
             super(itemView);
 
             mClickListener = clickListener;
-            DriverImage = (ImageView) itemView.findViewById(R.id.imageDriver);
-            ApprovedSing = (ImageView) itemView.findViewById(R.id.ApprovedSing);
-            //SteeringWheel = (ImageView) itemView.findViewById(R.id.SteeringWheel);
+            driverImage = (CircularImageView) itemView.findViewById(R.id.imageDriver);
+            approvedSign = (ImageView) itemView.findViewById(R.id.approvedSign);
             driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
-            rowLayout = (LayoutRipple) itemView.findViewById(R.id.myRideRow);
-
+            rowLayout = itemView.findViewById(R.id.user_details_card);
             rowLayout.setOnClickListener(this);
         }
 

@@ -9,20 +9,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.labs.okey.freeride.R;
-
-import java.util.List;
-
 import com.labs.okey.freeride.model.FRMode;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.views.LayoutRipple;
+
+import java.util.List;
 
 /**
  * Created by Oleg on 22-Aug-15.
  */
 public class ModesPeersAdapter extends RecyclerView.Adapter<ModesPeersAdapter.ViewHolder>{
 
-    private List<FRMode> items;
-    Context mContext;
+    private List<FRMode>    items;
+    private Context         mContext;
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;

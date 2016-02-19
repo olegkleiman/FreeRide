@@ -163,7 +163,7 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
                             }, 0, 0, null,
                             new Response.ErrorListener(){
                                 public void onErrorResponse(VolleyError error){
-                                    Log.e(LOG_TAG, error.getLocalizedMessage());
+                                    Log.e(LOG_TAG, error.toString());
                                 }
                             });
             request.setShouldCache(true);
