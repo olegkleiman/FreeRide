@@ -24,8 +24,7 @@ public class VolleySingletone {
 
         mImageLoader = new ImageLoader(mRequestQueue,
                 new ImageLoader.ImageCache() {
-                    private final LruCache<String, Bitmap>
-                            cache = new LruCache<String, Bitmap>(20);
+                    private final LruCache<String, Bitmap> cache = new LruCache<>(20);
 
                     @Override
                     public Bitmap getBitmap(String url) {
@@ -51,6 +50,7 @@ public class VolleySingletone {
             // getApplicationContext() is key, it keeps you from leaking the
             // Activity or BroadcastReceiver if someone passes one in.
             mRequestQueue = Volley.newRequestQueue(mCtx.getApplicationContext());
+            //mRequestQueue = new RequestQueue()
         }
         return mRequestQueue;
     }
