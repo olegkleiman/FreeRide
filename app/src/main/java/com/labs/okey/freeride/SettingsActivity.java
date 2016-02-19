@@ -3,6 +3,7 @@ package com.labs.okey.freeride;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -28,7 +29,7 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.android.volley.Response;
+import com.android.volley.Cache;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.labs.okey.freeride.adapters.CarsAdapter;
@@ -44,6 +45,7 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
+import com.pkmmte.view.CircularImageView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -62,14 +64,14 @@ import java.util.concurrent.ExecutionException;
 public class SettingsActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener{
 
-    List<RegisteredCar> mCars;
-    CarsAdapter mCarsAdapter;
-    User mUser;
+    private final String LOG_TAG = getClass().getSimpleName();
 
-    private EditText mCarInput;
-    private EditText mCarNick;
+    private List<RegisteredCar> mCars;
+    private CarsAdapter         mCarsAdapter;
+    private User                mUser;
 
-    private static final String LOG_TAG = "FR.Settings";
+    private EditText            mCarInput;
+    private EditText            mCarNick;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,103 +153,72 @@ public class SettingsActivity extends BaseActivity
     private void displayUser() {
         mUser = getUser();
 
-
-
-        Drawable drawable = null;
 //        try {
 
-            TextView txtView = (TextView)findViewById(R.id.textUserName);
-            txtView.setText(String.format("%s %s", mUser.getFirstName(), mUser.getLastName()));
+        TextView txtView = (TextView)findViewById(R.id.textUserName);
+        txtView.setText(String.format("%s %s", mUser.getFirstName(), mUser.getLastName()));
 
-            txtView = (TextView)findViewById(R.id.textUserEmail);
-            txtView.setText(mUser.getEmail());
+        txtView = (TextView)findViewById(R.id.textUserEmail);
+        txtView.setText(mUser.getEmail());
 
-            txtView = (TextView)findViewById(R.id.textUserPhone);
-            txtView.setText(mUser.getPhone());
+        txtView = (TextView)findViewById(R.id.textUserPhone);
+        txtView.setText(mUser.getPhone());
 
-            ImageView providerLogoImageView = (ImageView) findViewById(R.id.provider_logo);
-            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            String provider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
-            int drawableLogoId = 0;
-            if( provider.equals(Globals.FB_PROVIDER)) {
-                drawableLogoId = R.drawable.facebook_logo;
-            } else if( provider.equals(Globals.MICROSOFT_PROVIDER)) {
-                drawableLogoId = R.drawable.microsoft_logo;
-            } else if( provider.equals(Globals.GOOGLE_PROVIDER)) {
-                drawableLogoId = R.drawable.googleplus_logo;
-            }
-            if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                providerLogoImageView.setImageDrawable(getResources()
-                                    .getDrawable(drawableLogoId,
-                                                getApplicationContext().getTheme()));
-            } else {
-                providerLogoImageView.setImageDrawable(getResources()
-                                    .getDrawable(drawableLogoId));
-            }
+        ImageView providerLogoImageView = (ImageView) findViewById(R.id.provider_logo);
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String provider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
+        int drawableLogoId = 0;
+        if( provider.equals(Globals.FB_PROVIDER)) {
+            drawableLogoId = R.drawable.facebook_logo;
+        } else if( provider.equals(Globals.MICROSOFT_PROVIDER)) {
+            drawableLogoId = R.drawable.microsoft_logo;
+        } else if( provider.equals(Globals.GOOGLE_PROVIDER)) {
+            drawableLogoId = R.drawable.googleplus_logo;
+        }
+        if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            providerLogoImageView.setImageDrawable(getResources()
+                                .getDrawable(drawableLogoId,
+                                            getApplicationContext().getTheme()));
+        } else {
+            providerLogoImageView.setImageDrawable(getResources()
+                                .getDrawable(drawableLogoId));
+        }
 
-            // Retrieves an image thru Volley
-//            com.android.volley.toolbox.ImageRequest request =
-//                    new com.android.volley.toolbox.ImageRequest(mUser.getPictureURL(),
-//                            new Response.Listener<Bitmap>() {
-//                                @Override
-//                                public void onResponse(Bitmap bitmap) {
-//                                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-//
-//                                    drawable = RoundedDrawable.fromDrawable(drawable);
-//                                    ((RoundedDrawable) drawable)
-//                                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-//                                            .setBorderColor(Color.WHITE)
-//                                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-//                                            .setOval(true);
-//
-//                                    userPicture.setImageDrawable(drawable);
-//                                }
-//                            }, 0, 0, null,
-//                            new Response.ErrorListener(){
-//                                public void onErrorResponse(VolleyError error){
-//                                    Toast.makeText(SettingsActivity.this,
-//                                            error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-//                                }
-//                            });
+        // Retrieves an image thru Volley
+        final CircularImageView profileImageView = (CircularImageView)findViewById(R.id.imageProfileView);
 
-            if( Globals.volley.getImageLoader().isCached(mUser.getPictureURL(), 100, 100) ) {
-                Globals.volley.getImageLoader().get(mUser.getPictureURL(),
-                        new ImageLoader.ImageListener(){
+        Cache cache = Globals.volley.getRequestQueue().getCache();
+        Cache.Entry entry = cache.get(mUser.getPictureURL());
+        if( entry != null ) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
+            profileImageView.setImageBitmap(bitmap);
+        } else {
 
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Toast.makeText(SettingsActivity.this,
-                                        error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                            }
+            ImageLoader imageLoader = Globals.volley.getImageLoader();
+            imageLoader.get(mUser.getPictureURL(), new ImageLoader.ImageListener() {
+                @Override
+                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
 
-                            @Override
-                            public void onResponse(ImageLoader.ImageContainer response,
-                                                   boolean isImmediate) {
-                                Bitmap bitmap = response.getBitmap();
-                                if( bitmap != null )
-                                    setUserPicture(bitmap);
-                            }
-                        });
-            } else {
-                com.android.volley.toolbox.ImageRequest request =
-                        new com.android.volley.toolbox.ImageRequest(mUser.getPictureURL(),
-                                new Response.Listener<Bitmap>() {
-                                    @Override
-                                    public void onResponse(Bitmap bitmap) {
-                                        setUserPicture(bitmap);
-                                    }
-                                }, 0, 0, null,
-                                new Response.ErrorListener(){
-                                    public void onErrorResponse(VolleyError error){
-                                        Toast.makeText(SettingsActivity.this,
-                                                error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                                    }
-                                });
+                    Bitmap bitmap = response.getBitmap();
+                    if (bitmap != null)
+                        profileImageView.setImageBitmap(bitmap);
+                }
 
-                Globals.volley.addToRequestQueue(request);
-            }
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(LOG_TAG, error.getLocalizedMessage());
+                }
+            });
+        }
 
-
+//        Drawable drawable = profileImageView.getDrawable();
+//        drawable = RoundedDrawable.fromDrawable(drawable);
+//        ((RoundedDrawable) drawable)
+//                .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+//                .setBorderColor(Color.WHITE)
+//                .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+//                .setOval(true);
+//        profileImageView.setImageDrawable(drawable);
 
 //            drawable = (Globals.drawMan.userDrawable(this,
 //                    "1",
@@ -256,7 +227,7 @@ public class SettingsActivity extends BaseActivity
 //            drawable = RoundedDrawable.fromDrawable(drawable);
 //            ((RoundedDrawable) drawable)
 //                    .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-//                    .setBorderColor(Color.LTGRAY)
+//                    .setBorderColor(Color.WHITE)
 //                    .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
 //                    .setOval(true);
 //

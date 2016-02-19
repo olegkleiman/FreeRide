@@ -130,7 +130,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         android.location.LocationListener
 {
 
-    private static final String                 LOG_TAG = "FR.Driver";
+    private final String                        LOG_TAG = getClass().getSimpleName();
 
     private PassengersAdapter                   mPassengersAdapter;
     SwipeableRecyclerViewTouchListener          mSwipeTouchListener;
@@ -142,9 +142,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private P2pPreparer                         mP2pPreparer;
     private P2pConversator                      mP2pConversator;
 
-    TextSwitcher                                mTextSwitcher;
-    RecyclerView                                mPeersRecyclerView;
-    ImageView                                   mImageTransmit;
+    private TextSwitcher                        mTextSwitcher;
+    private RecyclerView                        mPeersRecyclerView;
+    private ImageView                           mImageTransmit;
 
     private Location                            mCurrentLocation;
     private long                                mLastLocationUpdateTime;

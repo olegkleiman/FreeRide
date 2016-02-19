@@ -73,11 +73,8 @@ import java.util.concurrent.ExecutionException;
 public class RegisterActivity extends FragmentActivity
         implements ConfirmRegistrationFragment.RegistrationDialogListener{
 
-    private static final String LOG_TAG = "FR.Register";
-
+    private final String LOG_TAG = getClass().getSimpleName();
     private final String PENDING_ACTION_BUNDLE_KEY = "com.labs.okey.freeride:PendingAction";
-
-    User                        mNewUser;
 
     private CallbackManager     mFBCallbackManager;
     private LoginButton         mFBLoginButton;
@@ -89,61 +86,10 @@ public class RegisterActivity extends FragmentActivity
 //    }
 //    TwitterLoginButton      mTwitterloginButton;
 
-    String                  mAccessToken;
-    String                  mAcessTokenSecret; // used by Twitter
-    private boolean         mAddNewUser = true;
-
-    private AsyncTask<User, Void, Void> mCheckUsersTask = new AsyncTask<User, Void, Void>() {
-
-        Exception mEx;
-        ProgressDialog progress;
-
-        @Override
-        protected void onPreExecute() {
-
-            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-            if (loginLayout != null)
-                loginLayout.setVisibility(View.GONE);
-
-            progress = ProgressDialog.show(RegisterActivity.this,
-                    getString(R.string.registration_add_status),
-                    getString(R.string.registration_add_status_wait));
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            progress.dismiss();
-
-            if (mEx == null)
-                showRegistrationForm();
-
-        }
-
-        @Override
-        protected Void doInBackground(User... params) {
-
-            User _user = params[0];
-
-            String regID = _user.getRegistrationId();
-            try {
-
-                MobileServiceList<User> _users =
-                        usersTable.where().field("registration_id").eq(regID)
-                                .execute().get();
-
-                if( _users.size() >= 1 )
-                    mAddNewUser = false;
-
-                saveProviderAccessToken(Globals.TWITTER_PROVIDER, regID);
-
-            } catch (InterruptedException | ExecutionException ex) {
-                mEx = ex;
-                Log.e(LOG_TAG, ex.getMessage());
-            }
-
-            return null;
-        }
-    };
+    private User                mNewUser;
+    private String              mAccessToken;
+    private String              mAcessTokenSecret; // used by Twitter
+    private boolean             mAddNewUser = true;
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, final User user) {
@@ -761,10 +707,6 @@ public class RegisterActivity extends FragmentActivity
 
                     if( mEx == null ) {
 
-//                        Intent returnIntent = new Intent();
-//                        returnIntent.putExtra(Globals.TOKENPREF, mAccessToken);
-//                        returnIntent.putExtra(Globals.TOKENSECRETPREF, mAcessTokenSecret);
-//                        setResult(RESULT_OK, returnIntent);
                         Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                         startActivity(intent);
                         finish();
@@ -820,7 +762,7 @@ public class RegisterActivity extends FragmentActivity
                         InputStream inputStream = urlConnection.getInputStream();
 
                         byte[] buffer = new byte[1024];
-                        int bufferLength = 0;
+                        int bufferLength;
 
                         while ( (bufferLength = inputStream.read(buffer)) > 0 ) {
                             fileOutput.write(buffer, 0, bufferLength);

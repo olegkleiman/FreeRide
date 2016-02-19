@@ -107,17 +107,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         android.location.LocationListener
 {
 
-    private static final String LOG_TAG = "FR.Passenger";
+    private final String                LOG_TAG = getClass().getSimpleName();
 
-    String mUserID;
+    private String                      mUserID;
 
-    final int MAKE_PICTURE_REQUEST = 1;
+    final int                           MAKE_PICTURE_REQUEST = 1;
     // handled  in onActivityResult
 
-    Boolean                             mDriversShown;
-    TextSwitcher                        mTextSwitcher;
+    private Boolean                     mDriversShown;
+    private TextSwitcher                mTextSwitcher;
 
-    MobileServiceTable<Join>            joinsTable;
+    private MobileServiceTable<Join>    joinsTable;
 
     private P2pPreparer                 mP2pPreparer;
     private P2pConversator              mP2pConversator;

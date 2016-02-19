@@ -106,6 +106,9 @@ public class SplashScreen extends AppCompatActivity {
 
         Globals.InitializeVolley(getApplicationContext());
 
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        Globals.myRides_update_required = sharedPrefs.getBoolean(Globals.UPDATE_MYRIDES_REQUIRED, false);
+
         mVisible = true;
         mContentView = findViewById(R.id.fullscreen_content);
 

@@ -6,9 +6,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,12 +20,12 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.android.volley.Response;
+import com.android.volley.Cache;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.LoginEvent;
@@ -42,7 +40,6 @@ import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
-import com.labs.okey.freeride.utils.RoundedDrawable;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
@@ -53,6 +50,7 @@ import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
+import com.pkmmte.view.CircularImageView;
 
 import java.net.MalformedURLException;
 import java.security.MessageDigest;
@@ -67,7 +65,7 @@ public class MainActivity extends BaseActivity
                    IRecyclerClickListener {
 
     static final int            REGISTER_USER_REQUEST = 1;
-    private static final String LOG_TAG = "FR.Main";
+    private final String        LOG_TAG = getClass().getSimpleName();
     public static               MobileServiceClient wamsClient;
     private boolean             mWAMSLogedIn = false;
 
@@ -339,49 +337,32 @@ public class MainActivity extends BaseActivity
         try {
             User user = User.load(this);
 
-            final ImageView imageAvatar = (ImageView) findViewById(R.id.userAvatarView);
+            final CircularImageView imageAvatar = (CircularImageView) findViewById(R.id.userAvatarView);
 
             // Retrieves an image thru Volley
-            com.android.volley.toolbox.ImageRequest request =
-                    new com.android.volley.toolbox.ImageRequest(user.getPictureURL(),
-                            new Response.Listener<Bitmap>() {
-                                @Override
-                                public void onResponse(Bitmap bitmap) {
-                                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+            Cache cache = Globals.volley.getRequestQueue().getCache();
+            Cache.Entry entry = cache.get(user.getPictureURL());
+            if( entry != null ) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
+                imageAvatar.setImageBitmap(bitmap);
+            } else {
+                ImageLoader imageLoader = Globals.volley.getImageLoader();
+                imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
+                    @Override
+                    public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
 
-                                    drawable = RoundedDrawable.fromDrawable(drawable);
-                                    ((RoundedDrawable) drawable)
-                                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                                            .setBorderColor(Color.WHITE)
-                                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                                            .setOval(true);
+                        Bitmap bitmap = response.getBitmap();
+                        if (bitmap != null)
+                            imageAvatar.setImageBitmap(bitmap);
+                    }
 
-                                    imageAvatar.setImageDrawable(drawable);
-                                }
-                            }, 0, 0, null,
-                            new Response.ErrorListener(){
-                                public void onErrorResponse(VolleyError error){
-                                    Toast.makeText(MainActivity.this,
-                                            error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            });
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(LOG_TAG, error.getLocalizedMessage());
+                    }
+                });
+            }
 
-            Globals.volley.addToRequestQueue(request);
-
-//            Drawable drawable =
-//                    (Globals.drawMan.userDrawable(this,
-//                            "1",
-//                            user.getPictureURL())).get();
-//            if( drawable != null ) {
-//                drawable = RoundedDrawable.fromDrawable(drawable);
-//                ((RoundedDrawable) drawable)
-//                        .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-//                        .setBorderColor(Color.WHITE)
-//                        .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-//                        .setOval(true);
-//
-//                imageAvatar.setImageDrawable(drawable);
-//            }
         } catch (Exception e) {
             if( Crashlytics.getInstance() != null)
                 Crashlytics.logException(e);

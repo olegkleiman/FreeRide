@@ -1,7 +1,6 @@
 package com.labs.okey.freeride;
 
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -18,8 +17,6 @@ import com.labs.okey.freeride.model.Ride;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.labs.okey.freeride.views.SlidingTabLayout;
-import com.microsoft.windowsazure.mobileservices.MobileServiceList;
-import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
@@ -29,15 +26,15 @@ import java.util.List;
 public class MyRidesActivity extends BaseActivity
         implements ActionBar.TabListener {
 
-    private static final String LOG_TAG = "FR.MyRides";
+    private static final String             LOG_TAG = "FR.MyRides";
 
-    MyRideTabAdapter mTabAdapter;
-    private String titles[];
-    List<Ride> mRides;
-    ViewPager mViewPager;
-    SlidingTabLayout slidingTabLayout;
+    private MyRideTabAdapter                mTabAdapter;
+    private List<Ride>                      mRides;
+    private MobileServiceSyncTable<Ride>    mRidesSyncTable;
 
-    private MobileServiceSyncTable<Ride> mRidesSyncTable;
+    SlidingTabLayout                        slidingTabLayout;
+    String[]                                titles;
+    ViewPager                               mViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +50,6 @@ public class MyRidesActivity extends BaseActivity
         wamsInit(false);
         mRidesSyncTable = getMobileServiceClient().getSyncTable("rides", Ride.class);
 
-
         setupUI(getString(R.string.subtitle_activity_my_rides), "");
 
         titles = getResources().getStringArray(R.array.my_rides_titles);
@@ -61,40 +57,37 @@ public class MyRidesActivity extends BaseActivity
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
 
-
-        //TODO the array is empty, please implement with cache table
-        mRides = new ArrayList<Ride>();
-
         mTabAdapter= new MyRideTabAdapter(getSupportFragmentManager(),
-                titles, mRides);
+                                          titles, mRides);
         mViewPager.setAdapter(mTabAdapter);
 
         slidingTabLayout.setViewPager(mViewPager);
         slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
             @Override
             public int getIndicatorColor(int position) {
-                return Color.WHITE;
+                return R.color.ColorAccent;
             }
         });
+
+        mRides = new ArrayList<Ride>();
+
         updateHistory();
     }
 
-
     public void updateHistory(){
-
-        // final ProgressBar gen_progress_refresh = (ProgressBar)findViewById(R.id.gen_fragment_progress_refresh);
-        // final ProgressBar rej_progress_refresh = (ProgressBar)findViewById(R.id.rej_fragment_progress_refresh);
 
         final ProgressBar myRidesProgressRefresh =  (ProgressBar)findViewById(R.id.myrides_progress_refresh);
 
-
         new AsyncTask<Object, Void, Void>() {
-
-
 
             // Runs on UI thread
             @Override
             protected void onPostExecute(Void res) {
+
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putBoolean(Globals.UPDATE_MYRIDES_REQUIRED, Globals.myRides_update_required);
+                editor.apply();
 
                 if (myRidesProgressRefresh.getVisibility() == View.VISIBLE) {
                     myRidesProgressRefresh.setVisibility(View.GONE);
@@ -116,17 +109,18 @@ public class MyRidesActivity extends BaseActivity
 
                 try {
 
-                    wamsUtils.sync(getMobileServiceClient(), "rides");
-
                     Query pullQueryRides = getMobileServiceClient().getTable(Ride.class)
                             .where().field("driverid").eq(Globals.userID);
-                    mRidesSyncTable.pull(pullQueryRides).get();
+                    wamsUtils.sync(getMobileServiceClient(), "rides");
 
-                    final MobileServiceList<Ride> ridesList = mRidesSyncTable.read(pullQueryRides).get();
+                    if( Globals.myRides_update_required ) {
 
-                    mRides = ridesList;
+                        mRidesSyncTable.pull(pullQueryRides).get();
+                        Globals.myRides_update_required = false;
 
-                    Globals.f_update_required = false;
+                    }
+
+                    mRides = mRidesSyncTable.read(pullQueryRides).get();
 
                 } catch (Exception ex) {
                     Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
@@ -158,6 +152,7 @@ public class MyRidesActivity extends BaseActivity
     }
 
     public void onRefresh() {
+        Globals.myRides_update_required = true;
         updateHistory();
     }
 
