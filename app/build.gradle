@@ -201,5 +201,6 @@ dependencies {
     compile 'com.github.brnunes:swipeablerecyclerview:1.0.1'
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.+'
     compile 'com.pkmmte.view:circularimageview:1.1'
+
 }
 

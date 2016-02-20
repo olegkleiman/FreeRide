@@ -34,7 +34,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
-import com.labs.okey.freeride.gcm.GCMHandler;
 import com.labs.okey.freeride.model.FRMode;
 import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.User;
@@ -138,8 +137,6 @@ public class MainActivity extends BaseActivity
 //
 //        } else {
 
-        NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
-                                                 GCMHandler.class);
 
         String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
         String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
@@ -358,7 +355,7 @@ public class MainActivity extends BaseActivity
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.e(LOG_TAG, error.getLocalizedMessage());
+                        Log.e(LOG_TAG, error.toString());
                     }
                 });
             }

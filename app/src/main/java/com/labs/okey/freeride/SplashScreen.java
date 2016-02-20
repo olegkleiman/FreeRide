@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.google.common.util.concurrent.FutureCallback;
@@ -20,7 +21,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.labs.okey.freeride.gcm.GCMHandler;
 import com.labs.okey.freeride.utils.Globals;
+import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import java.text.DateFormat;
 import java.util.concurrent.Callable;
@@ -93,7 +96,7 @@ public class SplashScreen extends AppCompatActivity {
     };
 
     private Handler mHandler =  new Handler(Looper.getMainLooper());
-
+    private AccessTokenTracker  mFbAccessTokenTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +109,9 @@ public class SplashScreen extends AppCompatActivity {
 
         Globals.InitializeVolley(getApplicationContext());
 
+        NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
+                                                GCMHandler.class);
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Globals.myRides_update_required = sharedPrefs.getBoolean(Globals.UPDATE_MYRIDES_REQUIRED, false);
 
@@ -113,12 +119,12 @@ public class SplashScreen extends AppCompatActivity {
         mContentView = findViewById(R.id.fullscreen_content);
 
         // Set up the user interaction to manually show or hide the system UI.
-        mContentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggle();
-            }
-        });
+//        mContentView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                toggle();
+//            }
+//        });
 
         ExecutorService service = Executors.newFixedThreadPool(1);
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
@@ -134,18 +140,24 @@ public class SplashScreen extends AppCompatActivity {
         Futures.addCallback(regValidationFuture, new FutureCallback<Boolean>() {
             @Override
             public void onSuccess(final Boolean result) {
-                Log.d(LOG_TAG, "Validation succeeded");
 
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
 
-                        Intent intent = (result) ?
-                                new Intent(SplashScreen.this, MainActivity.class) :
-                                new Intent(SplashScreen.this, RegisterActivity.class);
+                        Intent intent;
+                        if (result) {
+                            intent = new Intent(SplashScreen.this, MainActivity.class);
+                            Log.d(LOG_TAG, "Validation succeeded");
+                        } else {
+                            intent = new Intent(SplashScreen.this, RegisterActivity.class);
+                            Log.d(LOG_TAG, "Validation failed");
+                        }
 
                         startActivity(intent);
-                        finish();
+                        SplashScreen.this.finish();
+
+                        return;
                     }
                 }, 3000);
             }
@@ -177,29 +189,52 @@ public class SplashScreen extends AppCompatActivity {
                 @Override
                 public void onInitialized() {
                     AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
-                    bRes[0] = (fbAccessToken != null );
-
-                    if( fbAccessToken == null || fbAccessToken.isExpired()) {
-
+                    if (fbAccessToken == null) {
                         bRes[0] = false;
-                        Log.d(LOG_TAG, "FB Token is null or expired");
-
-//                        AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
-//                            @Override
-//                            public void OnTokenRefreshed(AccessToken accessToken) {
-//                                AccessToken.setCurrentAccessToken(accessToken);
-//                            }
-//
-//                            @Override
-//                            public void OnTokenRefreshFailed(FacebookException exception) {
-//
-//                            }
-//                        });
                     } else {
-                        Globals.initializeTokenTracker(getApplicationContext());
-                        bRes[0] = true;
+
+                        if ( fbAccessToken.isExpired()) {
+
+                            final CountDownLatch refreshLatch = new CountDownLatch(1);
+                            AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
+                                @Override
+                                public void OnTokenRefreshed(AccessToken accessToken) {
+                                    AccessToken.setCurrentAccessToken(accessToken);
+                                    bRes[0] = true;
+
+                                    refreshLatch.countDown();
+                                }
+
+                                @Override
+                                public void OnTokenRefreshFailed(FacebookException exception) {
+                                    bRes[0] = false;
+
+                                    refreshLatch.countDown();
+                                }
+
+                            });
+
+                            try {
+                                refreshLatch.await();
+                            } catch (InterruptedException ex) {
+                                Log.e(LOG_TAG, ex.getLocalizedMessage());
+                            }
+
+                        } else {
+                            Globals.initializeTokenTracker(getApplicationContext());
+                            bRes[0] = true;
+                        }
                     }
 
+                    bRes[0] = true;
+                    mFbAccessTokenTracker = new AccessTokenTracker() {
+                        @Override
+                        protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken,
+                                                                   AccessToken currentAccessToken) {
+                            Log.d(LOG_TAG, "Current access token was changed");
+                            AccessToken.setCurrentAccessToken(currentAccessToken);
+                        }
+                    };
 
                     latch.countDown();
                 }
@@ -268,13 +303,18 @@ public class SplashScreen extends AppCompatActivity {
         delayedHide(100);
     }
 
-    private void toggle() {
-        if (mVisible) {
-            hide();
-        } else {
-            show();
-        }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
+
+//    private void toggle() {
+//        if (mVisible) {
+//            hide();
+//        } else {
+//            show();
+//        }
+//    }
 
     private void hide() {
         // Hide UI first
