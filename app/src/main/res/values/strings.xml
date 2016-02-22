@@ -107,6 +107,8 @@
         <item>Privacy policy</item>
     </string-array>
 
+    <string name="progress_dialog">Logging into Azure</string>
+
     <string name="ride_details">ride details</string>
     <string name="drive_details">Driver</string>
     <string name="list_of_passengers">Passengers</string>
