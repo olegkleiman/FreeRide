@@ -206,7 +206,7 @@ public class SettingsActivity extends BaseActivity
 
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.e(LOG_TAG, error.getLocalizedMessage());
+                    Log.e(LOG_TAG, error.toString());
                 }
             });
         }
