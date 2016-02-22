@@ -19,7 +19,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:src="@mipmap/splash_background"
-            android:scaleType="fitXY" />
+            android:scaleType="centerCrop" />
 
 
         <pl.droidsonroids.gif.GifImageView

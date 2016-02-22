@@ -1,5 +1,6 @@
 package com.labs.okey.freeride;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -29,9 +30,12 @@ import com.android.volley.toolbox.ImageLoader;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.LoginEvent;
+import com.facebook.AccessToken;
+import com.facebook.FacebookException;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
 import com.labs.okey.freeride.model.FRMode;
@@ -41,22 +45,36 @@ import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wamsUtils;
+import com.microsoft.live.LiveAuthClient;
+import com.microsoft.live.LiveAuthException;
+import com.microsoft.live.LiveAuthListener;
+import com.microsoft.live.LiveConnectSession;
+import com.microsoft.live.LiveStatus;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
+import com.microsoft.windowsazure.mobileservices.http.NextServiceFilterCallback;
+import com.microsoft.windowsazure.mobileservices.http.ServiceFilter;
+import com.microsoft.windowsazure.mobileservices.http.ServiceFilterRequest;
+import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 import com.pkmmte.view.CircularImageView;
 
+import junit.framework.Assert;
+
 import java.net.MalformedURLException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends BaseActivity
@@ -142,7 +160,8 @@ public class MainActivity extends BaseActivity
         String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
 
         // Don't mess with BaseActivity.wamsInit();
-        wamsInit(accessToken, accessTokenSecret);
+        if( !wamsInit() )
+            login(accessToken, accessTokenSecret);
 
         WAMSVersionTable wamsVersionTable = new WAMSVersionTable(this, this);
         try {
@@ -478,58 +497,22 @@ public class MainActivity extends BaseActivity
 //        }
 //    }
 
-    public void wamsInit(String accessToken, String accessTokenSecret){
+    public Boolean wamsInit(){
 
         if( mWAMSLogedIn )
-            return;
+            return true;
 
         try {
             wamsClient = new MobileServiceClient(
                     Globals.WAMS_URL,
                     Globals.WAMS_API_KEY,
-                    this);
-                    //.withFilter(new wamsUtils.RefreshTokenCacheFilter());
+                    this)
+                    .withFilter(new RefreshTokenCacheFilter());
+                    //.withFilter(new wamsUtils.ProgressFilter());
 
-            if( !wamsUtils.loadUserTokenCache(wamsClient, this) ) {
+            if( !wamsUtils.loadUserTokenCache(wamsClient, this) )
+                return false;
 
-                final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
-                assert( tokenProvider != null );
-
-                final JsonObject body = new JsonObject();
-                if( tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
-                    body.addProperty("authenticationToken", accessToken);
-                } else if( tokenProvider == MobileServiceAuthenticationProvider.Google ) {
-                    body.addProperty("id_token", accessToken);
-                } else {
-
-                    body.addProperty("access_token", accessToken);
-                    if (!accessTokenSecret.isEmpty())
-                        body.addProperty("access_token_secret", accessTokenSecret);
-                }
-
-                ListenableFuture<MobileServiceUser> login =
-                        wamsClient.login(tokenProvider, body);
-
-                Futures.addCallback(login, new FutureCallback<MobileServiceUser>() {
-                    @Override
-                    public void onSuccess(MobileServiceUser mobileServiceUser) {
-                        cacheUserToken(mobileServiceUser);
-                        mWAMSLogedIn = true;
-
-                        if (Answers.getInstance() != null)
-                            Answers.getInstance().logLogin(new LoginEvent()
-                                    .putMethod(tokenProvider.toString())
-                                    .putSuccess(true));
-
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                        Toast.makeText(MainActivity.this,
-                                t.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
 
         } catch(MalformedURLException ex ) {
             if( Crashlytics.getInstance() != null)
@@ -537,6 +520,48 @@ public class MainActivity extends BaseActivity
 
             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
         }
+
+        return true;
+    }
+
+    private void login(String accessToken, String accessTokenSecret) {
+        final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
+        assert (tokenProvider != null);
+
+        final JsonObject body = new JsonObject();
+        if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
+            body.addProperty("authenticationToken", accessToken);
+        } else if (tokenProvider == MobileServiceAuthenticationProvider.Google) {
+            body.addProperty("id_token", accessToken);
+        } else {
+
+            body.addProperty("access_token", accessToken);
+            if (!accessTokenSecret.isEmpty())
+                body.addProperty("access_token_secret", accessTokenSecret);
+        }
+
+        ListenableFuture<MobileServiceUser> login =
+                wamsClient.login(tokenProvider, body);
+
+        Futures.addCallback(login, new FutureCallback<MobileServiceUser>() {
+            @Override
+            public void onSuccess(MobileServiceUser mobileServiceUser) {
+                cacheUserToken(mobileServiceUser);
+                mWAMSLogedIn = true;
+
+                if (Answers.getInstance() != null)
+                    Answers.getInstance().logLogin(new LoginEvent()
+                            .putMethod(tokenProvider.toString())
+                            .putSuccess(true));
+
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Toast.makeText(MainActivity.this,
+                        t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private MobileServiceAuthenticationProvider getTokenProvider() {
@@ -594,5 +619,184 @@ public class MainActivity extends BaseActivity
         } catch(Exception ex) {
             Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * The RefreshTokenCacheFilter class filters responses for HTTP status code 401.
+     * When 401 is encountered, the filter calls the authenticate method on the
+     * UI thread. Outgoing requests and retries are blocked during authentication.
+     * Once authentication is complete, the token cache is updated and
+     * any blocked request will receive the X-ZUMO-AUTH header added or updated to
+     * that request.
+     */
+    public class RefreshTokenCacheFilter implements ServiceFilter {
+
+
+        @Override
+        public ListenableFuture<ServiceFilterResponse> handleRequest(ServiceFilterRequest request,
+                                                                     NextServiceFilterCallback nextServiceFilterCallback) {
+
+            ListenableFuture<ServiceFilterResponse> future = null;
+            final CountDownLatch latch = new CountDownLatch(1);
+            int responseCode = 401;
+
+            try {
+                future = nextServiceFilterCallback.onNext(request);
+                ServiceFilterResponse response = future.get();
+                responseCode = response.getStatus().getStatusCode();
+                latch.countDown();
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, e.getMessage());
+            } catch (ExecutionException e) {
+                Log.e(LOG_TAG, e.getMessage());
+
+                if (e.getCause().getClass() == MobileServiceException.class) {
+                    MobileServiceException mEx = (MobileServiceException) e.getCause();
+                    responseCode = mEx.getResponse().getStatus().getStatusCode();
+                    if (responseCode == 401) {
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
+                                if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
+                                    if (Globals.liveAuthClient == null) {
+
+                                        Globals.liveAuthClient = new LiveAuthClient(getApplicationContext(),
+                                                                                Globals.MICROSOFT_CLIENT_ID);
+
+                                    }
+
+                                    Globals.liveAuthClient.login(MainActivity.this,
+                                            Arrays.asList(Globals.LIVE_SCOPES),
+                                            new LiveAuthListener() {
+                                                @Override
+                                                public void onAuthComplete(LiveStatus status,
+                                                                           LiveConnectSession session,
+                                                                           Object userState) {
+
+                                                    String accessToken = session.getAuthenticationToken();
+                                                    saveAccessTokenAfterRefresh(accessToken);
+                                                    latch.countDown();
+
+                                                    login(accessToken, "");
+
+                                                }
+
+                                                @Override
+                                                public void onAuthError(LiveAuthException exception, Object userState) {
+                                                    latch.countDown();
+                                                }
+                                            });
+
+
+                                } else if (tokenProvider == MobileServiceAuthenticationProvider.Facebook) {
+                                    com.facebook.AccessToken fbAccessToken = com.facebook.AccessToken.getCurrentAccessToken();
+                                    Assert.assertTrue(fbAccessToken.isExpired());
+
+                                    AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
+                                        @Override
+                                        public void OnTokenRefreshed(AccessToken accessToken) {
+                                            AccessToken.setCurrentAccessToken(accessToken);
+                                            saveAccessTokenAfterRefresh(accessToken.getToken());
+
+                                            latch.countDown();
+                                        }
+
+                                        @Override
+                                        public void OnTokenRefreshFailed(FacebookException exception) {
+
+                                            latch.countDown();
+                                        }
+
+                                    });
+                                    latch.countDown();
+
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+
+            try {
+                latch.await();
+            } catch (InterruptedException ex) {
+                Log.e(LOG_TAG, ex.getMessage());
+            }
+
+            return future;
+        }
+    }
+
+    /**
+     * The ProgressFilter class renders a progress bar on the screen during the time the App is waiting
+     * for the response of a previous request.
+     * the filter shows the progress bar on the beginning of the request, and hides it when the response arrived.
+     */
+    public class ProgressFilter implements ServiceFilter {
+
+        MaterialDialog mProgressDialog;
+
+        public ProgressFilter(Context context){
+            mProgressDialog = new MaterialDialog.Builder(context)
+                    .title(R.string.progress_dialog)
+                    .content(R.string.please_wait)
+                    .progress(true, 0)
+                    .build();
+        }
+
+        @Override
+        public ListenableFuture<ServiceFilterResponse> handleRequest(ServiceFilterRequest request,
+                                                                     NextServiceFilterCallback nextServiceFilterCallback) {
+
+            final SettableFuture<ServiceFilterResponse> resultFuture = SettableFuture.create();
+
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    if (mProgressDialog != null)
+                        mProgressDialog.show();
+                }
+            });
+
+            ListenableFuture<ServiceFilterResponse> future = nextServiceFilterCallback.onNext(request);
+            Futures.addCallback(future, new FutureCallback<ServiceFilterResponse>() {
+                @Override
+                public void onFailure(Throwable t) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mProgressDialog.dismiss();
+                        }
+                    });
+
+                    resultFuture.setException(t);
+                }
+
+                @Override
+                public void onSuccess(ServiceFilterResponse response) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mProgressDialog.dismiss();
+                        }
+                    });
+
+                    resultFuture.set(response);
+                }
+            });
+
+            return resultFuture;
+        }
+    }
+
+    private void saveAccessTokenAfterRefresh(String accessToken ){
+//        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+//        SharedPreferences.Editor editor = sharedPrefs.edit();
+//
+//        editor.putString(Globals.TOKENPREF, accessToken);
+//        editor.apply();
     }
 }
