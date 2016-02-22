@@ -1,2 +1,2 @@
-include ':app', ':volley', ':livesdk'
+include ':app', ':livesdk'
 include ':libraries:opencv'
