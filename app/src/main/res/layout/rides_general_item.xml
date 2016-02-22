@@ -60,6 +60,7 @@
                     android:layout_toEndOf="@+id/imageDriver"
                     android:layout_centerVertical="true"
                     android:layout_gravity="center"
+                    android:layout_marginStart="6dp"
                     android:layout_marginLeft="6dp" />
 
                 <TextView

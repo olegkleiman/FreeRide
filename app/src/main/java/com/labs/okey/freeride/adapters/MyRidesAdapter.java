@@ -137,7 +137,7 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
             approvedSign = (ImageView) itemView.findViewById(R.id.approvedSign);
             driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
-            rowLayout = itemView.findViewById(R.id.user_details_card);
+            rowLayout = itemView.findViewById(R.id.mode_row);
             rowLayout.setOnClickListener(this);
         }
 
