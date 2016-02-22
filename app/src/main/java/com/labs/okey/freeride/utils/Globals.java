@@ -7,6 +7,7 @@ import android.renderscript.Matrix4f;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.ndk.CrashlyticsNdk;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
@@ -115,7 +116,7 @@ public class Globals {
 //            TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
 //                                                                  TWITTER_CONSUMER_SECRET);
 //            Fabric.with(ctx, new TwitterCore(authConfig), new Crashlytics(), new Digits());
-            Fabric.with(ctx, new Crashlytics());
+            Fabric.with(ctx, new Crashlytics(), new CrashlyticsNdk());
 
             User user = User.load(ctx);
             Crashlytics.setUserIdentifier(user.getRegistrationId());
