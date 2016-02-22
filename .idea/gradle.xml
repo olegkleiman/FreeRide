@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/libraries" />
             <option value="$PROJECT_DIR$/libraries/opencv" />
             <option value="$PROJECT_DIR$/livesdk" />
+            <option value="$PROJECT_DIR$/volley" />
           </set>
         </option>
       </GradleProjectSettings>
