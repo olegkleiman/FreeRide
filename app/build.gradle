@@ -166,7 +166,8 @@ dependencies {
     }
     
     compile project(':libraries:opencv')
-    compile project(':volley')
+    //compile project(':volley')
+    compile 'com.android.volley:volley:1.0.0'
     compile project(':livesdk')
 
     // Twitter
