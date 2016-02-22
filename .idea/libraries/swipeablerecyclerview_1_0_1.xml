@@ -1,12 +1,10 @@
 <component name="libraryTable">
   <library name="swipeablerecyclerview-1.0.1">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.github.brnunes/swipeablerecyclerview/1.0.1/jars/classes.jar!/" />
       <root url="file://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.github.brnunes/swipeablerecyclerview/1.0.1/res" />
+      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.github.brnunes/swipeablerecyclerview/1.0.1/jars/classes.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.brnunes/swipeablerecyclerview/1.0.1/29f4cfe818c55d4a537fdd7e7aed3fece1cced2d/swipeablerecyclerview-1.0.1-sources.jar!/" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>
