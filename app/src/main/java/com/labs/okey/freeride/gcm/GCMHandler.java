@@ -65,6 +65,13 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
                     // Better use WAMS SDK v2 like:
                     final MobileServicePush msp = MainActivity.wamsClient.getPush();
+                    if( msp == null ) {
+                        if( Crashlytics.getInstance() != null )
+                            Crashlytics.log(Log.ERROR, LOG_TAG, "Unable to get PUSH");
+
+                        return null;
+                    }
+
                     ListenableFuture<Registration> lf = msp.register(gcmRegistrationId, tags);
 
                     Futures.addCallback(lf, new FutureCallback<Registration>() {

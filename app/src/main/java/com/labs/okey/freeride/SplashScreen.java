@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import com.crashlytics.android.Crashlytics;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookException;
@@ -25,6 +26,7 @@ import com.labs.okey.freeride.gcm.GCMHandler;
 import com.labs.okey.freeride.utils.Globals;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 
+import io.fabric.sdk.android.Fabric;
 import java.text.DateFormat;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;

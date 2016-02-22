@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- May use GUID generator: https://www.guidgenerator.com/online-guid-generator.aspx-->
+    <string name="com.crashlytics.android.build_id">a483745e-e608-478b-84f3-26ed6b9676d2</string>
+</resources>
