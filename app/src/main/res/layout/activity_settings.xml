@@ -24,14 +24,6 @@
             android:background="@drawable/toolbar_bk"
             android:layout_gravity="center">
 
-            <!--<com.android.volley.toolbox.NetworkImageView-->
-                <!--android:layout_width="@dimen/avatar_settings_size"-->
-                <!--android:layout_height="@dimen/avatar_settings_size"-->
-                <!--android:id="@+id/imageProfileView"-->
-                <!--android:layout_gravity="center_vertical"-->
-                <!--android:layout_centerVertical="true"-->
-                <!--android:layout_centerHorizontal="true" />-->
-
             <com.pkmmte.view.CircularImageView
                 android:layout_width="@dimen/avatar_settings_size"
                 android:layout_height="@dimen/avatar_settings_size"

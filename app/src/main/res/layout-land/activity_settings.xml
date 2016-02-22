@@ -30,11 +30,14 @@
                 android:background="@drawable/toolbar_bk"
                 android:layout_gravity="center">
 
-                <ImageView
+                <com.pkmmte.view.CircularImageView
                     android:layout_width="@dimen/avatar_settings_size"
                     android:layout_height="@dimen/avatar_settings_size"
                     android:src="@drawable/driver64"
                     android:id="@+id/imageProfileView"
+                    app:border="true"
+                    app:border_color="#FFFFFFFF"
+                    app:border_width="4dp"
                     android:layout_gravity="center_vertical"
                     android:layout_centerVertical="true"
                     android:layout_centerHorizontal="true" />
