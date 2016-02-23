@@ -14,7 +14,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -26,6 +25,11 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.common.base.Function;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.labs.okey.freeride.model.GFCircle;
 import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.services.GeofenceErrorMessages;
@@ -40,6 +44,9 @@ import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTab
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Oleg Kleiman on 09-Jun-15.
@@ -166,6 +173,55 @@ public class BaseActivityWithGeofences extends BaseActivity
 
         super.onPause();
     }
+
+    protected ListenableFuture<ArrayList<GFCircle>> _initGeofences() {
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
+
+        Callable<MobileServiceList<GeoFence>> getGeoFencesTask =
+                new Callable<MobileServiceList<GeoFence>>() {
+                @Override
+                public MobileServiceList<GeoFence> call() throws Exception {
+                    wamsUtils.sync(getMobileServiceClient(), "geofences");
+
+                    Query pullQuery = getMobileServiceClient().getTable(GeoFence.class).where();
+                    return mGFencesSyncTable.read(pullQuery).get();
+                }
+        };
+
+        if (mGFencesSyncTable == null)
+            mGFencesSyncTable = getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
+
+        ListenableFuture<MobileServiceList<GeoFence>> future = executor.submit(getGeoFencesTask);
+        return Futures.transform(future, toCircles);
+    }
+
+
+    final Function<MobileServiceList<GeoFence>, ArrayList<GFCircle>> toCircles =
+            new Function<MobileServiceList<GeoFence>, ArrayList<GFCircle>>() {
+                @Override
+                public ArrayList<GFCircle> apply(MobileServiceList<GeoFence> gFences){
+
+                    for (GeoFence _gFence : gFences) {
+                        if( _gFence.isActive() ) {
+                            // About the issues of converting float to double
+                            // see here: http://programmingjungle.blogspot.co.il/2013/03/float-to-double-conversion-in-java.html
+                            double lat = new BigDecimal(String.valueOf(_gFence.getLat())).doubleValue();
+                            double lon = new BigDecimal(String.valueOf(_gFence.getLon())).doubleValue();
+                            int radius = Math.round(_gFence.getRadius());
+
+                            GFCircle gfCircle = new GFCircle(lat, lon,
+                                    radius,
+                                    _gFence.getLabel());
+                            mGFCircles.add(gfCircle);
+
+                        }
+                    }
+
+                    isGeoFencesInitialized = true;
+
+                    return mGFCircles;
+    }};
 
     protected void initGeofences(final IInitializeNotifier notifier) {
         if (!isWamsInitialized())

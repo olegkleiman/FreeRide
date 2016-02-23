@@ -46,7 +46,7 @@ public class GFActivity extends BaseActivity
         android.location.LocationListener,
         OnMapReadyCallback {
 
-    private static final String LOG_TAG = "FR.GFActivity";
+    private final String                        LOG_TAG = getClass().getSimpleName();
 
     private LocationRequest                     mLocationRequest;
     private Location                            mCurrentLocation;

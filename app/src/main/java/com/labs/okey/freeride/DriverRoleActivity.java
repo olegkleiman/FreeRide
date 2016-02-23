@@ -62,7 +62,20 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.freeride.adapters.PassengersAdapter;
+import com.labs.okey.freeride.model.GFCircle;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.Ride;
@@ -78,6 +91,7 @@ import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.IUploader;
 import com.labs.okey.freeride.utils.RoundedDrawable;
+import com.labs.okey.freeride.utils.UiThreadExecutor;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.WiFiUtil;
 import com.labs.okey.freeride.utils.faceapiUtils;
@@ -127,7 +141,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         WAMSVersionTable.IVersionMismatchListener,
         IUploader,
         IInitializeNotifier, // used for geo-fence initialization
-        android.location.LocationListener
+        android.location.LocationListener,
+        // Added for Google Map support within sliding panel
+        OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks
 {
 
     private final String                        LOG_TAG = getClass().getSimpleName();
@@ -145,6 +162,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private TextSwitcher                        mTextSwitcher;
     private RecyclerView                        mPeersRecyclerView;
     private ImageView                           mImageTransmit;
+    private GoogleMap                           mGoogleMap;
+    private Circle                              meCircle;
 
     private Location                            mCurrentLocation;
     private long                                mLastLocationUpdateTime;
@@ -356,15 +375,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //        }
 
         if (savedInstanceState != null) {
+
             wamsInit();
-            initGeofences(this); // upon successful return, will be continued on initialized()
+            geoFencesInit();
 
             restoreState(savedInstanceState);
         } else {
 
             if( isConnectedToNetwork() ) {
+
                 wamsInit();
-                initGeofences(this);
+                geoFencesInit();
 
                 setupNetwork();
             }
@@ -634,6 +655,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         String msg = getGFenceForLocation(mCurrentLocation);
         mTextSwitcher.setText(msg);
 
+        for (GFCircle gfCircle : mGFCircles) {
+
+            CircleOptions circleOpt = new CircleOptions()
+                    .center(new LatLng(gfCircle.getX(), gfCircle.getY()))
+                    .radius(gfCircle.getRadius())
+                    .strokeColor(Color.CYAN)
+                    .fillColor(Color.TRANSPARENT);
+            mGoogleMap.addCircle(circleOpt);
+        }
+
         if (Globals.isInGeofenceArea()) { // set or not set inside getGFenceForLocation()
             if( mRideCode != null && mRideCodeUploaded.compareAndSet(false, true) ) {
                 mWAMSUploadRideCodeTask.execute();
@@ -688,6 +719,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
 
             mCurrentLocation = location;
+
+            LatLng latLng = new LatLng(location.getLatitude(),
+                    location.getLongitude());
+            // Showing the current location in Google Map
+            if( meCircle != null )
+                meCircle.remove();
+            CircleOptions circleOpt = new CircleOptions()
+                    .center(latLng)
+                    .radius(10)
+                    .strokeColor(Color.CYAN)
+                    .strokeWidth(1)
+                    .fillColor(Color.RED);
+            meCircle = mGoogleMap.addCircle(circleOpt);
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(17));
+
             // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
             String msg = getGFenceForLocation(location);
 
@@ -1170,6 +1217,42 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mRidesTable = getMobileServiceClient().getTable("rides", Ride.class);
     }
 
+    private void geoFencesInit() {
+
+        ListenableFuture<ArrayList<GFCircle>> transformFuture = _initGeofences();
+        Futures.addCallback(transformFuture, new FutureCallback<ArrayList<GFCircle>>() {
+            @Override
+            public void onSuccess(final ArrayList<GFCircle> result) {
+
+                String msg = getGFenceForLocation(mCurrentLocation);
+                mTextSwitcher.setText(msg);
+
+                for (GFCircle gfCircle : result) {
+
+                    CircleOptions circleOpt = new CircleOptions()
+                            .center(new LatLng(gfCircle.getX(), gfCircle.getY()))
+                            .radius(gfCircle.getRadius())
+                            .strokeColor(Color.CYAN)
+                            .fillColor(Color.TRANSPARENT);
+                    mGoogleMap.addCircle(circleOpt);
+                }
+
+                if (Globals.isInGeofenceArea()) { // set or not set inside getGFenceForLocation()
+                    if (mRideCode != null && mRideCodeUploaded.compareAndSet(false, true)) {
+                        mWAMSUploadRideCodeTask.execute();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                if( Crashlytics.getInstance() != null ) {
+                    Crashlytics.logException(t);
+                }
+            }
+        }, new UiThreadExecutor());
+    }
+
     private void setupNetwork() {
 
         int min = 100000;
@@ -1431,8 +1514,41 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+        mGoogleMap = googleMap;
+        mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
+        mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
+    }
+
+    //
+    // Implementation of GoogleApiClient.ConnectionCallbacks
+    //
+    @Override
+    public void onConnected(Bundle bundle) {
+
+        if (mCurrentLocation != null) {
+            CameraPosition cameraPosition = new CameraPosition.Builder().target(
+                    new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))
+                    .zoom(15)
+                    .build();
+            if( mGoogleMap != null)
+                mGoogleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.gf_map);
+        mapFragment.getMapAsync(this);
 
         // Prevent memory leak on ImageView
         View v = findViewById(R.id.centerImage);
@@ -1501,17 +1617,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         // Set the initial text without an animation
         String currentMonitorStatus = getString(R.string.geofence_outside_title);
         mTextSwitcher.setCurrentText(currentMonitorStatus);
-
-        mTextSwitcher.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                Intent intent = new Intent(DriverRoleActivity.this,
-                        GFActivity.class);
-                startActivity(intent);
-
-                return false;
-            }
-        });
 
         Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
@@ -1944,13 +2049,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    //
-    // Implementation of GoogleApiClient.ConnectionCallbacks
-    //
-    @Override
-    public void onConnectionSuspended(int i) {
 
-    }
 
     //
     // Implementation of IPictureURLUpdater

@@ -9,327 +9,388 @@
     android:fitsSystemWindows="true"
     tools:context="com.maximum.fastride.DriverRoleActivity" >
 
-<LinearLayout
-    android:id="@+id/content_frame"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <include
-        layout="@layout/tool_bar" />
-
-    <LinearLayout
-        android:id="@+id/driver_status_layout"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/card_backpanel_height"
-        android:orientation="horizontal"
-        android:background="?attr/colorPrimary"
-        android:layout_gravity="center_horizontal"
-        android:gravity="center_horizontal"
-        android:visibility="visible">
-        <TextView
-            android:id="@+id/code_label_caption"
-            android:textColor="@color/white"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
-        <TextView
-            android:id="@+id/txtRideCode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:layout_gravity="center"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:visibility="gone" />
-        <ImageView
-            android:id="@+id/img_transmit"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="center"
-            android:clickable="true"
-            android:src="@drawable/animation1"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <View
-        android:id="@+id/status_strip"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/card_backpanel_height"
-        android:background="?attr/colorPrimary"
-        android:visibility="visible" />
-
-    <RelativeLayout
-        android:id="@+id/drive_internal_layout"
-        android:layout_width="fill_parent"
-        android:layout_height="350dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/ColorBackground"
-        android:layout_weight="0.5"
-        android:elevation="8dp"
-        android:layout_marginLeft="@dimen/card_horizontal_margin"
-        android:layout_marginRight="@dimen/card_horizontal_margin"
-        android:layout_marginBottom="@dimen/card_horizontal_margin"
-        android:layout_marginTop="@dimen/negativeActionBarSize"
-        android:visibility="visible">
-
-        <FrameLayout
-            android:id="@+id/drivers_layout"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:visibility="visible">
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recyclerViewPeers"
-                android:layout_height="match_parent"
-                android:layout_width="fill_parent"
-                android:background="@color/ColorBackground" />
-
-            <TextView
-                android:id="@+id/empty_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:visibility="visible"
-                android:text="@string/no_passengers" />
-
-        </FrameLayout>
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/submit_ride_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_action_camera"
-            android:tag="camera_tag"
-            app:elevation="4dp"
-
-            app:layout_anchorGravity="bottom|right|end"
-
-            android:layout_gravity="end|bottom"
-            app:fabSize="normal"
-
-            app:backgroundTint="@color/ColorAccent"
-            app:borderWidth="0dp"
-
-            android:onClick="onSubmitRide"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:visibility="gone" />
-
-    </RelativeLayout>
-
-    <RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/ColorBackground"
-        android:id="@+id/cabin_background_layout"
-        android:visibility="gone"
-        android:layoutDirection="ltr"
-        android:clickable="false">
-        <ImageView
+        android:gravity="bottom"
+        sothree:umanoPanelHeight="@dimen/slidingup_panel_height"
+        sothree:umanoShadowHeight="4dp">
+
+    <LinearLayout
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <include
+            layout="@layout/tool_bar" />
+
+        <LinearLayout
+            android:id="@+id/driver_status_layout"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/card_backpanel_height"
+            android:orientation="horizontal"
+            android:background="?attr/colorPrimary"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:visibility="visible">
+            <TextView
+                android:id="@+id/code_label_caption"
+                android:textColor="@color/white"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+            <TextView
+                android:id="@+id/txtRideCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:layout_gravity="center"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:visibility="gone" />
+            <ImageView
+                android:id="@+id/img_transmit"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:src="@drawable/animation1"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/status_strip"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/card_backpanel_height"
+            android:background="?attr/colorPrimary"
+            android:visibility="visible" />
+
+        <RelativeLayout
+            android:id="@+id/drive_internal_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="350dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/ColorBackground"
+            android:layout_weight="0.5"
+            android:elevation="8dp"
+            android:layout_marginLeft="@dimen/card_horizontal_margin"
+            android:layout_marginRight="@dimen/card_horizontal_margin"
+            android:layout_marginBottom="@dimen/card_horizontal_margin"
+            android:layout_marginTop="@dimen/negativeActionBarSize"
+            android:visibility="visible">
+
+            <FrameLayout
+                android:id="@+id/drivers_layout"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:visibility="visible">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recyclerViewPeers"
+                    android:layout_height="match_parent"
+                    android:layout_width="fill_parent"
+                    android:background="@color/ColorBackground" />
+
+                <TextView
+                    android:id="@+id/empty_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:visibility="visible"
+                    android:text="@string/no_passengers" />
+
+            </FrameLayout>
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/submit_ride_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_action_camera"
+                android:tag="camera_tag"
+                app:elevation="4dp"
+
+                app:layout_anchorGravity="bottom|right|end"
+
+                android:layout_gravity="end|bottom"
+                app:fabSize="normal"
+
+                app:backgroundTint="@color/ColorAccent"
+                app:borderWidth="0dp"
+
+                android:onClick="onSubmitRide"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_centerInParent="true"
-            android:id="@+id/centerImage"
-            android:contentDescription="@string/cabin_image_description"
-            android:src="@drawable/cabin_portrait"
-            android:scaleType="fitXY" />
+            android:background="@color/ColorBackground"
+            android:id="@+id/cabin_background_layout"
+            android:visibility="gone"
+            android:layoutDirection="ltr"
+            android:clickable="false">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:id="@+id/centerImage"
+                android:contentDescription="@string/cabin_image_description"
+                android:src="@drawable/cabin_portrait"
+                android:scaleType="fitXY" />
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/close_circle"
-            android:onClick="hideCabinView" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/close_circle"
+                android:onClick="hideCabinView" />
 
-        <FrameLayout
-            android:id="@+id/passengerLayout1"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_marginTop="138dp"
-            android:layout_alignParentTop="true"
-            android:layout_toRightOf="@+id/passengerLayout4"
-            android:layout_toEndOf="@+id/passengerLayout4"
-            android:layout_marginLeft="43dp"
-            android:layout_marginStart="43dp">
+            <FrameLayout
+                android:id="@+id/passengerLayout1"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginTop="138dp"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@+id/passengerLayout4"
+                android:layout_toEndOf="@+id/passengerLayout4"
+                android:layout_marginLeft="43dp"
+                android:layout_marginStart="43dp">
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger1"
+                    android:tag="1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
+
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="left|bottom"
+                    app:fabSize="mini"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera" />
+
+            </FrameLayout>
+
+
+            <FrameLayout
+                android:id="@+id/passengerLayout2"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginBottom="68dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignStart="@+id/passengerLayout1">
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger2"
+                    android:tag="2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
+
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="mini"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera"
+
+                    />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/passengerLayout4"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_above="@+id/passengerLayout3"
+                android:layout_centerHorizontal="true">
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger4"
+                    android:tag="4"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
+
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="mini"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera"/>
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/passengerLayout3"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+
+                android:layout_alignTop="@+id/passengerLayout2"
+                android:layout_toStartOf="@+id/passengerLayout4"
+                android:layout_marginEnd="22dp">
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/passenger3"
+                    android:tag="3"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:src="@drawable/ic_action_camera"
+                    app:elevation="4dp"
+
+                    app:layout_anchor="@id/recyclerViewPeers"
+                    app:layout_anchorGravity="bottom|right|end"
+
+                    android:layout_gravity="end|bottom"
+                    app:fabSize="mini"
+
+                    app:backgroundTint="@color/ColorAccent"
+                    app:borderWidth="0dp"
+                    android:onClick="onButtonPassengerCamera"/>
+
+            </FrameLayout>
 
             <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger1"
-                android:tag="1"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:src="@drawable/ic_action_camera"
+                android:id="@+id/submit_ride_button_pics"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/ic_action_done"
                 app:elevation="4dp"
 
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="left|bottom"
-                app:fabSize="mini"
+                android:layout_gravity="center"
+                app:fabSize="normal"
 
                 app:backgroundTint="@color/ColorAccent"
                 app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera" />
 
-        </FrameLayout>
+                android:onClick="onSubmitRidePics"
+
+                android:visibility="invisible"
+                android:layout_alignBottom="@+id/passengerLayout1"
+                android:layout_alignRight="@+id/passengerLayout3"
+                android:layout_alignEnd="@+id/passengerLayout3" />
+
+        </RelativeLayout>
+
+        <!--<LinearLayout-->
+            <!--android:id="@+id/passenger_snackbar"-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="@dimen/snackbar_height"-->
+            <!--android:animateLayoutChanges="true">-->
+
+            <!--<TextSwitcher-->
+                <!--android:id="@+id/monitor_text_switcher"-->
+                <!--android:layout_weight="10"-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="fill_parent">-->
+
+                <!--<TextView-->
+                    <!--android:id="@+id/status_monitor"-->
+                    <!--android:layout_width="fill_parent"-->
+                    <!--android:layout_height="fill_parent"-->
+                    <!--android:paddingStart="@dimen/snackbar_leftpadding"-->
+                    <!--android:paddingEnd="@dimen/snackbar_rightpadding"-->
+                    <!--android:background="@color/ColorPrimary"-->
+                    <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+                    <!--android:textColor="@color/white"-->
+                    <!--android:text="@string/geofence_outside_title"-->
+                    <!--android:gravity="start|center_vertical|fill_vertical|start|center_horizontal"-->
+                    <!--android:visibility="visible" />-->
+
+                <!--<TextView-->
+                    <!--android:layout_width="fill_parent"-->
+                    <!--android:layout_height="fill_parent"-->
+                    <!--android:paddingStart="@dimen/snackbar_leftpadding"-->
+                    <!--android:paddingEnd="@dimen/snackbar_rightpadding"-->
+                    <!--android:background="@color/ColorPrimary"-->
+                    <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+                    <!--android:textColor="@color/white"-->
+                    <!--android:text="@string/geofence_outside_title"-->
+                    <!--android:gravity="start|center_vertical|fill_vertical|start|center_horizontal"-->
+                    <!--android:visibility="visible" />-->
 
 
-        <FrameLayout
-            android:id="@+id/passengerLayout2"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_marginBottom="68dp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignStart="@+id/passengerLayout1">
+            <!--</TextSwitcher>-->
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger2"
-                android:tag="2"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
+        <!--</LinearLayout>-->
 
-                app:layout_anchor="@id/recyclerViewPeers"
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="end|bottom"
-                app:fabSize="mini"
-
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera"
-
-                />
-
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/passengerLayout4"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_above="@+id/passengerLayout3"
-            android:layout_centerHorizontal="true">
-
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger4"
-                android:tag="4"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
-
-                app:layout_anchor="@id/recyclerViewPeers"
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="end|bottom"
-                app:fabSize="mini"
-
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera"/>
-
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/passengerLayout3"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-
-            android:layout_alignTop="@+id/passengerLayout2"
-            android:layout_toStartOf="@+id/passengerLayout4"
-            android:layout_marginEnd="22dp">
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/passenger3"
-                android:tag="3"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:src="@drawable/ic_action_camera"
-                app:elevation="4dp"
-
-                app:layout_anchor="@id/recyclerViewPeers"
-                app:layout_anchorGravity="bottom|right|end"
-
-                android:layout_gravity="end|bottom"
-                app:fabSize="mini"
-
-                app:backgroundTint="@color/ColorAccent"
-                app:borderWidth="0dp"
-                android:onClick="onButtonPassengerCamera"/>
-
-        </FrameLayout>
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/submit_ride_button_pics"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:src="@drawable/ic_action_done"
-            app:elevation="4dp"
-
-            android:layout_gravity="center"
-            app:fabSize="normal"
-
-            app:backgroundTint="@color/ColorAccent"
-            app:borderWidth="0dp"
-
-            android:onClick="onSubmitRidePics"
-
-            android:visibility="invisible"
-            android:layout_alignBottom="@+id/passengerLayout1"
-            android:layout_alignRight="@+id/passengerLayout3"
-            android:layout_alignEnd="@+id/passengerLayout3" />
-
-    </RelativeLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/passenger_snackbar"
-        android:layout_width="fill_parent"
-        android:layout_height="@dimen/snackbar_height"
-        android:animateLayoutChanges="true">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@color/white"
+        android:orientation="vertical" >
 
         <TextSwitcher
             android:id="@+id/monitor_text_switcher"
-            android:layout_weight="10"
-            android:layout_width="0dp"
-            android:layout_height="fill_parent">
+            android:layout_width="fill_parent"
+            android:layout_height="@dimen/slidingup_panel_height">
 
             <TextView
-                android:id="@+id/status_monitor"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
+                android:paddingLeft="@dimen/snackbar_leftpadding"
                 android:paddingStart="@dimen/snackbar_leftpadding"
+                android:paddingRight="@dimen/snackbar_rightpadding"
                 android:paddingEnd="@dimen/snackbar_rightpadding"
                 android:background="@color/ColorPrimary"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/white"
                 android:text="@string/geofence_outside_title"
-                android:gravity="start|center_vertical|fill_vertical|start|center_horizontal"
-                android:visibility="visible" />
+                android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
 
             <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
+                android:paddingLeft="@dimen/snackbar_leftpadding"
                 android:paddingStart="@dimen/snackbar_leftpadding"
+                android:paddingRight="@dimen/snackbar_rightpadding"
                 android:paddingEnd="@dimen/snackbar_rightpadding"
                 android:background="@color/ColorPrimary"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/white"
                 android:text="@string/geofence_outside_title"
-                android:gravity="start|center_vertical|fill_vertical|start|center_horizontal"
-                android:visibility="visible" />
-
+                android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
 
         </TextSwitcher>
 
+        <fragment
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/gf_map"
+            class="com.google.android.gms.maps.SupportMapFragment"
+            tools:layout="@layout/activity_driver_role" />
+
     </LinearLayout>
 
-</LinearLayout>
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
     <!-- The navigation drawer -->
     <include

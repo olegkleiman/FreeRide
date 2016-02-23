@@ -60,7 +60,19 @@ import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.freeride.adapters.WiFiPeersAdapter2;
+import com.labs.okey.freeride.model.GFCircle;
 import com.labs.okey.freeride.model.Join;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.ClientSocketHandler;
@@ -71,6 +83,7 @@ import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
 import com.labs.okey.freeride.utils.ITrace;
 import com.labs.okey.freeride.utils.RoundedDrawable;
+import com.labs.okey.freeride.utils.UiThreadExecutor;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wifip2p.IConversation;
 import com.labs.okey.freeride.utils.wifip2p.P2pConversator;
@@ -104,7 +117,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         P2pConversator.IPeersChangedListener,
         WAMSVersionTable.IVersionMismatchListener,
         IInitializeNotifier, // used for geo-fence initialization
-        android.location.LocationListener
+        android.location.LocationListener,
+        // Added for Google Map support within sliding panel
+        OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks
 {
 
     private final String                LOG_TAG = getClass().getSimpleName();
@@ -116,6 +132,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     private Boolean                     mDriversShown;
     private TextSwitcher                mTextSwitcher;
+    private GoogleMap                   mGoogleMap;
+    private Circle                      meCircle;
 
     private MobileServiceTable<Join>    joinsTable;
 
@@ -155,7 +173,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         wamsInit(false); // without auto-update for this activity
 
-        initGeofences(this);
+        geoFencesInit();
 
         joinsTable = getMobileServiceClient().getTable("joins", Join.class);
 
@@ -182,26 +200,53 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, mRideCode);
-        outState.putString(Globals.PARCELABLE_KEY_DRIVER, mDriverName);
-        outState.putParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS, mDrivers);
+    private void geoFencesInit() {
+        ListenableFuture<ArrayList<GFCircle>> transformFuture = _initGeofences();
+        Futures.addCallback(transformFuture, new FutureCallback<ArrayList<GFCircle>>() {
+            @Override
+            public void onSuccess(final ArrayList<GFCircle> result) {
+
+                String msg = getGFenceForLocation(mCurrentLocation);
+                mTextSwitcher.setText(msg);
+
+                for (GFCircle gfCircle : result) {
+
+                    CircleOptions circleOpt = new CircleOptions()
+                            .center(new LatLng(gfCircle.getX(), gfCircle.getY()))
+                            .radius(gfCircle.getRadius())
+                            .strokeColor(Color.CYAN)
+                            .fillColor(Color.TRANSPARENT);
+                    mGoogleMap.addCircle(circleOpt);
+                }
+
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                if (Crashlytics.getInstance() != null) {
+                    Crashlytics.logException(t);
+                }
+            }
+        }, new UiThreadExecutor());
     }
 
-        @UiThread
-    protected void setupUI(String title, String subTitle){
+    @UiThread
+    protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
 
-        RecyclerView driversRecycler = (RecyclerView)findViewById(R.id.recyclerViewDrivers);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.gf_map);
+        mapFragment.getMapAsync(this);
+
+        RecyclerView driversRecycler = (RecyclerView) findViewById(R.id.recyclerViewDrivers);
         driversRecycler.setHasFixedSize(true);
         driversRecycler.setLayoutManager(new LinearLayoutManager(this));
         driversRecycler.setItemAnimator(new DefaultItemAnimator());
 
         mDriversAdapter = new WiFiPeersAdapter2(this,
-                                    R.layout.drivers_header,
-                                    R.layout.row_devices,
-                                    mDrivers);
+                R.layout.drivers_header,
+                R.layout.row_devices,
+                mDrivers);
         driversRecycler.setAdapter(mDriversAdapter);
 
         mDriversShown = false;
@@ -214,19 +259,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         // Set the initial text without an animation
         String currentMonitorStatus = getString(R.string.geofence_outside_title);
         mTextSwitcher.setCurrentText(currentMonitorStatus);
-        mTextSwitcher.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                Intent intent = new Intent(PassengerRoleActivity.this,
-                        GFActivity.class);
-                startActivity(intent);
-
-                return false;
-            }
-        });
-
 
         Globals.setMonitorStatus(currentMonitorStatus);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+        mGoogleMap = googleMap;
+        mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
+        mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
     }
 
     @Override
@@ -234,7 +276,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onResume() {
         super.onResume();
 
-        try{
+        try {
             mCurrentLocation = getCurrentLocation(this);// check Location Permission inside!
 
             // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
@@ -247,7 +289,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             // Returns true if app has requested this permission previously
             // and the user denied the request
-            if( ActivityCompat.shouldShowRequestPermissionRationale(this,
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 mTextSwitcher.setCurrentText(getString(R.string.permission_location_denied));
@@ -272,8 +314,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         try {
             stopDiscovery(null);
-        } catch(Exception ex) {
-            if( Crashlytics.getInstance() != null )
+        } catch (Exception ex) {
+            if (Crashlytics.getInstance() != null)
                 Crashlytics.log(ex.getLocalizedMessage());
 
             Log.e(LOG_TAG, ex.getLocalizedMessage());
@@ -310,11 +352,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         String action = intent.getAction();
 
         // Is launched from Notification?
-        if( action != null &&
+        if (action != null &&
                 action.equals(Globals.ACTION_CONFIRM) &&
                 intent.getType() == null) {
 
-            if( intent.hasExtra(Globals.NOTIFICATION_ID_EXTRA) ) {
+            if (intent.hasExtra(Globals.NOTIFICATION_ID_EXTRA)) {
                 int notificationID = intent.getIntExtra(Globals.NOTIFICATION_ID_EXTRA, -1);
                 cancelNotification();
 
@@ -329,15 +371,15 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
-                                           @NonNull int[] grantResults){
+                                           @NonNull int[] grantResults) {
 
         try {
 
-            switch( requestCode ) {
+            switch (requestCode) {
 
                 case Globals.LOCATION_PERMISSION_REQUEST: {
 
-                    if(  grantResults.length > 0
+                    if (grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                         mCurrentLocation = getCurrentLocation(this);
@@ -346,7 +388,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 }
                 break;
 
-                case Globals.CAMERA_PERMISSION_REQUEST : {
+                case Globals.CAMERA_PERMISSION_REQUEST: {
                     if (grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                         onCameraCVInternal(null);
@@ -370,7 +412,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     // IInitializeNotifier implemntation
     //
     @Override
-    public void initialized(Object what){
+    public void initialized(Object what) {
 
         String msg = getGFenceForLocation(mCurrentLocation);
         mTextSwitcher.setText(msg);
@@ -382,16 +424,32 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     public void onLocationChanged(Location location) {
 
-        if( !Globals.DEBUG_WITHOUT_GEOFENCES ) {
+        if (!Globals.DEBUG_WITHOUT_GEOFENCES) {
 
             if (!isAccurate(location)) {
                 Globals.setInGeofenceArea(false); // ?
-                mTextSwitcher.setCurrentText( getGFenceForLocation(null) );
+                mTextSwitcher.setCurrentText(getGFenceForLocation(null));
                 Log.d(LOG_TAG, getString(R.string.location_inaccurate));
                 return;
             }
 
             mCurrentLocation = location;
+
+            LatLng latLng = new LatLng(location.getLatitude(),
+                    location.getLongitude());
+            // Showing the current location in Google Map
+            if( meCircle != null )
+                meCircle.remove();
+            CircleOptions circleOpt = new CircleOptions()
+                    .center(latLng)
+                    .radius(10)
+                    .strokeColor(Color.CYAN)
+                    .strokeWidth(1)
+                    .fillColor(Color.RED);
+            meCircle = mGoogleMap.addCircle(circleOpt);
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(17));
+
             // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
             String msg = getGFenceForLocation(location);
 
@@ -402,7 +460,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 mLastLocationUpdateTime = System.currentTimeMillis();
 
                 // Send notification and log the transition details.
-                if( Globals.getRemindGeofenceEntrance() ) {
+                if (Globals.getRemindGeofenceEntrance()) {
 
                     Globals.clearRemindGeofenceEntrance();
 
@@ -442,20 +500,20 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        if( requestCode == MAKE_PICTURE_REQUEST) {
-            switch( resultCode ) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == MAKE_PICTURE_REQUEST) {
+            switch (resultCode) {
 
                 case RESULT_OK: {
 
-                    if( data != null ) {
+                    if (data != null) {
                         Bundle extras = data.getExtras();
 
-                        FloatingActionButton passengerPicture = (FloatingActionButton)this.findViewById(R.id.join_ride_button);
+                        FloatingActionButton passengerPicture = (FloatingActionButton) this.findViewById(R.id.join_ride_button);
                         passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
 
                         Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
-                        if( bmp != null) {
+                        if (bmp != null) {
                             Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
 
                             drawable = RoundedDrawable.fromDrawable(drawable);
@@ -468,8 +526,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             passengerPicture.setImageDrawable(drawable);
                         }
 
-                        mPictureURI = (URI)extras.getSerializable(getString(R.string.detection_face_uri));
-                        mFaceId  = (UUID)extras.getSerializable(getString(R.string.detection_face_id));
+                        mPictureURI = (URI) extras.getSerializable(getString(R.string.detection_face_uri));
+                        mFaceId = (UUID) extras.getSerializable(getString(R.string.detection_face_id));
 
                         mTextSwitcher.setText(getString(R.string.instruction_make_additional_selfies));
                     }
@@ -479,17 +537,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 break;
 
                 case RESULT_CANCELED: { // Distinguishing between successful connection
-                                        // and just pressing back from there.
+                    // and just pressing back from there.
                     refresh();
                 }
                 break;
 
                 case RESULT_FIRST_USER: { // Any exceptions were occurred inside CameraCV Activity
 
-                    if( data != null ) {
+                    if (data != null) {
                         Bundle extras = data.getExtras();
                         String message = extras.getString(getString(R.string.detection_exception));
-                        if( message == null)
+                        if (message == null)
                             message = getString(R.string.detection_general_exception);
 
                         new MaterialDialog.Builder(this)
@@ -532,7 +590,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     })
                     .show();
 
-            if( mSearchDriverCountDownTimer == null ) {
+            if (mSearchDriverCountDownTimer == null) {
 
                 mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
 
@@ -549,7 +607,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                             Log.d(LOG_TAG, "Cancelling timer");
                         } else {
-                            if( !mSearchDriverDialog.isIndeterminateProgress() )
+                            if (!mSearchDriverDialog.isIndeterminateProgress())
                                 mSearchDriverDialog.incrementProgress(1);
                         }
                     }
@@ -568,9 +626,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         if (mDrivers.size() == 0) {
 
-                            if( mCountDiscoveryTrials++ > Globals.MAX_DISCOVERY_TRIALS ) {
-                               showRideCodePane(R.string.ride_code_dialog_content,
-                                                Color.BLACK);
+                            if (mCountDiscoveryTrials++ > Globals.MAX_DISCOVERY_TRIALS) {
+                                showRideCodePane(R.string.ride_code_dialog_content,
+                                        Color.BLACK);
                                 mCountDiscoveryTrials = 1;
                             } else {
                                 refresh();
@@ -583,8 +641,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             mSearchDriverCountDownTimer.start();
 
-        } catch( Exception ex) {
-            if( Crashlytics.getInstance() != null )
+        } catch (Exception ex) {
+            if (Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());
@@ -594,7 +652,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     @UiThread
     private void showRideCodePane(@StringRes int contentStringResId,
-                                  @ColorInt int contentColor){
+                                  @ColorInt int contentColor) {
 
         try {
             String dialogContent = getString(contentStringResId);
@@ -631,8 +689,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             }
 
                     ).show();
-        } catch( Exception ex) {
-            if( Crashlytics.getInstance() != null )
+        } catch (Exception ex) {
+            if (Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());
@@ -644,21 +702,19 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         try {
             checkCameraAndStoragePermissions();
             onCameraCVInternal(view);
-        }
-        catch(SecurityException ex) {
+        } catch (SecurityException ex) {
 
             // Returns true if app has requested this permission previously 
             // and the user denied the request 
-            if( ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
 
                 Toast.makeText(this, getString(R.string.permission_camera_denied), Toast.LENGTH_LONG).show();
                 Log.d(LOG_TAG, getString(R.string.permission_camera_denied));
 
-            } else if ( ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 Toast.makeText(this, getString(R.string.permission_storage_denied), Toast.LENGTH_LONG).show();
                 Log.d(LOG_TAG, getString(R.string.permission_storage_denied));
-            }
-            else {
+            } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         Globals.CAMERA_PERMISSION_REQUEST);
@@ -669,7 +725,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private void onCameraCVInternal(View v) {
 
         // Only allow participation request from monitored areas
-        if( !Globals.isInGeofenceArea() ) {
+        if (!Globals.isInGeofenceArea()) {
             new MaterialDialog.Builder(this)
                     .title(R.string.geofence_outside_title)
                     .content(R.string.geofence_outside)
@@ -689,7 +745,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean bShowSelfieDescription = sharedPrefs.getBoolean(Globals.SHOW_SELFIE_DESC, true);
 
-        if( bShowSelfieDescription ) {
+        if (bShowSelfieDescription) {
 
             new MaterialDialog.Builder(this)
                     .title(getString(R.string.selfie))
@@ -758,7 +814,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void connectionFailure(Exception ex) {
-        if( ex != null ) {
+        if (ex != null) {
 
             View v = findViewById(R.id.drawer_layout);
             Snackbar.make(v, ex.getMessage(), Snackbar.LENGTH_LONG);
@@ -776,7 +832,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     public void clicked(View view, int position) {
 
-        if( !Globals.isInGeofenceArea() ) {
+        if (!Globals.isInGeofenceArea()) {
             new MaterialDialog.Builder(this)
                     .title(R.string.geofence_outside_title)
                     .content(R.string.geofence_outside)
@@ -791,11 +847,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .show();
         } else {
 
-            if( position >= 0
-                && mRideCode == null ) {
-                                            // Ride code was stored if the activity is invoked from notification
-                                         // In this case the position is -1 because this
-                                         // function is called manually (from within onNewIntent())
+            if (position >= 0
+                    && mRideCode == null) {
+                // Ride code was stored if the activity is invoked from notification
+                // In this case the position is -1 because this
+                // function is called manually (from within onNewIntent())
                 Assert.assertNotNull(mDrivers);
 
                 WifiP2pDeviceUser driverDevice = mDrivers.get(position);
@@ -813,7 +869,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         //findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
 
-                        FloatingActionButton passengerPicture = (FloatingActionButton)findViewById(R.id.join_ride_button);
+                        FloatingActionButton passengerPicture = (FloatingActionButton) findViewById(R.id.join_ride_button);
                         passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.ColorAccent)));
                         Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_action_camera, null);
                         passengerPicture.setImageDrawable(drawable);
@@ -824,7 +880,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             };
 
             StringBuilder sb = new StringBuilder(getString(R.string.passenger_confirm));
-            if( mDriverName != null ) {
+            if (mDriverName != null) {
                 sb.append(" ");
                 getString(R.string.with);
                 sb.append(" ");
@@ -859,10 +915,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
     };
 
-    public void onSubmitCode(){
+    public void onSubmitCode() {
 
         // Only allow participation request from monitored areas
-        if( !Globals.isInGeofenceArea() ) {
+        if (!Globals.isInGeofenceArea()) {
             new MaterialDialog.Builder(this)
                     .title(R.string.geofence_outside_title)
                     .content(R.string.geofence_outside)
@@ -902,40 +958,40 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
 
             @Override
-            protected void onPostExecute(Void result){
+            protected void onPostExecute(Void result) {
 
                 cancelNotification();
 
                 // Prepare to play sound loud :)
                 AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                 int sb2value = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value/2, 0);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value / 2, 0);
 
                 CustomEvent confirmEvent = new CustomEvent(getString(R.string.passenger_confirmation_answer_name));
                 confirmEvent.putCustomAttribute("User", getUser().getFullName());
 
-                if( mEx != null ) {
+                if (mEx != null) {
 
                     confirmEvent.putCustomAttribute("Error", 0);
 
-                    try{
-                        MobileServiceException mse = (MobileServiceException)mEx.getCause();
+                    try {
+                        MobileServiceException mse = (MobileServiceException) mEx.getCause();
                         int responseCode = 0;
-                        if( mse.getCause() instanceof  UnknownHostException ) {
+                        if (mse.getCause() instanceof UnknownHostException) {
                             responseCode = 503; // Some artificially: usually 503 means
-                                                // 'Service Unavailable'.
-                                                // To this extent, we mean 'Connection lost'
+                            // 'Service Unavailable'.
+                            // To this extent, we mean 'Connection lost'
                         } else {
 
                             responseCode = mse.getResponse().getStatus().getStatusCode();
                         }
 
-                        switch( responseCode ) {
+                        switch (responseCode) {
 
                             case 403: { // HTTP 'Forbidden' means than IDs of the
-                                        // driver and passenger are same
+                                // driver and passenger are same
                                 showRideCodePane(R.string.ride_same_ids,
-                                            Color.RED);
+                                        Color.RED);
 
                                 lt.error();
                                 beepError.start();
@@ -943,10 +999,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             break;
 
                             case 404: { // HTTP 'Not found' means 'no such ride code'
-                                        // i.e.
-                                        // try again with appropriate message
+                                // i.e.
+                                // try again with appropriate message
                                 showRideCodePane(R.string.ride_code_wrong,
-                                                Color.RED);
+                                        Color.RED);
 
                                 lt.error();
                                 beepError.start();
@@ -976,20 +1032,19 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             default:
                                 lt.error();
                                 Toast.makeText(PassengerRoleActivity.this,
-                                                mEx.getMessage(),
-                                                Toast.LENGTH_LONG).show();
+                                        mEx.getMessage(),
+                                        Toast.LENGTH_LONG).show();
                                 break;
                         }
-                    } catch( Exception ex) {
-                        if( Crashlytics.getInstance() != null )
+                    } catch (Exception ex) {
+                        if (Crashlytics.getInstance() != null)
                             Crashlytics.logException(ex);
 
-                        if( !ex.getMessage().isEmpty() )
+                        if (!ex.getMessage().isEmpty())
                             Log.e(LOG_TAG, ex.getMessage());
                     }
 
-                }
-                else {
+                } else {
 
                     confirmEvent.putCustomAttribute("Success", 1);
 
@@ -1007,13 +1062,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             @Override
             protected Void doInBackground(Void... voids) {
 
-                try{
-                    Join _join  = new Join();
+                try {
+                    Join _join = new Join();
                     _join.setWhenJoined(new Date());
-                    if( mPictureURI != null && !mPictureURI.toString().isEmpty() )
+                    if (mPictureURI != null && !mPictureURI.toString().isEmpty())
                         _join.setPictureURL(mPictureURI.toString());
-                    if( mFaceId != null && !mFaceId.toString().isEmpty() )
-                        _join.setFaceId(mFaceId.toString() );
+                    if (mFaceId != null && !mFaceId.toString().isEmpty())
+                        _join.setFaceId(mFaceId.toString());
                     _join.setRideCode(mRideCode);
                     String currentGeoFenceName = Globals.get_currentGeoFenceName();
                     _join.setGFenceName(currentGeoFenceName);
@@ -1032,10 +1087,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     joinsTable.insert(_join).get();
 
-                } catch( ExecutionException | InterruptedException ex ) {
+                } catch (ExecutionException | InterruptedException ex) {
 
                     mEx = ex;
-                    if(Crashlytics.getInstance() != null)
+                    if (Crashlytics.getInstance() != null)
                         Crashlytics.logException(ex);
 
                     Log.e(LOG_TAG, ex.getMessage());
@@ -1055,22 +1110,22 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         mDrivers.clear();
         mDriversAdapter.notifyDataSetChanged();
 
-        final ImageButton btnRefresh = (ImageButton)findViewById(R.id.btnRefresh);
-        if( btnRefresh != null ) // This may happens because
-                                 // the button is actually created by adapter
+        final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
+        if (btnRefresh != null) // This may happens because
+            // the button is actually created by adapter
             btnRefresh.setVisibility(View.GONE);
-        final ProgressBar progress_refresh = (ProgressBar)findViewById(R.id.progress_refresh);
-        if( progress_refresh != null )
+        final ProgressBar progress_refresh = (ProgressBar) findViewById(R.id.progress_refresh);
+        if (progress_refresh != null)
             progress_refresh.setVisibility(View.VISIBLE);
 
         try {
             stopDiscovery(new Runnable() {
                 @Override
-                public void run(){
+                public void run() {
 
                     startDiscovery(PassengerRoleActivity.this,
-                                    getUser().getRegistrationId(),
-                                    ""); // empty ride code!
+                            getUser().getRegistrationId(),
+                            ""); // empty ride code!
 
                     getHandler().postDelayed(
                             new Runnable() {
@@ -1089,8 +1144,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 }
             });
 
-        } catch(Exception ex) {
-            if( Crashlytics.getInstance() != null )
+        } catch (Exception ex) {
+            if (Crashlytics.getInstance() != null)
                 Crashlytics.log(ex.getLocalizedMessage());
 
             Log.e(LOG_TAG, ex.getLocalizedMessage());
@@ -1113,8 +1168,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 record.put(Globals.TXTRECORD_PROP_USERID, userID);
 
                 mP2pConversator = new P2pConversator(PassengerRoleActivity.this,
-                                                    (IConversation) mP2pPreparer,
-                                                    getHandler());
+                        (IConversation) mP2pPreparer,
+                        getHandler());
                 mP2pConversator.startConversation(record, peersListener);
 
             }
@@ -1126,8 +1181,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         });
     }
 
-    private void stopDiscovery(final Runnable r) throws Exception{
-        if( mP2pPreparer == null && r != null) {
+    private void stopDiscovery(final Runnable r) throws Exception {
+        if (mP2pPreparer == null && r != null) {
             r.run();
             return;
         }
@@ -1140,10 +1195,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         mP2pConversator.stopConversation();
                     }
 
-                    if( r != null )
+                    if (r != null)
                         r.run();
 
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     Log.e(LOG_TAG, ex.getLocalizedMessage());
                 }
             }
@@ -1162,24 +1217,23 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 break;
 
             case Globals.MESSAGE_READ:
-                byte[] buffer = (byte[] )msg.obj;
+                byte[] buffer = (byte[]) msg.obj;
                 strMessage = new String(buffer);
                 trace(strMessage);
                 break;
 
             case Globals.MESSAGE_DISCOVERY_FAILED:
-                if( mSearchDriverDialog != null && mSearchDriverDialog.isShowing()) {
+                if (mSearchDriverDialog != null && mSearchDriverDialog.isShowing()) {
                     mSearchDriverDialog.dismiss();
                     mSearchDriverCountDownTimer.cancel();
 
-                    if( mCountDiscoveryFailures++ < Globals.MAX_ALLOWED_DISCOVERY_FAILURES ) {
+                    if (mCountDiscoveryFailures++ < Globals.MAX_ALLOWED_DISCOVERY_FAILURES) {
                         mSearchDriverDialog = null;
                         refresh();
-                    }
-                    else {
+                    } else {
                         mCountDiscoveryFailures = 0;
                         showRideCodePane(R.string.discovery_failure,
-                                        Color.RED);
+                                Color.RED);
                     }
                 }
                 break;
@@ -1200,10 +1254,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             @Override
             public void onClick(DialogInterface dialogInterface, int which) {
-                if( which == DialogInterface.BUTTON_POSITIVE ) {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
                     startActivity(new Intent(actionIntent));
                 }
-            }};
+            }
+        };
 
         new AlertDialogWrapper.Builder(this)
                 .setTitle(message)
@@ -1218,11 +1273,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     public void addDeviceUser(final WifiP2pDeviceUser device) {
 
-        if( device.getRideCode() == null )
+        if (device.getRideCode() == null)
             return;
 
         String remoteUserID = device.getUserId();
-        if( remoteUserID == null || remoteUserID.isEmpty() ) {
+        if (remoteUserID == null || remoteUserID.isEmpty()) {
             // remote user id was not transmitted
             runOnUiThread(new Runnable() {
                 @Override
@@ -1265,7 +1320,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                     mDriversAdapter.replaceItem(device);
                                     mDriversAdapter.notifyDataSetChanged();
                                 } else {
-                                    if( Crashlytics.getInstance() != null )
+                                    if (Crashlytics.getInstance() != null)
                                         Crashlytics.log(response.getError().getErrorMessage());
 
                                     Log.e(LOG_TAG, response.getError().getErrorMessage());
@@ -1298,7 +1353,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             try {
                 handler = new GroupOwnerSocketHandler(this.getHandler());
                 handler.start();
-            } catch (IOException e){
+            } catch (IOException e) {
                 trace("Failed to create a server thread - " + e.getMessage());
             }
 

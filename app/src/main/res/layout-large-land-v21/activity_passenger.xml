@@ -9,6 +9,15 @@
     android:fitsSystemWindows="true"
     tools:context="com.maximum.fastride.PassengerRoleActivity" >
 
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/sliding_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        sothree:umanoPanelHeight="@dimen/slidingup_panel_height"
+        sothree:umanoShadowHeight="4dp">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -77,46 +86,97 @@
 
         </RelativeLayout>
 
+        <!--<LinearLayout-->
+            <!--android:id="@+id/passenger_snackbar"-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="@dimen/snackbar_height"-->
+            <!--android:animateLayoutChanges="true"-->
+            <!--android:visibility="visible">-->
+
+            <!--<TextSwitcher-->
+                <!--android:id="@+id/passenger_monitor_text_switcher"-->
+                <!--android:layout_weight="10"-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="fill_parent">-->
+
+                <!--<TextView-->
+                    <!--android:layout_width="fill_parent"-->
+                    <!--android:layout_height="fill_parent"-->
+                    <!--android:paddingStart="@dimen/snackbar_leftpadding"-->
+                    <!--android:paddingEnd="@dimen/snackbar_rightpadding"-->
+                    <!--android:background="@color/ColorPrimary"-->
+                    <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+                    <!--android:textColor="@color/white"-->
+                    <!--android:text="@string/geofence_outside_title"-->
+                    <!--android:gravity="center_vertical|fill_vertical|start|center_horizontal" />-->
+
+                <!--<TextView-->
+                    <!--android:layout_width="fill_parent"-->
+                    <!--android:layout_height="fill_parent"-->
+                    <!--android:paddingStart="@dimen/snackbar_leftpadding"-->
+                    <!--android:paddingEnd="@dimen/snackbar_rightpadding"-->
+                    <!--android:background="@color/ColorPrimary"-->
+                    <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+                    <!--android:textColor="@color/white"-->
+                    <!--android:text="@string/geofence_outside_title"-->
+                    <!--android:gravity="center_vertical|fill_vertical|start|center_horizontal" />-->
+
+            <!--</TextSwitcher>-->
+
+        <!--</LinearLayout>-->
+
+        </LinearLayout>
+
         <LinearLayout
-            android:id="@+id/passenger_snackbar"
-            android:layout_width="fill_parent"
-            android:layout_height="@dimen/snackbar_height"
-            android:animateLayoutChanges="true"
-            android:visibility="visible">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@color/white"
+            android:orientation="vertical" >
 
             <TextSwitcher
                 android:id="@+id/passenger_monitor_text_switcher"
-                android:layout_weight="10"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent">
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/slidingup_panel_height">
 
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
+                    android:paddingLeft="@dimen/snackbar_leftpadding"
                     android:paddingStart="@dimen/snackbar_leftpadding"
+                    android:paddingRight="@dimen/snackbar_rightpadding"
                     android:paddingEnd="@dimen/snackbar_rightpadding"
                     android:background="@color/ColorPrimary"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textColor="@color/white"
                     android:text="@string/geofence_outside_title"
-                    android:gravity="center_vertical|fill_vertical|start|center_horizontal" />
+                    android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
 
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
+                    android:paddingLeft="@dimen/snackbar_leftpadding"
                     android:paddingStart="@dimen/snackbar_leftpadding"
+                    android:paddingRight="@dimen/snackbar_rightpadding"
                     android:paddingEnd="@dimen/snackbar_rightpadding"
                     android:background="@color/ColorPrimary"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textColor="@color/white"
                     android:text="@string/geofence_outside_title"
-                    android:gravity="center_vertical|fill_vertical|start|center_horizontal" />
+                    android:gravity="start|center_vertical|fill_vertical|start|center_horizontal" />
 
             </TextSwitcher>
 
-        </LinearLayout>
+            <fragment
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/gf_map"
+                class="com.google.android.gms.maps.SupportMapFragment"
+                tools:layout="@layout/activity_driver_role" />
 
         </LinearLayout>
+
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
     <!-- The navigation drawer -->
     <include
