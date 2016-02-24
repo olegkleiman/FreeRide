@@ -192,7 +192,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.1.1'
     compile 'com.facebook.android:facebook-android-sdk:4.9.0'
     compile 'com.google.code.gson:gson:2.4'
-    compile 'com.google.guava:guava:18.0'
+    compile 'com.google.guava:guava:19.0'
     compile 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
     compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
     compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
