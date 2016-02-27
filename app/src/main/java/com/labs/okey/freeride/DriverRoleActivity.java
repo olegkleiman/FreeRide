@@ -712,8 +712,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( !Globals.DEBUG_WITHOUT_GEOFENCES ) {
 
             if (!isAccurate(location)) {
-                Globals.setInGeofenceArea(false); // ?
-                mTextSwitcher.setCurrentText(getGFenceForLocation(null));
                 Log.d(LOG_TAG, getString(R.string.location_inaccurate));
                 return;
             }

@@ -25,6 +25,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -32,6 +33,7 @@ import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -78,6 +80,7 @@ public class RegisterActivity extends FragmentActivity
 
     private CallbackManager     mFBCallbackManager;
     private LoginButton         mFBLoginButton;
+    private ProfileTracker      mFbProfileTracker;
 
 //    DigitsAuthButton        mDigitsButton;
 //    private AuthCallback    mDigitsAuthCallback;
@@ -380,102 +383,48 @@ public class RegisterActivity extends FragmentActivity
         // Callback registration
         mFBLoginButton.registerCallback(mFBCallbackManager, new FacebookCallback<LoginResult>() {
             @Override
-            public void onSuccess(LoginResult loginResult) {
+            public void onSuccess(final LoginResult loginResult) {
 
                 mAccessToken = loginResult.getAccessToken().getToken();
 
-                final Profile profile = Profile.getCurrentProfile();
-
                 mNewUser = new User();
-                mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + profile.getId());
 
-                mNewUser.setFirstName(profile.getFirstName());
-                mNewUser.setLastName(profile.getLastName());
-                String pictureURI = profile.getProfilePictureUri(100, 100).toString();
-                mNewUser.setPictureURL(pictureURI);
+                if (Profile.getCurrentProfile() == null) {
 
-                String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-                mNewUser.setDeviceId(android_id);
-                mNewUser.setPlatform(Globals.PLATFORM);
+                    mFbProfileTracker = new ProfileTracker() {
+                        @Override
+                        protected void onCurrentProfileChanged(Profile oldProfile, final Profile profile) {
 
-                GraphRequest request = GraphRequest.newMeRequest(
-                        loginResult.getAccessToken(),
-                        new GraphRequest.GraphJSONObjectCallback() {
-                            @Override
-                            public void onCompleted(
-                                    JSONObject object,
-                                    GraphResponse response) {
+                            mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + profile.getId());
+                            mNewUser.setFirstName(profile.getFirstName());
+                            mNewUser.setLastName(profile.getLastName());
+                            String pictureURI = profile.getProfilePictureUri(100, 100).toString();
+                            mNewUser.setPictureURL(pictureURI);
 
-                                try {
-                                    JSONObject gUser = response.getJSONObject();
-                                    String email = gUser.getString("email");
-                                    mNewUser.setEmail(email);
+                            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+                            mNewUser.setDeviceId(android_id);
+                            mNewUser.setPlatform(Globals.PLATFORM);
 
-                                    new AsyncTask<Void, Void, Void>() {
+                            completeFBRegistration(loginResult.getAccessToken(), profile.getId());
+                            mFbProfileTracker.stopTracking();
+                        }
+                    };
+                    mFbProfileTracker.startTracking();
+                } else {
+                    Profile profile = Profile.getCurrentProfile();
 
-                                        Exception mEx;
-                                        ProgressDialog progress;
+                    mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + profile.getId());
+                    mNewUser.setFirstName(profile.getFirstName());
+                    mNewUser.setLastName(profile.getLastName());
+                    String pictureURI = profile.getProfilePictureUri(100, 100).toString();
+                    mNewUser.setPictureURL(pictureURI);
 
-                                        @Override
-                                        protected void onPreExecute() {
+                    String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+                    mNewUser.setDeviceId(android_id);
+                    mNewUser.setPlatform(Globals.PLATFORM);
 
-                                            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-                                            if (loginLayout != null)
-                                                loginLayout.setVisibility(View.GONE);
-
-                                            progress = ProgressDialog.show(RegisterActivity.this,
-                                                    getString(R.string.registration_add_status),
-                                                    getString(R.string.registration_add_status_wait));
-                                        }
-
-                                        @Override
-                                        protected void onPostExecute(Void result) {
-                                            progress.dismiss();
-
-                                            if (mEx == null)
-                                                showRegistrationForm();
-
-                                        }
-
-                                        @Override
-                                        protected Void doInBackground(Void... params) {
-
-                                            String regID = Globals.FB_PROVIDER_FOR_STORE + profile.getId();
-                                            try {
-
-                                                saveProviderAccessToken(Globals.FB_PROVIDER, regID);
-
-                                                MobileServiceList<User> _users =
-                                                        usersTable.where().field("registration_id").eq(regID)
-                                                                .execute().get();
-
-                                                if (_users.size() >= 1) {
-                                                    User _user = _users.get(0);
-
-                                                    if (_user.compare(mNewUser))
-                                                        mAddNewUser = false;
-                                                }
-
-                                            } catch (InterruptedException | ExecutionException ex) {
-                                                mEx = ex;
-                                                Log.e(LOG_TAG, ex.getMessage());
-                                            }
-
-                                            return null;
-                                        }
-                                    }.execute();
-
-                                } catch (JSONException ex) {
-                                    Log.e(LOG_TAG, ex.getLocalizedMessage());
-                                }
-
-                            }
-                        });
-                Bundle parameters = new Bundle();
-                parameters.putString("fields", "id,name,email");
-                request.setParameters(parameters);
-                request.executeAsync();
-
+                    completeFBRegistration(loginResult.getAccessToken(), profile.getId());
+                }
             }
 
             @Override
@@ -508,6 +457,86 @@ public class RegisterActivity extends FragmentActivity
         }
     }
 
+    private void completeFBRegistration(AccessToken accessToken, final String regId){
+        GraphRequest request = GraphRequest.newMeRequest(
+                accessToken,
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(
+                            JSONObject object,
+                            GraphResponse response) {
+
+                        try {
+                            JSONObject gUser = response.getJSONObject();
+                            String email = gUser.getString("email");
+                            mNewUser.setEmail(email);
+
+                            new AsyncTask<Void, Void, Void>() {
+
+                                Exception mEx;
+                                ProgressDialog progress;
+
+                                @Override
+                                protected void onPreExecute() {
+
+                                    LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+                                    if (loginLayout != null)
+                                        loginLayout.setVisibility(View.GONE);
+
+                                    progress = ProgressDialog.show(RegisterActivity.this,
+                                            getString(R.string.registration_add_status),
+                                            getString(R.string.registration_add_status_wait));
+                                }
+
+                                @Override
+                                protected void onPostExecute(Void result) {
+                                    progress.dismiss();
+
+                                    if (mEx == null)
+                                        showRegistrationForm();
+
+                                }
+
+                                @Override
+                                protected Void doInBackground(Void... params) {
+
+                                    String regID = Globals.FB_PROVIDER_FOR_STORE + regId;
+                                    try {
+
+                                        saveProviderAccessToken(Globals.FB_PROVIDER, regID);
+
+                                        MobileServiceList<User> _users =
+                                                usersTable.where().field("registration_id").eq(regID)
+                                                        .execute().get();
+
+                                        if (_users.size() >= 1) {
+                                            User _user = _users.get(0);
+
+                                            if (_user.compare(mNewUser))
+                                                mAddNewUser = false;
+                                        }
+
+                                    } catch (InterruptedException | ExecutionException ex) {
+                                        mEx = ex;
+                                        Log.e(LOG_TAG, ex.getMessage());
+                                    }
+
+                                    return null;
+                                }
+                            }.execute();
+
+                        } catch (JSONException ex) {
+                            Log.e(LOG_TAG, ex.getLocalizedMessage());
+                        }
+
+                    }
+                });
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "id,name,email");
+        request.setParameters(parameters);
+        request.executeAsync();
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -522,7 +551,9 @@ public class RegisterActivity extends FragmentActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        mFBCallbackManager.onActivityResult(requestCode, resultCode, data);
+
+        if( FacebookSdk.isFacebookRequestCode(requestCode) )
+            mFBCallbackManager.onActivityResult(requestCode, resultCode, data);
         //mTwitterloginButton.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -534,6 +565,9 @@ public class RegisterActivity extends FragmentActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        if( mFbProfileTracker != null && mFbProfileTracker.isTracking() )
+            mFbProfileTracker.stopTracking();
     }
 
     @Override

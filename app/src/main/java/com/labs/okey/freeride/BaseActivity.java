@@ -157,14 +157,14 @@ public class BaseActivity extends AppCompatActivity
 
     }
 
-    private static int[] NETWORK_TYPES = {ConnectivityManager.TYPE_WIFI,
-            ConnectivityManager.TYPE_ETHERNET};
     public boolean isConnectedToNetwork() {
         ConnectivityManager connManager = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = connManager.getActiveNetworkInfo();
-
-        return (info != null && info.isConnectedOrConnecting());
+        if( info == null )
+            return false;
+        else
+            return info.isConnectedOrConnecting();
     }
 
     @UiThread
@@ -198,7 +198,7 @@ public class BaseActivity extends AppCompatActivity
                         DRAWER_ICONS,
                         mUser.getFirstName() + " " + mUser.getLastName(),
                         mUser.getEmail(),
-                        mUser.getPictureURL());
+                        mUser.getPictureURL().replace("http", "https"));
         mDrawerRecyclerView.setAdapter(drawerRecyclerAdapter);
 
         final Context ctx = this;

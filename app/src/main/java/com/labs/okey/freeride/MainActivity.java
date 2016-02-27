@@ -362,8 +362,9 @@ public class MainActivity extends BaseActivity
                 Bitmap bitmap = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
                 imageAvatar.setImageBitmap(bitmap);
             } else {
-                ImageLoader imageLoader = Globals.volley.getImageLoader();
-                imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
+                final ImageLoader imageLoader = Globals.volley.getImageLoader();
+                imageLoader.get(user.getPictureURL().replace("http", "https"),
+                        new ImageLoader.ImageListener() {
                     @Override
                     public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
 
@@ -374,6 +375,7 @@ public class MainActivity extends BaseActivity
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        //NetworkResponse response = error.networkResponse;
                         Log.e(LOG_TAG, error.toString());
                     }
                 });

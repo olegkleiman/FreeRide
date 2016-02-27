@@ -315,10 +315,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         try {
             stopDiscovery(null);
         } catch (Exception ex) {
-            if (Crashlytics.getInstance() != null)
-                Crashlytics.log(ex.getLocalizedMessage());
+            if( Crashlytics.getInstance() != null )
+                Crashlytics.log(ex.getMessage());
 
-            Log.e(LOG_TAG, ex.getLocalizedMessage());
+            if( !ex.getMessage().isEmpty() )
+                Log.e(LOG_TAG, ex.getMessage());
         }
 
         Globals.clearMyPassengerIds();
@@ -427,8 +428,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         if (!Globals.DEBUG_WITHOUT_GEOFENCES) {
 
             if (!isAccurate(location)) {
-                Globals.setInGeofenceArea(false); // ?
-                mTextSwitcher.setCurrentText(getGFenceForLocation(null));
                 Log.d(LOG_TAG, getString(R.string.location_inaccurate));
                 return;
             }
@@ -690,8 +689,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     ).show();
         } catch (Exception ex) {
-            if (Crashlytics.getInstance() != null)
-                Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());
         }

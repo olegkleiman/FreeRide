@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -55,7 +54,7 @@ public class BaseActivityWithGeofences extends BaseActivity
         implements ResultCallback<Status>,
                 GoogleApiClient.ConnectionCallbacks
 {
-    private static final String                     LOG_TAG = "FR.GeoFences";
+    private final String                            LOG_TAG = getClass().getSimpleName();;
     private MobileServiceSyncTable<GeoFence>        mGFencesSyncTable;
     private String                                  mCurrentGeoFenceName;
     protected String getCurrentGFenceName() { return mCurrentGeoFenceName; }
@@ -100,15 +99,7 @@ public class BaseActivityWithGeofences extends BaseActivity
 
             try {
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                Criteria criteria = new Criteria();
-                criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                criteria.setAltitudeRequired(false);
-                criteria.setBearingRequired(false);
-                criteria.setCostAllowed(true);
-
-                String provider = locationManager.getBestProvider(criteria, true);
-
-                return locationManager.getLastKnownLocation(provider);
+                return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             } catch (Exception ex) {
                 Log.e(LOG_TAG, ex.getMessage());
 
@@ -136,10 +127,6 @@ public class BaseActivityWithGeofences extends BaseActivity
         try {
             mLocationListener = locationListener;
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-            if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) )
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                        0, 0, locationListener);
 
             if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,

@@ -195,19 +195,20 @@ public class SettingsActivity extends BaseActivity
         } else {
 
             ImageLoader imageLoader = Globals.volley.getImageLoader();
-            imageLoader.get(mUser.getPictureURL(), new ImageLoader.ImageListener() {
-                @Override
-                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+            imageLoader.get(mUser.getPictureURL().replace("http", "https"),
+                    new ImageLoader.ImageListener() {
+                    @Override
+                    public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
 
-                    Bitmap bitmap = response.getBitmap();
-                    if (bitmap != null)
-                        profileImageView.setImageBitmap(bitmap);
-                }
+                        Bitmap bitmap = response.getBitmap();
+                        if (bitmap != null)
+                            profileImageView.setImageBitmap(bitmap);
+                    }
 
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e(LOG_TAG, error.toString());
-                }
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(LOG_TAG, error.toString());
+                    }
             });
         }
 
