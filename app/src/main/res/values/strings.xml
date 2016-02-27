@@ -285,10 +285,12 @@ limitations under the License.</string>
     <string name="log_gf_uptodate">Geofences are up to date</string>
     <string name="camera_directive_1">Look straight into camera lens</string>
 
+    <string name="ride_started_answers_name" translatable="false">Ride Started</string>
     <string name="passenger_confirmation_answer_name" translatable="false">Passenger Confirmation</string>
     <string name="no_fee_answer_name" translatable="false">No-fee request</string>
+    <string name="push_subscription_answer_name" translatable="false">Push subscription</string>
+    <string name="push_subscription_attribute" translatable="false">Subscribed</string>
     <string name="appeal_answer_name" translatable="false">No-fee request</string>
-    <string name="ride_started_answers_name" translatable="false">Ride Started</string>
     <string name="registration_answer_name" translatable="false">Registration</string>
     <string name="answer_approved_attribute" translatable="false">Sent</string>
     <string name="answer_success_attribute" translatable="false">Success</string>
