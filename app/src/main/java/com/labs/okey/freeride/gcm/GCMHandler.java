@@ -12,11 +12,12 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.freeride.DriverRoleActivity;
-import com.labs.okey.freeride.MainActivity;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
@@ -37,7 +38,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class GCMHandler extends  com.microsoft.windowsazure.notifications.NotificationsHandler{
 
-    private static final String LOG_TAG = "FR.GCMHandler";
+    private final String LOG_TAG = getClass().getSimpleName();
 
     Context ctx;
     private static final int NOTIFICATION_ID = 1;
@@ -58,13 +59,12 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                 try {
                     String[] tags = {userID};
 
-//                    MobileServiceClient wamsClient = new MobileServiceClient(
-//                                                                Globals.WAMS_URL,
-//                                                                Globals.WAMS_API_KEY,
-//                                                                context);
+                    MobileServiceClient wamsClient = new MobileServiceClient(
+                                                                Globals.WAMS_URL,
+                                                                Globals.WAMS_API_KEY,
+                                                                context);
 
-                    // Better use WAMS SDK v2 like:
-                    final MobileServicePush msp = MainActivity.wamsClient.getPush();
+                    final MobileServicePush msp = wamsClient.getPush();
                     if( msp == null ) {
                         if( Crashlytics.getInstance() != null )
                             Crashlytics.log(Log.ERROR, LOG_TAG, "Unable to get PUSH");
@@ -74,9 +74,18 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
                     ListenableFuture<Registration> lf = msp.register(gcmRegistrationId, tags);
 
+                    final User user = User.load(context);
+                    final CustomEvent subscriptionEvent =
+                            new CustomEvent(context.getString(R.string.push_subscription_answer_name));
+
                     Futures.addCallback(lf, new FutureCallback<Registration>() {
                         @Override
                         public void onSuccess(Registration result) {
+                            subscriptionEvent.putCustomAttribute(context.getString(R.string.push_subscription_attribute), "Success");
+                            if( user != null )
+                                subscriptionEvent.putCustomAttribute("User", user.getFullName());
+                            Answers.getInstance().logCustom(subscriptionEvent);
+
                             Log.d(LOG_TAG, "Azure Notification Hub registration succeeded");
                         }
 
@@ -84,6 +93,15 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                         public void onFailure(Throwable t) {
 
                             try {
+
+                                subscriptionEvent.putCustomAttribute(context.getString(R.string.push_subscription_attribute), "Failed");
+                                if( user != null )
+                                    subscriptionEvent.putCustomAttribute("User", user.getFullName());
+                                Answers.getInstance().logCustom(subscriptionEvent);
+
+                                if( Crashlytics.getInstance() != null )
+                                    Crashlytics.logException(t);
+
                                 verifyStorageVersion(context);
 
                                 //msp.unregister().get();
