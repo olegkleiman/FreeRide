@@ -140,7 +140,6 @@
                 android:layout_height="match_parent"
                 android:layout_centerHorizontal="true"
                 android:id="@+id/centerImage"
-                android:src="@drawable/cabin_portrait"
                 android:contentDescription="@string/cabin_image_description"
                 android:scaleType="fitCenter" />
 

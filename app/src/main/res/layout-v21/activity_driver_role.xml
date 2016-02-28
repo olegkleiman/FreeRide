@@ -139,7 +139,6 @@
                 android:layout_height="match_parent"
                 android:id="@+id/centerImage"
                 android:contentDescription="@string/cabin_image_description"
-                android:src="@drawable/cabin_portrait"
                 android:scaleType="fitXY"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentStart="true" />

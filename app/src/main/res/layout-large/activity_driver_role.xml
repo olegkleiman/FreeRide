@@ -144,7 +144,6 @@
                 android:layout_centerInParent="true"
                 android:id="@+id/centerImage"
                 android:contentDescription="@string/cabin_image_description"
-                android:src="@drawable/cabin_portrait"
                 android:scaleType="fitXY" />
 
             <ImageView
@@ -347,7 +346,6 @@
         android:layout_gravity="center"
         android:background="@color/white"
         android:orientation="vertical" >
-
 
         <TextSwitcher
             android:id="@+id/monitor_text_switcher"

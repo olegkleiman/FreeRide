@@ -131,7 +131,6 @@
     <string name="add_car_button_add">Add</string>
     <string name="edit_car_button_save">Save</string>
     <string name="edit_car_button_delete">Delete</string>
-    <string name="cancel">Cancel</string>
     <string name="help">Help</string>
     <string name="add_car_hint">Car number</string>
     <string name="add_car_nick">Car nickname</string>
@@ -162,10 +161,7 @@
     <string name="dialog_confirm_registration">Replace previous registration?</string>
     <string name="registration_already_performed">You already registered with Free Ride app.</string>
     <string name="add_cars_caption">Add your cars</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
     <string name="with">with</string>
-    <string name="ok" translatable="false">OK</string>
     <string name="close">Close</string>
     <string name="stop">Stop</string>
     <string name="thanks">Thank you</string>
