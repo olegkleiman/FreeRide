@@ -698,19 +698,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 public void onGlobalLayout() {
                     cabinImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-                    int width = cabinImageView.getWidth();
-                    int height = cabinImageView.getHeight();
-
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inJustDecodeBounds = true;
-                    BitmapFactory.decodeResource(getResources(), R.drawable.cabin_portrait, options);
-
-                    int inSampleSize = BaseActivity.calculateInSampleSize(options, width, height);
-                    options.inSampleSize = inSampleSize;
-                    options.inJustDecodeBounds = false;
-                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cabin_portrait, options);
-                    cabinImageView.setImageBitmap(bitmap);
-
+                    loadBitmap(R.drawable.cabin_portrait, cabinImageView);
                 }
             });
         }

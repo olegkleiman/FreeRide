@@ -8,11 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.UiThread;
@@ -30,6 +33,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -43,6 +47,7 @@ import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 
+import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.util.StringTokenizer;
 
@@ -167,7 +172,58 @@ public class BaseActivity extends AppCompatActivity
             return info.isConnectedOrConnecting();
     }
 
-    public static int calculateInSampleSize(
+    public void loadBitmap(int resId, ImageView imageView) {
+        BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+        task.execute(resId);
+    }
+
+    class BitmapWorkerTask extends AsyncTask<Integer, Void, Bitmap>{
+
+        private final WeakReference<ImageView> imageViewReference;
+        private int data;
+        int  width, height;
+
+        public BitmapWorkerTask(ImageView imageView){
+            imageViewReference = new WeakReference<>(imageView);
+            width = imageView.getWidth();
+            height = imageView.getHeight();
+        }
+
+        // Decode image in background
+        @Override
+        protected Bitmap doInBackground(Integer... params){
+            data = params[0];
+            return decodeSampledBitmapFromResource(getResources(), data, width, height);
+        }
+
+        // Once completed, see if ImageView is still around and set bitmap
+        @Override
+        protected void onPostExecute(Bitmap bitmap){
+            if( bitmap != null ) {
+                final ImageView imageView = imageViewReference.get();
+                if (imageView != null)
+                    imageView.setImageBitmap(bitmap);
+            }
+        }
+    }
+
+    private Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+                                                   int reqWidth, int reqHeight){
+        // First decode with inJustDecodeBounds=true to check dimensions
+        // Calculated dimensions are stored in BitmapFactory.Options
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(res, resId, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+    public int calculateInSampleSize(
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
         final int height = options.outHeight;

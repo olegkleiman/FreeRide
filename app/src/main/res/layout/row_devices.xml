@@ -28,11 +28,14 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp">
 
-            <ImageView
+            <com.pkmmte.view.CircularImageView
                 android:layout_width="72dp"
                 android:layout_height="72dp"
                 android:layout_marginStart="2dip"
                 android:layout_marginLeft="2dip"
+                app:border="true"
+                app:border_color="#FFFFFFFF"
+                app:border_width="4dp"
                 android:id="@+id/userPicture"
                 android:src="@mipmap/ic_launcher2"/>
 

@@ -1,7 +1,7 @@
 package com.labs.okey.freeride.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.support.v7.widget.RecyclerView;
@@ -14,16 +14,16 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.facebook.FacebookSdk;
 import com.labs.okey.freeride.R;
 import com.labs.okey.freeride.model.WifiP2pDeviceUser;
 import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.IRefreshable;
-import com.labs.okey.freeride.utils.RoundedDrawable;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Oleg Kleiman on 23-May-15.
@@ -94,7 +94,7 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
 
         if (holder.holderId == TYPE_ITEM) {
 
@@ -109,28 +109,44 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
             String userId = device.getUserId();
             String pictureURL = getUserPictureURL(userId);
 
-            Drawable drawable = null;
-            try {
-                drawable = (Globals.drawMan.userDrawable(mContext,
-                        userId,
-                        pictureURL)).get(); // May be null because of pictureURL
-                                            // but handled in catch block
-                if( drawable != null ) {
+            ImageLoader imageLoader = Globals.volley.getImageLoader();
+            imageLoader.get(pictureURL,
+                    new ImageLoader.ImageListener() {
+                        @Override
+                        public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                            Bitmap bitmap = response.getBitmap();
+                            if (bitmap != null)
+                                holder.userPicture.setImageBitmap(bitmap);
+                        }
 
-                    drawable = RoundedDrawable.fromDrawable(drawable);
-                    ((RoundedDrawable) drawable)
-                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                            .setBorderColor(Color.LTGRAY)
-                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                            .setOval(true);
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.e(LOG_TAG, error.toString());
+                        }
+                    });
 
-                    holder.userPicture.setImageDrawable(drawable);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                Log.e(LOG_TAG, e.getMessage());
-            } catch (NullPointerException ex) {
-                Log.e(LOG_TAG, "No drawable for pictureURL");
-            }
+//            Drawable drawable = null;
+//            try {
+//                drawable = (Globals.drawMan.userDrawable(mContext,
+//                        userId,
+//                        pictureURL)).get(); // May be null because of pictureURL
+//                                            // but handled in catch block
+//                if( drawable != null ) {
+//
+//                    drawable = RoundedDrawable.fromDrawable(drawable);
+//                    ((RoundedDrawable) drawable)
+//                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+//                            .setBorderColor(Color.LTGRAY)
+//                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
+//                            .setOval(true);
+//
+//                    holder.userPicture.setImageDrawable(drawable);
+//                }
+//            } catch (InterruptedException | ExecutionException e) {
+//                Log.e(LOG_TAG, e.getMessage());
+//            } catch (NullPointerException ex) {
+//                Log.e(LOG_TAG, "No drawable for pictureURL");
+//            }
         }
 
     }
@@ -200,7 +216,7 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
                 if( !FacebookSdk.isInitialized() )
                     FacebookSdk.sdkInitialize(mContext);
 
-                return "https://graph.facebook.com/" + tokens[1] + "/picture?type=large";
+                return "https://graph.facebook.com/" + tokens[1] + "/picture?type=normal";
             } else if( Globals.MICROSOFT_PROVIDER.equalsIgnoreCase(tokens[0])) {
                 return String.format("https://apis.live.net/v5.0/%s/picture", tokens[1]);
             } else
