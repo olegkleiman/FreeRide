@@ -72,7 +72,7 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
             new MaterialDialog.Builder(mContext)
                     .title(mContext.getString(R.string.save_error))
                     .content(error.getMessage())
-                    .positiveText(R.string.ok)
+                    .positiveText(android.R.string.ok)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {

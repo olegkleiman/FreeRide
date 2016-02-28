@@ -102,7 +102,7 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
                     .title(mContext.getString(R.string.appeal_send_title))
                     .content(mContext.getString(R.string.appeal_send_success))
                     .iconRes(R.drawable.ic_info)
-                    .positiveText(R.string.ok)
+                    .positiveText(android.R.string.ok)
                     .callback(new MaterialDialog.ButtonCallback() {
                                   @Override
                                   public void onPositive(MaterialDialog dialog) {

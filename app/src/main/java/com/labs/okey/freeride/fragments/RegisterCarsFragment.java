@@ -67,7 +67,7 @@ public class RegisterCarsFragment extends Fragment {
                             .title(R.string.add_car_dialog_caption)
                             .customView(R.layout.dialog_add_car, true)
                             .positiveText(R.string.add_car_button_add)
-                            .negativeText(R.string.cancel)
+                            .negativeText(android.R.string.cancel)
                             .autoDismiss(true)
                             .cancelable(true)
                             .callback(new MaterialDialog.ButtonCallback() {
