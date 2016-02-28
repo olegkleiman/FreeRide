@@ -5,12 +5,11 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,7 +17,6 @@ import android.view.View;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.freeride.adapters.AboutTabAdapter;
-import com.labs.okey.freeride.adapters.MyRideTabAdapter;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.views.SlidingTabLayout;
 
@@ -98,8 +96,8 @@ public class AboutActivity extends BaseActivity
         new MaterialDialog.Builder(this)
                 .title(getString(R.string.new_version_title))
                 .content(getString(R.string.new_version_conent))
-                .positiveText(R.string.yes)
-                .negativeText(R.string.no)
+                .positiveText(android.R.string.yes)
+                .negativeText(android.R.string.no)
                 .callback(new MaterialDialog.ButtonCallback() {
                     @Override
                     public void onPositive(MaterialDialog dialog) {

@@ -553,7 +553,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 .content(message)
                                 .title(R.string.detection_error)
                                 .iconRes(R.drawable.ic_exclamation)
-                                .positiveText(R.string.ok)
+                                .positiveText(android.R.string.ok)
                                 .show();
                     }
                 }
@@ -578,7 +578,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .autoDismiss(false)
                             //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
                     .progress(true, 0)
-                    .negativeText(R.string.cancel)
+                    .negativeText(android.R.string.cancel)
                     .onNegative(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
@@ -671,7 +671,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     }))
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
-                    .positiveText(R.string.ok)
+                    .positiveText(android.R.string.ok)
                     .neutralText(R.string.code_try_later)
                     .negativeText(R.string.code_retry_action)
                     .contentColor(contentColor)
@@ -748,7 +748,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .title(getString(R.string.selfie))
                     .content(getString(R.string.selfie_content))
                     .iconRes(R.drawable.ic_smart_selfie)
-                    .positiveText(R.string.ok)
+                    .positiveText(android.R.string.ok)
                     .negativeText(R.string.selfie_desc_not_show_again)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
@@ -790,8 +790,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             new MaterialDialog.Builder(this)
                     .title(getString(R.string.new_version_title))
                     .content(getString(R.string.new_version_conent))
-                    .positiveText(R.string.yes)
-                    .negativeText(R.string.no)
+                    .positiveText(android.R.string.yes)
+                    .negativeText(android.R.string.no)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
@@ -887,8 +887,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             new AlertDialogWrapper.Builder(this)
                     .setTitle(sb.toString())
-                    .setNegativeButton(R.string.no, dialogClickListener)
-                    .setPositiveButton(R.string.yes, dialogClickListener)
+                    .setNegativeButton(android.R.string.no, dialogClickListener)
+                    .setPositiveButton(android.R.string.yes, dialogClickListener)
                     .show();
         }
 
@@ -901,7 +901,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .title(R.string.thanks)
                     .content(R.string.confirmation_accepted)
                     .cancelable(false)
-                    .positiveText(R.string.ok)
+                    .positiveText(android.R.string.ok)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
@@ -1259,8 +1259,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         new AlertDialogWrapper.Builder(this)
                 .setTitle(message)
-                .setNegativeButton(R.string.no, dialogClickListener)
-                .setPositiveButton(R.string.yes, dialogClickListener)
+                .setNegativeButton(android.R.string.no, dialogClickListener)
+                .setPositiveButton(android.R.string.yes, dialogClickListener)
                 .show();
     }
 

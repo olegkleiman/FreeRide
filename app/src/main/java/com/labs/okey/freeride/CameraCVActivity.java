@@ -647,7 +647,7 @@ public class CameraCVActivity extends Activity
                         new MaterialDialog.Builder(CameraCVActivity.this)
                                 .title(getString(R.string.detection_no_results))
                                 .content(getString(R.string.try_again))
-                                .positiveText(R.string.ok).callback(new MaterialDialog.ButtonCallback() {
+                                .positiveText(android.R.string.ok).callback(new MaterialDialog.ButtonCallback() {
                                     @Override
                                     public void onPositive(MaterialDialog dialog) {
 

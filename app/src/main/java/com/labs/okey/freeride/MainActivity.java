@@ -311,8 +311,8 @@ public class MainActivity extends BaseActivity
                     .title(getString(R.string.new_version_title))
                     .content(getString(R.string.new_version_conent))
                     .iconRes(R.drawable.ic_info)
-                    .positiveText(R.string.yes)
-                    .negativeText(R.string.no)
+                    .positiveText(android.R.string.yes)
+                    .negativeText(android.R.string.no)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
@@ -356,14 +356,17 @@ public class MainActivity extends BaseActivity
             final CircularImageView imageAvatar = (CircularImageView) findViewById(R.id.userAvatarView);
 
             // Retrieves an image thru Volley
+            String pictureURL = user.getPictureURL();
+            if( !pictureURL.contains("https") )
+                pictureURL = pictureURL.replace("http", "https");
             Cache cache = Globals.volley.getRequestQueue().getCache();
-            Cache.Entry entry = cache.get(user.getPictureURL());
+            Cache.Entry entry = cache.get(pictureURL);
             if( entry != null ) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
                 imageAvatar.setImageBitmap(bitmap);
             } else {
                 final ImageLoader imageLoader = Globals.volley.getImageLoader();
-                imageLoader.get(user.getPictureURL().replace("http", "https"),
+                imageLoader.get(pictureURL,
                         new ImageLoader.ImageListener() {
                     @Override
                     public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {

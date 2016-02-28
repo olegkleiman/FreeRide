@@ -195,7 +195,10 @@ public class SettingsActivity extends BaseActivity
         } else {
 
             ImageLoader imageLoader = Globals.volley.getImageLoader();
-            imageLoader.get(mUser.getPictureURL().replace("http", "https"),
+            String pictureURL = mUser.getPictureURL();
+            if( !pictureURL.contains("https") )
+                pictureURL = pictureURL.replace("http", "https");
+            imageLoader.get(pictureURL,
                     new ImageLoader.ImageListener() {
                     @Override
                     public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
@@ -516,7 +519,7 @@ public class SettingsActivity extends BaseActivity
                 .title(R.string.add_car_dialog_caption)
                 .customView(R.layout.dialog_add_car, true)
                 .positiveText(R.string.add_car_button_add)
-                .negativeText(R.string.cancel)
+                .negativeText(android.R.string.cancel)
                 .autoDismiss(true)
                 .cancelable(true)
                 .callback(new MaterialDialog.ButtonCallback() {
@@ -589,7 +592,7 @@ public class SettingsActivity extends BaseActivity
                 .inputMaxLength(10)
                 .inputType(InputType.TYPE_CLASS_PHONE)
                 .positiveText(R.string.edit_car_button_save)
-                .negativeText(R.string.cancel)
+                .negativeText(android.R.string.cancel)
                 .callback((new MaterialDialog.ButtonCallback() {
                     @Override
                     public void onPositive(MaterialDialog dialog) {

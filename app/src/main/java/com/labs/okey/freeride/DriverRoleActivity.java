@@ -47,6 +47,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -689,6 +690,31 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         findViewById(R.id.cabin_background_layout).setVisibility(View.VISIBLE);
 
+        final ImageView cabinImageView = (ImageView)findViewById(R.id.centerImage);
+        ViewTreeObserver observer = cabinImageView.getViewTreeObserver();
+        if( observer.isAlive() ) {
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    cabinImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                    int width = cabinImageView.getWidth();
+                    int height = cabinImageView.getHeight();
+
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inJustDecodeBounds = true;
+                    BitmapFactory.decodeResource(getResources(), R.drawable.cabin_portrait, options);
+
+                    int inSampleSize = BaseActivity.calculateInSampleSize(options, width, height);
+                    options.inSampleSize = inSampleSize;
+                    options.inJustDecodeBounds = false;
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cabin_portrait, options);
+                    cabinImageView.setImageBitmap(bitmap);
+
+                }
+            });
+        }
+
         mCabinShown = true;
     }
 
@@ -1008,7 +1034,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .content(R.string.nofee_request_accepted)
                     .iconRes(R.drawable.ic_info)
                     .cancelable(false)
-                    .positiveText(R.string.ok)
+                    .positiveText(android.R.string.ok)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
@@ -1549,8 +1575,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mapFragment.getMapAsync(this);
 
         // Prevent memory leak on ImageView
-        View v = findViewById(R.id.centerImage);
-        v.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        View cabinImageView = findViewById(R.id.centerImage);
+        cabinImageView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
         mImageTransmit = (ImageView) findViewById(R.id.img_transmit);
 
@@ -1635,6 +1661,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
 
     }
+
+
 
     private boolean handleTouchEvent(MotionEvent motionEvent){
         switch( motionEvent.getActionMasked() ){
@@ -1770,9 +1798,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         try {
 
             builder.title(R.string.appeal)
-                    .positiveText(R.string.ok)
-                    .negativeText(R.string.cancel)
-//                    .neutralText(R.string.help)
+                    .positiveText(android.R.string.ok)
+                    .negativeText(android.R.string.cancel)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
@@ -2005,8 +2032,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .title(getString(R.string.new_version_title))
                     .content(getString(R.string.new_version_conent))
                     .iconRes(R.drawable.ic_info)
-                    .positiveText(R.string.yes)
-                    .negativeText(R.string.no)
+                    .positiveText(android.R.string.yes)
+                    .negativeText(android.R.string.no)
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
