@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -18,6 +19,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.UiThread;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -46,6 +48,7 @@ import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
@@ -170,6 +173,21 @@ public class BaseActivity extends AppCompatActivity
             return false;
         else
             return info.isConnectedOrConnecting();
+    }
+
+    public MobileServiceAuthenticationProvider getTokenProvider() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String accessTokenProvider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
+
+        if( accessTokenProvider.equals(Globals.FB_PROVIDER))
+            return MobileServiceAuthenticationProvider.Facebook;
+        else if( accessTokenProvider.equals(Globals.TWITTER_PROVIDER) ||
+                accessTokenProvider.equals(Globals.DIGITS_PROVIDER) )
+            return MobileServiceAuthenticationProvider.Twitter;
+        else if( accessTokenProvider.equals(Globals.MICROSOFT_PROVIDER))
+            return MobileServiceAuthenticationProvider.MicrosoftAccount;
+        else
+            return null;
     }
 
     public void loadBitmap(int resId, ImageView imageView) {

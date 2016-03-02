@@ -56,10 +56,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
-import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -94,9 +91,6 @@ import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import junit.framework.Assert;
 
 import net.steamcrafted.loadtoast.LoadToast;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URI;
@@ -317,9 +311,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         } catch (Exception ex) {
             if( Crashlytics.getInstance() != null )
                 Crashlytics.log(ex.getMessage());
-
-            if( !ex.getMessage().isEmpty() )
-                Log.e(LOG_TAG, ex.getMessage());
         }
 
         Globals.clearMyPassengerIds();
@@ -1081,7 +1072,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         Log.e(LOG_TAG, e.getMessage());
                     }
                     // The rest of params are set within WAMS insert script
-
+                    String userId = getMobileServiceClient().getCurrentUser().getUserId();
+                    Log.d(LOG_TAG, userId);
                     joinsTable.insert(_join).get();
 
                 } catch (ExecutionException | InterruptedException ex) {
@@ -1294,45 +1286,51 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     mDriversAdapter.add(device);
                     mDriversAdapter.notifyDataSetChanged();
 
-                    // remove 'type code' menu item
                     mDriversShown = true;
                 }
             });
 
-            AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
-            GraphRequest request = GraphRequest.newGraphPathRequest(
-                    fbAccessToken,
-                    tokens[1],
-                    new GraphRequest.Callback() {
-                        @Override
-                        public void onCompleted(GraphResponse response) {
+            // Uncomment the following code
+            // if decided to NOT transmit user name thru Wi-Fi Direct
 
-                            try {
-
-                                JSONObject object = response.getJSONObject();
-                                if (response.getError() == null) {
-                                    String userName = (String) object.get("name");
-                                    device.setUserName(userName);
-
-                                    mDriversAdapter.replaceItem(device);
-                                    mDriversAdapter.notifyDataSetChanged();
-                                } else {
-                                    if (Crashlytics.getInstance() != null)
-                                        Crashlytics.log(response.getError().getErrorMessage());
-
-                                    Log.e(LOG_TAG, response.getError().getErrorMessage());
-                                }
-
-                            } catch (JSONException e) {
-                                Log.e(LOG_TAG, e.getLocalizedMessage());
-                            }
-                        }
-                    });
-
-            Bundle parameters = new Bundle();
-            parameters.putString("fields", "id,name");
-            request.setParameters(parameters);
-            request.executeAsync();
+//            if ( tokens[0].equalsIgnoreCase(Globals.FB_PROVIDER) ) {
+//                AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
+//                GraphRequest request = GraphRequest.newGraphPathRequest(
+//                        fbAccessToken,
+//                        tokens[1],
+//                        new GraphRequest.Callback() {
+//                            @Override
+//                            public void onCompleted(GraphResponse response) {
+//
+//                                try {
+//
+//                                    JSONObject object = response.getJSONObject();
+//                                    if (response.getError() == null) {
+//                                        String userName = (String) object.get("name");
+//                                        device.setUserName(userName);
+//
+//                                        mDriversAdapter.replaceItem(device);
+//                                        mDriversAdapter.notifyDataSetChanged();
+//                                    } else {
+//                                        if (Crashlytics.getInstance() != null)
+//                                            Crashlytics.log(response.getError().getErrorMessage());
+//
+//                                        Log.e(LOG_TAG, response.getError().getErrorMessage());
+//                                    }
+//
+//                                } catch (JSONException e) {
+//                                    Log.e(LOG_TAG, e.getLocalizedMessage());
+//                                }
+//                            }
+//                        });
+//
+//                Bundle parameters = new Bundle();
+//                parameters.putString("fields", "id,name");
+//                request.setParameters(parameters);
+//                request.executeAsync();
+//            } else if( tokens[0].equalsIgnoreCase(Globals.MICROSOFT_PROVIDER) ) {
+//
+//            }
         }
     }
 

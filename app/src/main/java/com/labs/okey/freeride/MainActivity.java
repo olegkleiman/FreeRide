@@ -32,9 +32,12 @@ import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.LoginEvent;
 import com.facebook.AccessToken;
 import com.facebook.FacebookException;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonObject;
 import com.labs.okey.freeride.adapters.ModesPeersAdapter;
@@ -74,8 +77,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener,
@@ -529,6 +535,22 @@ public class MainActivity extends BaseActivity
         return true;
     }
 
+    class LoginAccumulator {
+
+        public String tokenResult;
+        public MobileServiceUser loggedUserResult;
+
+        @Subscribe
+        public void setToken(final String val) {
+            tokenResult = val;
+        }
+
+        @Subscribe
+        public void setUser(final MobileServiceUser val) {
+            loggedUserResult = val;
+        }
+    }
+
     private void login(String accessToken, String accessTokenSecret) {
         final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
         assert (tokenProvider != null);
@@ -539,19 +561,23 @@ public class MainActivity extends BaseActivity
         } else if (tokenProvider == MobileServiceAuthenticationProvider.Google) {
             body.addProperty("id_token", accessToken);
         } else {
-
             body.addProperty("access_token", accessToken);
             if (!accessTokenSecret.isEmpty())
                 body.addProperty("access_token_secret", accessTokenSecret);
         }
 
-        ListenableFuture<MobileServiceUser> login =
+        ListenableFuture<MobileServiceUser> loginFuture =
                 wamsClient.login(tokenProvider, body);
 
-        Futures.addCallback(login, new FutureCallback<MobileServiceUser>() {
+        Futures.addCallback(loginFuture, new FutureCallback<MobileServiceUser>() {
             @Override
             public void onSuccess(MobileServiceUser mobileServiceUser) {
                 cacheUserToken(mobileServiceUser);
+
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
+                updateUserRegistration(userRegistrationId, mobileServiceUser.getUserId());
+
                 mWAMSLogedIn = true;
 
                 if (Answers.getInstance() != null)
@@ -569,19 +595,38 @@ public class MainActivity extends BaseActivity
         });
     }
 
-    private MobileServiceAuthenticationProvider getTokenProvider() {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String accessTokenProvider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
+    private void updateUserRegistration(final String registrationId, final String userId) {
 
-        if( accessTokenProvider.equals(Globals.FB_PROVIDER))
-            return MobileServiceAuthenticationProvider.Facebook;
-        else if( accessTokenProvider.equals(Globals.TWITTER_PROVIDER) ||
-                accessTokenProvider.equals(Globals.DIGITS_PROVIDER) )
-            return MobileServiceAuthenticationProvider.Twitter;
-        else if( accessTokenProvider.equals(Globals.MICROSOFT_PROVIDER))
-            return MobileServiceAuthenticationProvider.MicrosoftAccount;
-        else
-            return null;
+        final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
+        assert (tokenProvider != null);
+
+        if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
+
+            final MobileServiceTable<User> usersTable = wamsClient.getTable("users", User.class);
+
+            Callable<Void> updateUserRegistrationTask = new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+
+                    MobileServiceList<User> _users =
+                            usersTable.where()
+                                    .field("registration_id").eq(Globals.MICROSOFT_PROVIDER_FOR_STORE + registrationId)
+                                    .execute().get();
+                    if (_users.size() >= 1) {
+                        User _user = _users.get(0);
+                        _user.setRegistrationId(userId);
+
+                        usersTable.update(_user);
+                    }
+
+                    return null;
+                }
+            };
+
+            ExecutorService service = Executors.newFixedThreadPool(1);
+            ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
+            executor.submit(updateUserRegistrationTask);
+        }
     }
 
     private void cacheUserToken(MobileServiceUser mobileServiceUser) {
@@ -589,7 +634,7 @@ public class MainActivity extends BaseActivity
         SharedPreferences.Editor editor = sharedPrefs.edit();
 
         editor.putString(Globals.WAMSTOKENPREF, mobileServiceUser.getAuthenticationToken());
-        editor.putString(Globals.USERIDPREF, mobileServiceUser.getUserId());
+        //editor.putString(Globals.USERIDPREF, mobileServiceUser.getUserId());
 
         editor.apply();
     }

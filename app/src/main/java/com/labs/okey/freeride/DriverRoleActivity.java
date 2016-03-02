@@ -835,7 +835,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private void startAdvertise(final P2pConversator.IPeersChangedListener peersListener,
                                 final String userID,
-                                final String rideCode) {
+                                final String rideCode,
+                                final String userName) {
 
         mP2pPreparer = new P2pPreparer(this);
         mP2pPreparer.prepare(new P2pPreparer.P2pPreparerListener() {
@@ -846,6 +847,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 if( !rideCode.isEmpty() )
                     record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
                 record.put(Globals.TXTRECORD_PROP_USERID, userID);
+                record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
 
                 mP2pConversator = new P2pConversator(DriverRoleActivity.this,
                                                     (IConversation)mP2pPreparer,
@@ -1286,7 +1288,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         startAdvertise(this,
                         getUser().getRegistrationId(),
-                        mRideCode);
+                        mRideCode,
+                        getUser().getFullName());
 
         getHandler().postDelayed(mEnableCabinPictureButtonRunnable,
                                  Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
@@ -1740,7 +1743,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         startAdvertise(this,
                         getUser().getRegistrationId(),
-                        rideCode);
+                        rideCode,
+                        getUser().getFullName());
 
         getHandler().postDelayed(
                 new Runnable() {
