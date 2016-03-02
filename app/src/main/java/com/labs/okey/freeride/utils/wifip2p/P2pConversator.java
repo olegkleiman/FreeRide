@@ -353,6 +353,7 @@ public class P2pConversator
 
         String rideCode = record.get(Globals.TXTRECORD_PROP_RIDECODE);
         String userId = record.get(Globals.TXTRECORD_PROP_USERID);
+        String userName = record.get(Globals.TXTRECORD_PROP_USERNAME);
 
         String msg = "DNS-SD TXT Record:";
         Log.i(LOG_TAG, msg);
@@ -375,7 +376,7 @@ public class P2pConversator
             mHandler.sendMessage(message);
         }
 
-        AdvertisedRide advRide = new AdvertisedRide(userId, "No name", rideCode);
+        AdvertisedRide advRide = new AdvertisedRide(userId, userName, rideCode);
         mBuddies.put(wifiP2pDevice.deviceName, advRide);
      }
 

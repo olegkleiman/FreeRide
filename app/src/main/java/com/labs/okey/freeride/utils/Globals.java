@@ -254,10 +254,10 @@ public class Globals {
     public static final String GOOGLE_PROVIDER = "Google";
     public static final String TWITTER_PROVIDER = "Twitter";
     public static final String DIGITS_PROVIDER = "Digits";
-    public static final String MICROSOFT_PROVIDER = "Microsoft";
+    public static final String MICROSOFT_PROVIDER = "MicrosoftAccount";
     public static final String FB_PROVIDER_FOR_STORE = "Facebook:";
     public static final String GOOGLE_PROVIDER_FOR_STORE = "Google:";
-    public static final String MICROSOFT_PROVIDER_FOR_STORE = "MS:";
+    public static final String MICROSOFT_PROVIDER_FOR_STORE = "MicrosoftAccount:";
     public static final String TWITTER_PROVIDER_FOR_STORE = "Twitter:";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
 
@@ -443,7 +443,7 @@ public class Globals {
     public static LiveAuthClient liveAuthClient;
     public static final String[] LIVE_SCOPES = {
             "wl.signin",
-//            "wl.basic",
+            "wl.basic",
             "wl.emails",
             "wl.offline_access"
     };
