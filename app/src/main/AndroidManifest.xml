@@ -96,6 +96,7 @@
         <activity
             android:name=".RegisterActivity"
             android:label="@string/title_activity_register"
+            android:noHistory="false"
             android:theme="@style/AppTheme" />
         <activity
             android:name="com.facebook.FacebookActivity"

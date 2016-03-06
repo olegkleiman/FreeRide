@@ -186,6 +186,8 @@ public class BaseActivity extends AppCompatActivity
             return MobileServiceAuthenticationProvider.Twitter;
         else if( accessTokenProvider.equals(Globals.MICROSOFT_PROVIDER))
             return MobileServiceAuthenticationProvider.MicrosoftAccount;
+        else if( accessTokenProvider.equals(Globals.GOOGLE_PROVIDER ) )
+            return MobileServiceAuthenticationProvider.Google;
         else
             return null;
     }

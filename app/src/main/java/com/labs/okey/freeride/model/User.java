@@ -36,6 +36,13 @@ public class User implements Parcelable {
     }
 
     public String getFullName() { return first_name + " " + last_name;}
+    public void setFullName(String val) {
+        String[] tokens = val.split(" ");
+        first_name = tokens[0];
+        if( tokens.length > 1) {
+            last_name = tokens[1];
+        }
+    }
 
     @com.google.gson.annotations.SerializedName("registration_id")
     private String registration_id;

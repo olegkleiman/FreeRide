@@ -41,6 +41,12 @@
             android:layout_gravity="center_horizontal"
             android:scaleType="center" />
 
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"/>
+
         <!--<com.twitter.sdk.android.core.identity.TwitterLoginButton-->
             <!--android:id="@+id/twitter_login_button"-->
             <!--android:layout_width="match_parent"-->

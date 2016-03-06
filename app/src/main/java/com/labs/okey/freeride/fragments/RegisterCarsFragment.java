@@ -75,7 +75,8 @@ public class RegisterCarsFragment extends Fragment {
                                 public void onPositive(MaterialDialog dialog) {
 
                                     String carNumber = mCarInput.getText().toString();
-                                    String carNick =  mCarNickInput.getText().toString();
+                                    String carNick = ( mCarNickInput.getText().toString().isEmpty() ) ?
+                                            "" : mCarNickInput.getText().toString();
 
                                     RegisteredCar car = new RegisteredCar();
                                     car.setCarNumber(carNumber);
@@ -109,6 +110,7 @@ public class RegisterCarsFragment extends Fragment {
             String s = car.getCarNumber() + "~" + car.getCarNick();
             carsSet.add(s);
         }
+
         editor.putStringSet(Globals.CARS_PREF, carsSet);
         editor.apply();
     }

@@ -295,7 +295,7 @@ public class SettingsActivity extends BaseActivity
                             .title(R.string.edit_car_dialog_caption)
                             .customView(R.layout.dialog_add_car, true)
                             .positiveText(R.string.edit_car_button_save)
-                            .negativeText(R.string.cancel)
+                            .negativeText(android.R.string.cancel)
                             .neutralText(R.string.edit_car_button_delete)
                             .autoDismiss(false)
                             .cancelable(true)
@@ -572,10 +572,13 @@ public class SettingsActivity extends BaseActivity
         Set<String> carsSet = new HashSet<String>();
         for (RegisteredCar car : mCars) {
 
-            String _s = car.getCarNumber() + "~" + car.getCarNick();
+            String _s = car.getCarNumber() + "~";
+            if( car.getCarNick() != null && !car.getCarNick().isEmpty() )
+                _s = _s.concat(car.getCarNick());
             carsSet.add(_s);
 
         }
+
         editor.putStringSet(Globals.CARS_PREF, carsSet);
         editor.apply();
     }

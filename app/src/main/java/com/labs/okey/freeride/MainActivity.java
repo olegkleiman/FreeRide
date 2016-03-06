@@ -553,7 +553,8 @@ public class MainActivity extends BaseActivity
 
     private void login(String accessToken, String accessTokenSecret) {
         final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
-        assert (tokenProvider != null);
+        if (tokenProvider == null)
+            throw new AssertionError("Token provider cannot be null");
 
         final JsonObject body = new JsonObject();
         if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {

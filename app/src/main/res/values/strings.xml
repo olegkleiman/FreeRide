@@ -9,6 +9,9 @@
     <!-- If you have one subscription key, you can add it here to use the service -->
     <string name="oxford_subscription_key" translatable="false">f862259efc314bdbbef51000f399f168</string>
 
+    <!-- Google+ -->
+    <string name="server_client_id">1041824085053-ifcq96g2417pi2v8sf0brn23d4cmrdb0.apps.googleusercontent.com</string>
+
     <string name="app_name" translatable="false">FastRide</string>
     <string name="app_label" translatable="false">Fast Ride</string>
     <string name="action_settings">Settings</string>

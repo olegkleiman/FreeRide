@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
@@ -37,6 +38,12 @@ import com.facebook.ProfileTracker;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.labs.okey.freeride.fragments.ConfirmRegistrationFragment;
 import com.labs.okey.freeride.fragments.RegisterCarsFragment;
 import com.labs.okey.freeride.model.GeoFence;
@@ -94,6 +101,9 @@ public class RegisterActivity extends FragmentActivity
     private String              mAcessTokenSecret; // used by Twitter
     private boolean             mAddNewUser = true;
 
+    private GoogleApiClient     mGoogleApiClient;
+    private static final int    RC_SIGN_IN = 9001; // Used by Google+
+
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, final User user) {
         final String android_id = Settings.Secure.getString(this.getContentResolver(),
@@ -141,6 +151,57 @@ public class RegisterActivity extends FragmentActivity
     // permissions for READ and INSERT operations, so no authentication is
     // required for adding new user to it
     MobileServiceTable<User> usersTable;
+
+    class VerifyAccountTask extends AsyncTask<Void, Void, Void> {
+
+        Exception mEx;
+        ProgressDialog progress;
+
+        @Override
+        protected void onPreExecute() {
+
+            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+            if (loginLayout != null)
+                loginLayout.setVisibility(View.GONE);
+
+            progress = ProgressDialog.show(RegisterActivity.this,
+                    getString(R.string.registration_add_status),
+                    getString(R.string.registration_add_status_wait));
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            progress.dismiss();
+
+            if (mEx == null)
+                showRegistrationForm();
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            String regID = mNewUser.getRegistrationId();
+            try {
+                MobileServiceList<User> _users =
+                        usersTable.where().field("registration_id").eq(regID)
+                                .execute().get();
+
+                if (_users.size() >= 1) {
+                    User _user = _users.get(0);
+
+                    if (_user.compare(mNewUser))
+                        mAddNewUser = false;
+                }
+
+            } catch (InterruptedException | ExecutionException ex) {
+                mEx = ex;
+                Log.e(LOG_TAG, ex.getMessage());
+            }
+
+            return null;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -231,6 +292,31 @@ public class RegisterActivity extends FragmentActivity
 
         final ContentResolver contentResolver = this.getContentResolver();
 
+        // Google+ stuff
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestIdToken(getString(R.string.server_client_id))
+                .build();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */,
+                        new GoogleApiClient.OnConnectionFailedListener() {
+                            @Override
+                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                                Log.d(LOG_TAG, "onConnectionFailed:" + connectionResult);
+                            }
+                        })
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+
+        findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            }
+        });
+
         // Microsoft (Live) stuff
         final ImageButton oneDriveButton = (ImageButton) this.findViewById(R.id.query_vroom);
         oneDriveButton.setOnClickListener(new View.OnClickListener() {
@@ -300,57 +386,59 @@ public class RegisterActivity extends FragmentActivity
                                               String pictureURI = result.optString(JsonKeys.LOCATION);
                                               mNewUser.setPictureURL(pictureURI);
 
-                                              new AsyncTask<Void, Void, Void>() {
+                                              new VerifyAccountTask().execute();
 
-                                                  Exception mEx;
-                                                  ProgressDialog progress;
-
-                                                  @Override
-                                                  protected void onPreExecute() {
-
-                                                      LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-                                                      if (loginLayout != null)
-                                                          loginLayout.setVisibility(View.GONE);
-
-                                                      progress = ProgressDialog.show(RegisterActivity.this,
-                                                              getString(R.string.registration_add_status),
-                                                              getString(R.string.registration_add_status_wait));
-                                                  }
-
-                                                  @Override
-                                                  protected void onPostExecute(Void result) {
-                                                      progress.dismiss();
-
-                                                      if (mEx == null)
-                                                          showRegistrationForm();
-
-                                                  }
-
-                                                  @Override
-                                                  protected Void doInBackground(Void... params) {
-
-                                                      // At this point userIs was already saved
-                                                      String regID = mNewUser.getRegistrationId();
-                                                      try {
-                                                          MobileServiceList<User> _users =
-                                                                  usersTable.where().field("registration_id").eq(regID)
-                                                                          .execute().get();
-
-                                                          if (_users.size() >= 1) {
-                                                              User _user = _users.get(0);
-
-                                                              if (_user.compare(mNewUser))
-                                                                  mAddNewUser = false;
-                                                          }
-
-                                                      } catch (InterruptedException | ExecutionException ex) {
-                                                          mEx = ex;
-                                                          Log.e(LOG_TAG, ex.getMessage());
-                                                      }
-
-                                                      return null;
-                                                  }
-                                              }.execute();
+//                                              new AsyncTask<Void, Void, Void>() {
+//
+//                                                  Exception mEx;
+//                                                  ProgressDialog progress;
+//
+//                                                  @Override
+//                                                  protected void onPreExecute() {
+//
+//                                                      LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+//                                                      if (loginLayout != null)
+//                                                          loginLayout.setVisibility(View.GONE);
+//
+//                                                      progress = ProgressDialog.show(RegisterActivity.this,
+//                                                              getString(R.string.registration_add_status),
+//                                                              getString(R.string.registration_add_status_wait));
+//                                                  }
+//
+//                                                  @Override
+//                                                  protected void onPostExecute(Void result) {
+//                                                      progress.dismiss();
+//
+//                                                      if (mEx == null)
+//                                                          showRegistrationForm();
+//
+//                                                  }
+//
+//                                                  @Override
+//                                                  protected Void doInBackground(Void... params) {
+//
+//                                                      // At this point userIs was already saved
+//                                                      String regID = mNewUser.getRegistrationId();
+//                                                      try {
+//                                                          MobileServiceList<User> _users =
+//                                                                  usersTable.where().field("registration_id").eq(regID)
+//                                                                          .execute().get();
+//
+//                                                          if (_users.size() >= 1) {
+//                                                              User _user = _users.get(0);
+//
+//                                                              if (_user.compare(mNewUser))
+//                                                                  mAddNewUser = false;
+//                                                          }
+//
+//                                                      } catch (InterruptedException | ExecutionException ex) {
+//                                                          mEx = ex;
+//                                                          Log.e(LOG_TAG, ex.getMessage());
+//                                                      }
+//
+//                                                      return null;
+//                                                  }
+//                                              }.execute();
 
                                           }
                                       }
@@ -457,6 +545,84 @@ public class RegisterActivity extends FragmentActivity
         }
     }
 
+    private void googleHandleSignInResult(GoogleSignInResult result) {
+        if (result.isSuccess()) {
+
+            mNewUser = new User();
+
+            GoogleSignInAccount acct = result.getSignInAccount();
+
+            mAccessToken = acct.getIdToken();
+            String regId = acct.getId();
+            mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + regId);
+            saveProviderAccessToken(Globals.GOOGLE_PROVIDER, regId);
+
+            mNewUser.setFullName(acct.getDisplayName());
+            mNewUser.setEmail(acct.getEmail());
+            if( acct.getPhotoUrl() != null )
+                mNewUser.setPictureURL(acct.getPhotoUrl().toString());
+
+            final ContentResolver contentResolver = this.getContentResolver();
+            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+            mNewUser.setDeviceId(android_id);
+            mNewUser.setPlatform(Globals.PLATFORM);
+
+            new VerifyAccountTask().execute();
+
+//            new AsyncTask<Void, Void, Void>() {
+//
+//                Exception mEx;
+//                ProgressDialog progress;
+//
+//                @Override
+//                protected void onPreExecute() {
+//
+//                    LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+//                    if (loginLayout != null)
+//                        loginLayout.setVisibility(View.GONE);
+//
+//                    progress = ProgressDialog.show(RegisterActivity.this,
+//                            getString(R.string.registration_add_status),
+//                            getString(R.string.registration_add_status_wait));
+//                }
+//
+//                @Override
+//                protected void onPostExecute(Void result) {
+//                    progress.dismiss();
+//
+//                    if (mEx == null)
+//                        showRegistrationForm();
+//
+//                }
+//
+//                @Override
+//                protected Void doInBackground(Void... params) {
+//
+//                    // At this point userIs was already saved
+//                    String regID = Globals.GOOGLE_PROVIDER_FOR_STORE + mNewUser.getRegistrationId();
+//                    try {
+//                        MobileServiceList<User> _users =
+//                                usersTable.where().field("registration_id").eq(regID)
+//                                        .execute().get();
+//
+//                        if (_users.size() >= 1) {
+//                            User _user = _users.get(0);
+//
+//                            if (_user.compare(mNewUser))
+//                                mAddNewUser = false;
+//                        }
+//
+//                    } catch (InterruptedException | ExecutionException ex) {
+//                        mEx = ex;
+//                        Log.e(LOG_TAG, ex.getMessage());
+//                    }
+//
+//                    return null;
+//                }
+//            }.execute();
+        }
+    }
+
     private void completeFBRegistration(AccessToken accessToken, final String regId){
         GraphRequest request = GraphRequest.newMeRequest(
                 accessToken,
@@ -471,59 +637,64 @@ public class RegisterActivity extends FragmentActivity
                             String email = gUser.getString("email");
                             mNewUser.setEmail(email);
 
-                            new AsyncTask<Void, Void, Void>() {
+                            String regID = Globals.FB_PROVIDER_FOR_STORE + regId;
+                            saveProviderAccessToken(Globals.FB_PROVIDER, regID);
 
-                                Exception mEx;
-                                ProgressDialog progress;
+                            new VerifyAccountTask().execute();
 
-                                @Override
-                                protected void onPreExecute() {
-
-                                    LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-                                    if (loginLayout != null)
-                                        loginLayout.setVisibility(View.GONE);
-
-                                    progress = ProgressDialog.show(RegisterActivity.this,
-                                            getString(R.string.registration_add_status),
-                                            getString(R.string.registration_add_status_wait));
-                                }
-
-                                @Override
-                                protected void onPostExecute(Void result) {
-                                    progress.dismiss();
-
-                                    if (mEx == null)
-                                        showRegistrationForm();
-
-                                }
-
-                                @Override
-                                protected Void doInBackground(Void... params) {
-
-                                    String regID = Globals.FB_PROVIDER_FOR_STORE + regId;
-                                    try {
-
-                                        saveProviderAccessToken(Globals.FB_PROVIDER, regID);
-
-                                        MobileServiceList<User> _users =
-                                                usersTable.where().field("registration_id").eq(regID)
-                                                        .execute().get();
-
-                                        if (_users.size() >= 1) {
-                                            User _user = _users.get(0);
-
-                                            if (_user.compare(mNewUser))
-                                                mAddNewUser = false;
-                                        }
-
-                                    } catch (InterruptedException | ExecutionException ex) {
-                                        mEx = ex;
-                                        Log.e(LOG_TAG, ex.getMessage());
-                                    }
-
-                                    return null;
-                                }
-                            }.execute();
+//                            new AsyncTask<Void, Void, Void>() {
+//
+//                                Exception mEx;
+//                                ProgressDialog progress;
+//
+//                                @Override
+//                                protected void onPreExecute() {
+//
+//                                    LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+//                                    if (loginLayout != null)
+//                                        loginLayout.setVisibility(View.GONE);
+//
+//                                    progress = ProgressDialog.show(RegisterActivity.this,
+//                                            getString(R.string.registration_add_status),
+//                                            getString(R.string.registration_add_status_wait));
+//                                }
+//
+//                                @Override
+//                                protected void onPostExecute(Void result) {
+//                                    progress.dismiss();
+//
+//                                    if (mEx == null)
+//                                        showRegistrationForm();
+//
+//                                }
+//
+//                                @Override
+//                                protected Void doInBackground(Void... params) {
+//
+//                                    String regID = Globals.FB_PROVIDER_FOR_STORE + regId;
+//                                    try {
+//
+//                                        saveProviderAccessToken(Globals.FB_PROVIDER, regID);
+//
+//                                        MobileServiceList<User> _users =
+//                                                usersTable.where().field("registration_id").eq(regID)
+//                                                        .execute().get();
+//
+//                                        if (_users.size() >= 1) {
+//                                            User _user = _users.get(0);
+//
+//                                            if (_user.compare(mNewUser))
+//                                                mAddNewUser = false;
+//                                        }
+//
+//                                    } catch (InterruptedException | ExecutionException ex) {
+//                                        mEx = ex;
+//                                        Log.e(LOG_TAG, ex.getMessage());
+//                                    }
+//
+//                                    return null;
+//                                }
+//                            }.execute();
 
                         } catch (JSONException ex) {
                             Log.e(LOG_TAG, ex.getLocalizedMessage());
@@ -554,6 +725,10 @@ public class RegisterActivity extends FragmentActivity
 
         if( FacebookSdk.isFacebookRequestCode(requestCode) )
             mFBCallbackManager.onActivityResult(requestCode, resultCode, data);
+        else if( requestCode == RC_SIGN_IN ) { // Google
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            googleHandleSignInResult(result);
+        }
         //mTwitterloginButton.onActivityResult(requestCode, resultCode, data);
     }
 
