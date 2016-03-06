@@ -80,6 +80,16 @@ public class Globals {
         volley = VolleySingletone.getInstance(context);
     }
 
+//    private static Tracker mGoogleTracker;
+//    synchronized public static Tracker getGoogleTracker(Context context) {
+//        if( mGoogleTracker == null ) {
+//            GoogleAnalytics analytics = GoogleAnalytics.getInstance(context);
+//            mGoogleTracker = analytics.newTracker(R.xml.global_tracker);
+//        }
+//
+//        return mGoogleTracker;
+//    }
+
     private static AccessTokenTracker mFbAccessTokenTracker;
     public static void initializeTokenTracker(Context context) {
 
