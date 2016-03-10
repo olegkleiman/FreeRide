@@ -1,18 +1,19 @@
 package com.labs.okey.freeride;
 
+import android.accounts.AccountManager;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
@@ -26,6 +27,8 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -38,12 +41,15 @@ import com.facebook.ProfileTracker;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.plus.People;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
 import com.labs.okey.freeride.fragments.ConfirmRegistrationFragment;
 import com.labs.okey.freeride.fragments.RegisterCarsFragment;
 import com.labs.okey.freeride.model.GeoFence;
@@ -65,6 +71,16 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterApiClient;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterAuthClient;
+import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -80,7 +96,10 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 public class RegisterActivity extends FragmentActivity
-        implements ConfirmRegistrationFragment.RegistrationDialogListener{
+        implements ConfirmRegistrationFragment.RegistrationDialogListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        ResultCallback<People.LoadPeopleResult> {
 
     private final String LOG_TAG = getClass().getSimpleName();
     private final String PENDING_ACTION_BUNDLE_KEY = "com.labs.okey.freeride:PendingAction";
@@ -94,15 +113,15 @@ public class RegisterActivity extends FragmentActivity
 //    public AuthCallback     getAuthCallback(){
 //        return mDigitsAuthCallback;
 //    }
-//    TwitterLoginButton      mTwitterloginButton;
+    TwitterLoginButton          mTwitterloginButton;
 
     private User                mNewUser;
     private String              mAccessToken;
     private String              mAcessTokenSecret; // used by Twitter
     private boolean             mAddNewUser = true;
 
-    private GoogleApiClient     mGoogleApiClient;
     private static final int    RC_SIGN_IN = 9001; // Used by Google+
+    private static final int    REQUEST_CODE_RESOLVE_ERR = 9002;
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, final User user) {
@@ -160,7 +179,7 @@ public class RegisterActivity extends FragmentActivity
         @Override
         protected void onPreExecute() {
 
-            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
+            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.login_form);
             if (loginLayout != null)
                 loginLayout.setVisibility(View.GONE);
 
@@ -203,6 +222,49 @@ public class RegisterActivity extends FragmentActivity
         }
     }
 
+    // Implementation of GoogleApiClient.ConnectionCallbacks
+    // for Google Play
+    @Override
+    public void onConnected(Bundle bundle) {
+
+        mNewUser = new User();
+
+        //Plus.PeopleApi.loadVisible(Globals.googleApiClient, null).setResultCallback(this);
+
+        Person person = Plus.PeopleApi.getCurrentPerson(Globals.googleApiClient);
+        if( person != null) {
+            if( person.hasName() ) {
+                Person.Name _name = person.getName();
+                mNewUser.setLastName(_name.getFamilyName());
+                mNewUser.setFirstName(_name.getGivenName());
+            }
+
+            if( person.hasImage() )
+                mNewUser.setPictureURL(person.getImage().getUrl());
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        if( result.hasResolution() ) {
+            try {
+                result.startResolutionForResult(this, REQUEST_CODE_RESOLVE_ERR);
+            } catch(IntentSender.SendIntentException ex) {
+                // There was an error with the resolution intent. Try again.
+                Globals.googleApiClient.connect();
+            }
+        }
+    }
+
+    public void onResult(People.LoadPeopleResult peopleData) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -221,12 +283,12 @@ public class RegisterActivity extends FragmentActivity
         toolbar.setTitleTextColor(getResources().getColor(R.color.white));
         toolbar.setTitle(getString(R.string.title_activity_register));
 
-//        if( Answers.getInstance() != null )
-//            Answers.getInstance().logCustom(new CustomEvent(getString(R.string.registration_answer_name)));
+        if( Answers.getInstance() != null )
+            Answers.getInstance().logCustom(new CustomEvent(getString(R.string.registration_answer_name)));
 
 //        mDigitsAuthCallback = new AuthCallback() {
 //            @Override
-//            public void success(DigitsSession session, String phoneNumber) {
+//            public void success(DigitsSession session, String phoneNumber)
 ////                SessionRecorder.recordSessionActive("Login: digits account active", session);
 //            }
 //
@@ -245,80 +307,118 @@ public class RegisterActivity extends FragmentActivity
 //            Log.e(LOG_TAG, ex.getMessage());
 //        }
 //
-//        // Twitter stuff
-//        mTwitterloginButton = (TwitterLoginButton) findViewById(R.id.twitter_login_button);
-//        mTwitterloginButton.setCallback(new Callback<TwitterSession>() {
-//            @Override
-//            public void success(Result<TwitterSession> result) {
-//
-//                mAccessToken = result.data.getAuthToken().token;
-//                mAcessTokenSecret = result.data.getAuthToken().secret;
-//
-//                TwitterAuthClient authClient = new TwitterAuthClient();
-//
-//                TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
-//                twitterApiClient.getAccountService().verifyCredentials(false, false, new Callback<com.twitter.sdk.android.core.models.User>(){
-//
-//                    @Override
-//                    public void success(Result<com.twitter.sdk.android.core.models.User> userResult) {
-//
-//                        mNewUser = new User();
-//                        mNewUser.setRegistrationId(Globals.TWITTER_PROVIDER_FOR_STORE + userResult.data.idStr);
-//                        String userName = userResult.data.name;
-//                        String[] unTokens = userName.split(" ");
-//                        mNewUser.setFirstName(unTokens[0]);
-//                        mNewUser.setLastName(unTokens[1]);
-//                        mNewUser.setEmail(userResult.data.email);
-//
-//                        //mNewUser.setPictureURL(userResult.data.profileImageUrl);
-//                        mNewUser.setPictureURL(userResult.data.profileImageUrl.replace("_normal", "_bigger"));
-//
-//                        mCheckUsersTask.execute(mNewUser);
-//                    }
-//
-//                    @Override
-//                    public void failure(TwitterException e) {
-//
-//                    }
-//                });
-//
-//            }
-//
-//            @Override
-//            public void failure(TwitterException exception) {
-//                // Do something on failure
-//            }
-//        });
 
         final ContentResolver contentResolver = this.getContentResolver();
 
+        // Twitter stuff
+        mTwitterloginButton = (TwitterLoginButton) findViewById(R.id.twitter_login);
+        mTwitterloginButton.setCallback(new Callback<TwitterSession>() {
+            @Override
+            public void success(Result<TwitterSession> result) {
+
+                TwitterSession session = Twitter.getSessionManager().getActiveSession();
+
+                mAccessToken = result.data.getAuthToken().token;
+                mAcessTokenSecret = result.data.getAuthToken().secret;
+
+                TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+                twitterApiClient.getAccountService().verifyCredentials(false, false, new Callback<com.twitter.sdk.android.core.models.User>() {
+
+                    @Override
+                    public void success(Result<com.twitter.sdk.android.core.models.User> userResult) {
+
+                        mNewUser = new User();
+                        String userID = userResult.data.idStr;
+                        mNewUser.setRegistrationId(Globals.TWITTER_PROVIDER_FOR_STORE + userID);
+                        String userName = userResult.data.name;
+                        String[] unTokens = userName.split(" ");
+                        mNewUser.setFirstName(unTokens[0]);
+                        mNewUser.setLastName(unTokens[1]);
+
+                        String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+                        mNewUser.setDeviceId(android_id);
+
+                        mNewUser.setPictureURL(userResult.data.profileImageUrl.replace("_normal", "_bigger"));
+
+                        saveProviderAccessToken(Globals.TWITTER_PROVIDER, userID);
+                    }
+
+                    @Override
+                    public void failure(TwitterException e) {
+
+                    }
+                });
+
+                TwitterAuthClient authClient = new TwitterAuthClient();
+                authClient.requestEmail(session, new Callback<String>() {
+                    @Override
+                    public void success(Result<String> result) {
+                        mNewUser.setEmail(result.data);
+                        mNewUser.save(getApplicationContext());
+
+
+                        new VerifyAccountTask().execute();
+                    }
+
+                    @Override
+                    public void failure(TwitterException error) {
+                        Toast.makeText(RegisterActivity.this, error.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void failure(TwitterException exception) {
+                // Do something on failure
+            }
+        });
+
         // Google+ stuff
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestIdToken(getString(R.string.server_client_id))
+//        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+//                .requestEmail()
+//                .requestServerAuthCode(getString(R.string.server_client_id), false)
+//                .requestIdToken(getString(R.string.server_client_id))
+//                .build();
+//
+//        Globals.googleApiClient = new GoogleApiClient.Builder(this)
+////                .enableAutoManage(this /* FragmentActivity */,
+////                        new GoogleApiClient.OnConnectionFailedListener() {
+////                            @Override
+////                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+////                                Log.d(LOG_TAG, "onConnectionFailed:" + connectionResult);
+////                            }
+////                        })
+//                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+//                .build();
+//        Globals.googleApiClient.connect();
+
+        Globals.googleApiClient = new GoogleApiClient.Builder(this)
+                                .addApi(Plus.API)
+                //.enableAutoManage(this, this)
+                                .addScope(Plus.SCOPE_PLUS_PROFILE)
+                                .addScope(Plus.SCOPE_PLUS_LOGIN)
+                                .addConnectionCallbacks(this)
+                                .addOnConnectionFailedListener(this)
                 .build();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */,
-                        new GoogleApiClient.OnConnectionFailedListener() {
-                            @Override
-                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                                Log.d(LOG_TAG, "onConnectionFailed:" + connectionResult);
-                            }
-                        })
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-
-        findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
+        SignInButton googleSignInButton = (SignInButton)findViewById(R.id.google_login);
+        googleSignInButton.setColorScheme(SignInButton.COLOR_DARK);
+        googleSignInButton.setSize(SignInButton.SIZE_WIDE);
+        googleSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+
+                //Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(Globals.googleApiClient);
+                String[] accountTypes = new String[] { "com.google" };
+                Intent signInIntent = AccountPicker.newChooseAccountIntent(null, null, accountTypes, false, null, null, null, null);
+
                 startActivityForResult(signInIntent, RC_SIGN_IN);
             }
         });
 
         // Microsoft (Live) stuff
-        final ImageButton oneDriveButton = (ImageButton) this.findViewById(R.id.query_vroom);
+        final ImageButton oneDriveButton = (ImageButton) this.findViewById(R.id.msa_login);
         oneDriveButton.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(final View v) {
@@ -387,59 +487,6 @@ public class RegisterActivity extends FragmentActivity
                                               mNewUser.setPictureURL(pictureURI);
 
                                               new VerifyAccountTask().execute();
-
-//                                              new AsyncTask<Void, Void, Void>() {
-//
-//                                                  Exception mEx;
-//                                                  ProgressDialog progress;
-//
-//                                                  @Override
-//                                                  protected void onPreExecute() {
-//
-//                                                      LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-//                                                      if (loginLayout != null)
-//                                                          loginLayout.setVisibility(View.GONE);
-//
-//                                                      progress = ProgressDialog.show(RegisterActivity.this,
-//                                                              getString(R.string.registration_add_status),
-//                                                              getString(R.string.registration_add_status_wait));
-//                                                  }
-//
-//                                                  @Override
-//                                                  protected void onPostExecute(Void result) {
-//                                                      progress.dismiss();
-//
-//                                                      if (mEx == null)
-//                                                          showRegistrationForm();
-//
-//                                                  }
-//
-//                                                  @Override
-//                                                  protected Void doInBackground(Void... params) {
-//
-//                                                      // At this point userIs was already saved
-//                                                      String regID = mNewUser.getRegistrationId();
-//                                                      try {
-//                                                          MobileServiceList<User> _users =
-//                                                                  usersTable.where().field("registration_id").eq(regID)
-//                                                                          .execute().get();
-//
-//                                                          if (_users.size() >= 1) {
-//                                                              User _user = _users.get(0);
-//
-//                                                              if (_user.compare(mNewUser))
-//                                                                  mAddNewUser = false;
-//                                                          }
-//
-//                                                      } catch (InterruptedException | ExecutionException ex) {
-//                                                          mEx = ex;
-//                                                          Log.e(LOG_TAG, ex.getMessage());
-//                                                      }
-//
-//                                                      return null;
-//                                                  }
-//                                              }.execute();
-
                                           }
                                       }
 
@@ -448,8 +495,6 @@ public class RegisterActivity extends FragmentActivity
                                           Log.e(LOG_TAG, exception.getLocalizedMessage());
                                       }
                                   });
-                              } else {
-
                               }
                           }
 
@@ -465,7 +510,7 @@ public class RegisterActivity extends FragmentActivity
         // FB stuff
         mFBCallbackManager = CallbackManager.Factory.create();
 
-        mFBLoginButton = (LoginButton) findViewById(R.id.loginButton);
+        mFBLoginButton = (LoginButton) findViewById(R.id.fb_login);
         mFBLoginButton.setReadPermissions("email");
 
         // Callback registration
@@ -545,83 +590,36 @@ public class RegisterActivity extends FragmentActivity
         }
     }
 
-    private void googleHandleSignInResult(GoogleSignInResult result) {
-        if (result.isSuccess()) {
-
-            mNewUser = new User();
-
-            GoogleSignInAccount acct = result.getSignInAccount();
-
-            mAccessToken = acct.getIdToken();
-            String regId = acct.getId();
-            mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + regId);
-            saveProviderAccessToken(Globals.GOOGLE_PROVIDER, regId);
-
-            mNewUser.setFullName(acct.getDisplayName());
-            mNewUser.setEmail(acct.getEmail());
-            if( acct.getPhotoUrl() != null )
-                mNewUser.setPictureURL(acct.getPhotoUrl().toString());
-
-            final ContentResolver contentResolver = this.getContentResolver();
-            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-            mNewUser.setDeviceId(android_id);
-            mNewUser.setPlatform(Globals.PLATFORM);
-
-            new VerifyAccountTask().execute();
-
-//            new AsyncTask<Void, Void, Void>() {
+//    private Boolean googleHandleSignInResult(GoogleSignInResult result) {
+//        if ( !result.isSuccess())
+//            return false;
 //
-//                Exception mEx;
-//                ProgressDialog progress;
+//        mNewUser = new User();
 //
-//                @Override
-//                protected void onPreExecute() {
+//        GoogleSignInAccount acct = result.getSignInAccount();
+//        if( acct == null )
+//            return false;
 //
-//                    LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-//                    if (loginLayout != null)
-//                        loginLayout.setVisibility(View.GONE);
+//        mAccessToken = acct.getIdToken();
+//        String regId = acct.getId();
+//        mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + regId);
+//        saveProviderAccessToken(Globals.GOOGLE_PROVIDER, regId);
 //
-//                    progress = ProgressDialog.show(RegisterActivity.this,
-//                            getString(R.string.registration_add_status),
-//                            getString(R.string.registration_add_status_wait));
-//                }
+//        mNewUser.setFullName(acct.getDisplayName());
+//        mNewUser.setEmail(acct.getEmail());
+//        if (acct.getPhotoUrl() != null)
+//            mNewUser.setPictureURL(acct.getPhotoUrl().toString());
 //
-//                @Override
-//                protected void onPostExecute(Void result) {
-//                    progress.dismiss();
+//        final ContentResolver contentResolver = this.getContentResolver();
+//        String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+//        mNewUser.setDeviceId(android_id);
+//        mNewUser.setPlatform(Globals.PLATFORM);
 //
-//                    if (mEx == null)
-//                        showRegistrationForm();
+//        new VerifyAccountTask().execute();
 //
-//                }
+//        return true;
 //
-//                @Override
-//                protected Void doInBackground(Void... params) {
-//
-//                    // At this point userIs was already saved
-//                    String regID = Globals.GOOGLE_PROVIDER_FOR_STORE + mNewUser.getRegistrationId();
-//                    try {
-//                        MobileServiceList<User> _users =
-//                                usersTable.where().field("registration_id").eq(regID)
-//                                        .execute().get();
-//
-//                        if (_users.size() >= 1) {
-//                            User _user = _users.get(0);
-//
-//                            if (_user.compare(mNewUser))
-//                                mAddNewUser = false;
-//                        }
-//
-//                    } catch (InterruptedException | ExecutionException ex) {
-//                        mEx = ex;
-//                        Log.e(LOG_TAG, ex.getMessage());
-//                    }
-//
-//                    return null;
-//                }
-//            }.execute();
-        }
-    }
+//    }
 
     private void completeFBRegistration(AccessToken accessToken, final String regId){
         GraphRequest request = GraphRequest.newMeRequest(
@@ -642,60 +640,6 @@ public class RegisterActivity extends FragmentActivity
 
                             new VerifyAccountTask().execute();
 
-//                            new AsyncTask<Void, Void, Void>() {
-//
-//                                Exception mEx;
-//                                ProgressDialog progress;
-//
-//                                @Override
-//                                protected void onPreExecute() {
-//
-//                                    LinearLayout loginLayout = (LinearLayout) findViewById(R.id.fb_login_form);
-//                                    if (loginLayout != null)
-//                                        loginLayout.setVisibility(View.GONE);
-//
-//                                    progress = ProgressDialog.show(RegisterActivity.this,
-//                                            getString(R.string.registration_add_status),
-//                                            getString(R.string.registration_add_status_wait));
-//                                }
-//
-//                                @Override
-//                                protected void onPostExecute(Void result) {
-//                                    progress.dismiss();
-//
-//                                    if (mEx == null)
-//                                        showRegistrationForm();
-//
-//                                }
-//
-//                                @Override
-//                                protected Void doInBackground(Void... params) {
-//
-//                                    String regID = Globals.FB_PROVIDER_FOR_STORE + regId;
-//                                    try {
-//
-//                                        saveProviderAccessToken(Globals.FB_PROVIDER, regID);
-//
-//                                        MobileServiceList<User> _users =
-//                                                usersTable.where().field("registration_id").eq(regID)
-//                                                        .execute().get();
-//
-//                                        if (_users.size() >= 1) {
-//                                            User _user = _users.get(0);
-//
-//                                            if (_user.compare(mNewUser))
-//                                                mAddNewUser = false;
-//                                        }
-//
-//                                    } catch (InterruptedException | ExecutionException ex) {
-//                                        mEx = ex;
-//                                        Log.e(LOG_TAG, ex.getMessage());
-//                                    }
-//
-//                                    return null;
-//                                }
-//                            }.execute();
-
                         } catch (JSONException ex) {
                             Log.e(LOG_TAG, ex.getLocalizedMessage());
                         }
@@ -706,6 +650,22 @@ public class RegisterActivity extends FragmentActivity
         parameters.putString("fields", "id,name,email");
         request.setParameters(parameters);
         request.executeAsync();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if( !Globals.googleApiClient.isConnected() )
+            Globals.googleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if( Globals.googleApiClient.isConnected() )
+            Globals.googleApiClient.disconnect();
     }
 
     @Override
@@ -726,10 +686,74 @@ public class RegisterActivity extends FragmentActivity
         if( FacebookSdk.isFacebookRequestCode(requestCode) )
             mFBCallbackManager.onActivityResult(requestCode, resultCode, data);
         else if( requestCode == RC_SIGN_IN ) { // Google
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            googleHandleSignInResult(result);
+
+            String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+            getTokenAndLogin(accountName);
+
+//            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+//            if( result != null ) {
+//                if( !googleHandleSignInResult(result) )
+//                    Toast.makeText(this, "Unable to process Google account", Toast.LENGTH_LONG).show();
+//            }
+
+        } else if( requestCode == REQUEST_CODE_RESOLVE_ERR && resultCode == RESULT_OK ) {
+            Globals.googleApiClient.connect();
         }
-        //mTwitterloginButton.onActivityResult(requestCode, resultCode, data);
+        else if( requestCode == TwitterAuthConfig.DEFAULT_AUTH_REQUEST_CODE ) {
+            mTwitterloginButton.onActivityResult(requestCode, resultCode, data);
+        }
+
+    }
+
+    static final String GOOGLE_SCOPE_TAKE2 = "audience:server:client_id:";
+
+    private void getTokenAndLogin(String accountName) {
+        final String GOOGLE_ID_TOKEN_SCOPE = GOOGLE_SCOPE_TAKE2 + getString(R.string.server_client_id);
+        new GetTokenAndLoginTask(GOOGLE_ID_TOKEN_SCOPE, accountName).execute((Void)null);
+
+    }
+
+    class GetTokenAndLoginTask extends AsyncTask<Void, Void, Void> {
+        String mScope;
+        String mEmail;
+
+        public GetTokenAndLoginTask(String scope, String email) {
+            this.mScope = scope;
+            this.mEmail = email;
+        }
+
+        @Override
+        protected void onPostExecute(Void res) {
+            final ContentResolver contentResolver = getApplicationContext().getContentResolver();
+
+            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+            if( mNewUser != null ) {
+                mNewUser.setDeviceId(android_id);
+                mNewUser.setPlatform(Globals.PLATFORM);
+
+                new VerifyAccountTask().execute();
+            }
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+
+                mAccessToken = GoogleAuthUtil.getToken(getApplicationContext(), mEmail, mScope);
+                String userId = GoogleAuthUtil.getAccountId(getApplicationContext(), mEmail);
+
+                if( mNewUser != null ) {
+                    mNewUser.setEmail(mEmail);
+                    mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + userId);
+                }
+
+                saveProviderAccessToken(Globals.GOOGLE_PROVIDER, userId);
+
+            } catch (Exception e) {
+                Log.e(LOG_TAG, e.getMessage());
+            }
+            return null;
+        }
     }
 
     @Override

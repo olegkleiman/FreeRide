@@ -19,10 +19,9 @@
             android:checked="false"
             app:showAsAction="never" />
 
-        <item android:id="@+id/action_debug_update_version"
-            android:title="Download last version"
-            android:orderInCategory="400"
-            app:showAsAction="never" />
     </group>
 
+    <item android:id="@+id/action_logoff"
+        android:title="Log Off"
+        app:showAsAction="never" />
  </menu>

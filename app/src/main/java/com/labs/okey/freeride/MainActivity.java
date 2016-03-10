@@ -32,7 +32,6 @@ import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.LoginEvent;
 import com.facebook.AccessToken;
 import com.facebook.FacebookException;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -149,19 +148,6 @@ public class MainActivity extends BaseActivity
         setContentView(R.layout.activity_main);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
-//        if( userRegistrationId.isEmpty() ) {
-//
-//            Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
-//            startActivityForResult(intent, REGISTER_USER_REQUEST);
-//
-//            Answers.getInstance().logCustom(new CustomEvent(getString(R.string.registration_answer_name)));
-//
-//            // To be continued on onActivityResult()
-//
-//        } else {
-
-
         String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
         String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
 
@@ -517,8 +503,8 @@ public class MainActivity extends BaseActivity
             wamsClient = new MobileServiceClient(
                     Globals.WAMS_URL,
                     Globals.WAMS_API_KEY,
-                    this)
-                    .withFilter(new RefreshTokenCacheFilter());
+                    this);
+                    //.withFilter(new RefreshTokenCacheFilter());
                     //.withFilter(new wamsUtils.ProgressFilter());
 
             if( !wamsUtils.loadUserTokenCache(wamsClient, this) )
@@ -533,22 +519,6 @@ public class MainActivity extends BaseActivity
         }
 
         return true;
-    }
-
-    class LoginAccumulator {
-
-        public String tokenResult;
-        public MobileServiceUser loggedUserResult;
-
-        @Subscribe
-        public void setToken(final String val) {
-            tokenResult = val;
-        }
-
-        @Subscribe
-        public void setUser(final MobileServiceUser val) {
-            loggedUserResult = val;
-        }
     }
 
     private void login(String accessToken, String accessTokenSecret) {
@@ -590,8 +560,12 @@ public class MainActivity extends BaseActivity
 
             @Override
             public void onFailure(Throwable t) {
-                Toast.makeText(MainActivity.this,
-                        t.getMessage(), Toast.LENGTH_LONG).show();
+                Throwable cause = t.getCause();
+                String msg = t.getMessage();
+                if( cause != null) {
+                    msg = cause.getMessage();
+                }
+                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
             }
         });
     }

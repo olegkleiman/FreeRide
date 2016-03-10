@@ -12,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.crashlytics.android.Crashlytics;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookException;
@@ -24,9 +23,9 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.labs.okey.freeride.gcm.GCMHandler;
 import com.labs.okey.freeride.utils.Globals;
+import com.labs.okey.freeride.utils.wamsUtils;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 
-import io.fabric.sdk.android.Fabric;
 import java.text.DateFormat;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -185,7 +184,7 @@ public class SplashScreen extends AppCompatActivity {
         final CountDownLatch latch = new CountDownLatch(1);
         final Boolean[] bRes = new Boolean[1];
 
-        if( provider.equals(Globals.FB_PROVIDER)) {
+        if( provider.equalsIgnoreCase(Globals.FB_PROVIDER)) {
 
             FacebookSdk.sdkInitialize(getApplicationContext(), new FacebookSdk.InitializeCallback() {
                 @Override
@@ -242,18 +241,29 @@ public class SplashScreen extends AppCompatActivity {
                 }
             });
 
-        } else if(provider.equals(Globals.TWITTER_PROVIDER) ||
-                provider.equals(Globals.DIGITS_PROVIDER)) {
+        } else if(provider.equalsIgnoreCase(Globals.TWITTER_PROVIDER) ||
+                provider.equalsIgnoreCase(Globals.DIGITS_PROVIDER)) {
             // According to https://dev.twitter.com/oauth/overview/faq ('How long does an access token last?')
             // Twitter (and Digits) tokens are not expired
             bRes[0] = true;
             latch.countDown();
-        } else if( provider.equals(Globals.MICROSOFT_PROVIDER) ) {
-            // If Microsoft Account tokena are expire?
+        } else if( provider.equalsIgnoreCase(Globals.MICROSOFT_PROVIDER) ) {
+            // If Microsoft Account tokens are expire?
             bRes[0] = true;
             latch.countDown();
-        }
+        } else if( provider.equalsIgnoreCase(Globals.GOOGLE_PROVIDER) ) {
+            // If Google tokens are expire?
 
+            String token = sharedPrefs.getString(Globals.TOKENPREF, "");
+            try {
+                Boolean _bRes = !wamsUtils.isJWTTokenExpired(token);
+                bRes[0] = _bRes;
+            } catch( Exception ex) {
+                Log.e(LOG_TAG, ex.getMessage());
+            }
+
+            latch.countDown();
+        }
 
         try {
 

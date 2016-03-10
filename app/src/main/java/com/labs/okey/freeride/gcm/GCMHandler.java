@@ -112,8 +112,6 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                         }
                     });
 
-                    Registration _reg = lf.get();
-
                 } catch (Exception e) {
 
                     if( Crashlytics.getInstance() != null)

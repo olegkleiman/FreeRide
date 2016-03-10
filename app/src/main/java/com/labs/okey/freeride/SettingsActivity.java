@@ -32,6 +32,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Cache;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.labs.okey.freeride.adapters.CarsAdapter;
 import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.RegisteredCar;
@@ -62,7 +63,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public class SettingsActivity extends BaseActivity
-        implements WAMSVersionTable.IVersionMismatchListener{
+        implements WAMSVersionTable.IVersionMismatchListener,
+        GoogleApiClient.ConnectionCallbacks {
 
     private final String LOG_TAG = getClass().getSimpleName();
 
@@ -116,9 +118,10 @@ public class SettingsActivity extends BaseActivity
 
             editor.putBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.DEBUG_WITHOUT_GEOFENCES);
             editor.apply();
-        } else if( id == R.id.action_debug_update_version ) {
-            WAMSVersionTable versionTable = new WAMSVersionTable(this, this);
-            versionTable.execute();
+        } else if( id == R.id.action_logoff) {
+            wamsUtils.logOff(this);
+            Intent intent = new Intent(this, RegisterActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -137,6 +140,15 @@ public class SettingsActivity extends BaseActivity
     }
 
     public void match() {
+
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
 
     }
 
@@ -174,6 +186,8 @@ public class SettingsActivity extends BaseActivity
             drawableLogoId = R.drawable.microsoft_logo;
         } else if( provider.equals(Globals.GOOGLE_PROVIDER)) {
             drawableLogoId = R.drawable.googleplus_logo;
+        } else if( provider.equals(Globals.TWITTER_PROVIDER)) {
+            drawableLogoId = R.drawable.twitter_logo;
         }
         if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             providerLogoImageView.setImageDrawable(getResources()

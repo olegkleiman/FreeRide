@@ -9,6 +9,11 @@ import android.util.Log;
 import com.crashlytics.android.Crashlytics;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.microsoft.live.LiveAuthClient;
+import com.microsoft.live.LiveAuthException;
+import com.microsoft.live.LiveAuthListener;
+import com.microsoft.live.LiveConnectSession;
+import com.microsoft.live.LiveStatus;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
@@ -16,6 +21,7 @@ import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncCon
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.ColumnDataType;
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.MobileServiceLocalStoreException;
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.SQLiteLocalStore;
+import com.twitter.sdk.android.core.TwitterCore;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -169,6 +175,65 @@ public class wamsUtils {
         return input;
     }
 
+    static public void logOff(Context context) {
+        MobileServiceAuthenticationProvider tokenProvider = getTokenProvider(context);
+
+        if( tokenProvider == MobileServiceAuthenticationProvider.Facebook ) {
+            com.facebook.login.LoginManager.getInstance().logOut();
+        } else if( tokenProvider == MobileServiceAuthenticationProvider.Google) {
+
+            if( !Globals.googleApiClient.isConnected())
+                Globals.googleApiClient.connect();
+
+//            try {
+//                Auth.GoogleSignInApi.signOut(Globals.googleApiClient).setResultCallback(
+//                        new ResultCallback<Status>() {
+//                            @Override
+//                            public void onResult(Status status) {
+//
+//                            }
+//                        }
+//                );
+//            } catch(Exception ex) {
+//                Log.e(LOG_TAG, ex.getMessage());
+//            }
+        } else if( tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount ) {
+            if( Globals.liveAuthClient == null )
+                Globals.liveAuthClient = new LiveAuthClient(context,
+                        Globals.MICROSOFT_CLIENT_ID);
+
+            Globals.liveAuthClient.logout(new LiveAuthListener() {
+                @Override
+                public void onAuthComplete(LiveStatus status, LiveConnectSession session, Object userState) {
+
+                }
+
+                @Override
+                public void onAuthError(LiveAuthException exception, Object userState) {
+
+                }
+            });
+
+        } else if( tokenProvider == MobileServiceAuthenticationProvider.Twitter ) {
+//            TwitterAuthConfig authConfig =
+//                    new TwitterAuthConfig(Globals.TWITTER_CONSUMER_KEY,
+//                                          Globals.TWITTER_CONSUMER_SECRET);
+//            Fabric.with(this, new Twitter(authConfig), new Digits());
+
+            TwitterCore.getInstance().logOut();
+        }
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+
+        editor.remove(Globals.REG_PROVIDER_PREF);
+        editor.remove(Globals.USERIDPREF);
+        editor.remove(Globals.TOKENPREF);
+        editor.remove(Globals.TOKENSECRETPREF);
+
+        editor.apply();
+    }
+
     static public boolean isJWTTokenExpired(String jwtToken) throws Exception{
         StringTokenizer jwtTokens = new StringTokenizer(jwtToken, ".");
 
@@ -197,16 +262,19 @@ public class wamsUtils {
             String jsonString = new String(jwtData, "UTF-8");
             JsonObject jsonObj = (new JsonParser()).parse(jsonString).getAsJsonObject();
 
+            String issuer = jsonObj.get("iss").getAsString();
+            Log.d(LOG_TAG, "JWT issuer: " + issuer);
+
             String exp = jsonObj.get("exp").getAsString();
             // 'exp' in JWT represents the number of seconds since Jan 1, 1970 UTC
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(Long.parseLong(exp) * 1000);
             Date expiryDate = calendar.getTime();
             if( expiryDate.before(new Date()) ) {
-                Log.d(LOG_TAG, "WAMS token expired");
+                Log.d(LOG_TAG, "Token expired");
                 return true;
             } else {
-                Log.d(LOG_TAG, "WAMS token is valid");
+                Log.d(LOG_TAG, "Token is valid");
                 return false;
             }
             //return !expiryDate.before(new Date());
@@ -247,6 +315,8 @@ public class wamsUtils {
 
         if( accessTokenProvider.equals(Globals.FB_PROVIDER))
             return MobileServiceAuthenticationProvider.Facebook;
+        else if( accessTokenProvider.equals(Globals.GOOGLE_PROVIDER))
+            return MobileServiceAuthenticationProvider.Google;
         else if( accessTokenProvider.equals(Globals.TWITTER_PROVIDER) ||
                 accessTokenProvider.equals(Globals.DIGITS_PROVIDER) )
             return MobileServiceAuthenticationProvider.Twitter;

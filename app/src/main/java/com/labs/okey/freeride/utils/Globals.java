@@ -7,15 +7,18 @@ import android.renderscript.Matrix4f;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.ndk.CrashlyticsNdk;
+import com.digits.sdk.android.Digits;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
 import com.microsoft.live.LiveAuthClient;
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -123,10 +126,10 @@ public class Globals {
 
         try {
 
-//            TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
-//                                                                  TWITTER_CONSUMER_SECRET);
-//            Fabric.with(ctx, new TwitterCore(authConfig), new Crashlytics(), new Digits());
-            Fabric.with(ctx, new Crashlytics(), new CrashlyticsNdk());
+            TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
+                                                                  TWITTER_CONSUMER_SECRET);
+            Fabric.with(ctx, new Twitter(authConfig), new Crashlytics(), new Digits());
+//            Fabric.with(ctx, new Crashlytics(), new CrashlyticsNdk());
 
             User user = User.load(ctx);
             Crashlytics.setUserIdentifier(user.getRegistrationId());
@@ -457,6 +460,8 @@ public class Globals {
             "wl.emails",
             "wl.offline_access"
     };
+
+    public static GoogleApiClient googleApiClient;
 
 
     public static String TWITTER_CONSUMER_KEY = "jxvXE5xHG84JvuI4bLJApTzYb";
