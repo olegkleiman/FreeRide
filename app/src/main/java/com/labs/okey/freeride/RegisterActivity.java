@@ -27,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.facebook.AccessToken;
@@ -42,12 +43,9 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.plus.People;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 import com.labs.okey.freeride.fragments.ConfirmRegistrationFragment;
@@ -98,8 +96,7 @@ import java.util.concurrent.ExecutionException;
 public class RegisterActivity extends FragmentActivity
         implements ConfirmRegistrationFragment.RegistrationDialogListener,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        ResultCallback<People.LoadPeopleResult> {
+        GoogleApiClient.OnConnectionFailedListener {
 
     private final String LOG_TAG = getClass().getSimpleName();
     private final String PENDING_ACTION_BUNDLE_KEY = "com.labs.okey.freeride:PendingAction";
@@ -117,11 +114,13 @@ public class RegisterActivity extends FragmentActivity
 
     private User                mNewUser;
     private String              mAccessToken;
-    private String              mAcessTokenSecret; // used by Twitter
+    private String              mAccessTokenSecret; // used by Twitter
     private boolean             mAddNewUser = true;
 
     private static final int    RC_SIGN_IN = 9001; // Used by Google+
     private static final int    REQUEST_CODE_RESOLVE_ERR = 9002;
+
+    MaterialDialog              mGoogleProgressDialog;
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, final User user) {
@@ -224,24 +223,21 @@ public class RegisterActivity extends FragmentActivity
 
     // Implementation of GoogleApiClient.ConnectionCallbacks
     // for Google Play
+
+    // After this callback, the application can make requests on other methods provided
+    // by the client and expect that no user intervention is required to call methods
+    // that use account and scopes provided to the client constructor.
     @Override
     public void onConnected(Bundle bundle) {
+        if( mGoogleProgressDialog != null )
+            mGoogleProgressDialog.dismiss();
 
-        mNewUser = new User();
-
-        //Plus.PeopleApi.loadVisible(Globals.googleApiClient, null).setResultCallback(this);
-
-        Person person = Plus.PeopleApi.getCurrentPerson(Globals.googleApiClient);
-        if( person != null) {
-            if( person.hasName() ) {
-                Person.Name _name = person.getName();
-                mNewUser.setLastName(_name.getFamilyName());
-                mNewUser.setFirstName(_name.getGivenName());
-            }
-
-            if( person.hasImage() )
-                mNewUser.setPictureURL(person.getImage().getUrl());
-        }
+        // This approach (described at https://developers.google.com/identity/sign-in/android/v1/people)is deprecated!
+        // When app will be migrated to use Azure App Services and hence
+        // it will be possible to use play services ver. 8.3 or greater,
+        // change this approach to new one as described here: https://developers.google.com/identity/sign-in/android/
+        String email = Plus.AccountApi.getAccountName(Globals.googleApiClient);
+        getTokenAndLogin(email);
     }
 
     @Override
@@ -254,10 +250,6 @@ public class RegisterActivity extends FragmentActivity
                 Globals.googleApiClient.connect();
             }
         }
-    }
-
-    public void onResult(People.LoadPeopleResult peopleData) {
-
     }
 
     @Override
@@ -319,7 +311,7 @@ public class RegisterActivity extends FragmentActivity
                 TwitterSession session = Twitter.getSessionManager().getActiveSession();
 
                 mAccessToken = result.data.getAuthToken().token;
-                mAcessTokenSecret = result.data.getAuthToken().secret;
+                mAccessTokenSecret = result.data.getAuthToken().secret;
 
                 TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
                 twitterApiClient.getAccountService().verifyCredentials(false, false, new Callback<com.twitter.sdk.android.core.models.User>() {
@@ -397,7 +389,7 @@ public class RegisterActivity extends FragmentActivity
                                 .addApi(Plus.API)
                 //.enableAutoManage(this, this)
                                 .addScope(Plus.SCOPE_PLUS_PROFILE)
-                                .addScope(Plus.SCOPE_PLUS_LOGIN)
+                                //.addScope(Plus.SCOPE_PLUS_LOGIN)
                                 .addConnectionCallbacks(this)
                                 .addOnConnectionFailedListener(this)
                 .build();
@@ -409,13 +401,18 @@ public class RegisterActivity extends FragmentActivity
             @Override
             public void onClick(View v) {
 
-                //Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(Globals.googleApiClient);
-                String[] accountTypes = new String[] { "com.google" };
-                Intent signInIntent = AccountPicker.newChooseAccountIntent(null, null, accountTypes, false, null, null, null, null);
+                if (!Globals.googleApiClient.isConnected()) {
+                    mGoogleProgressDialog.show();
+                    Globals.googleApiClient.connect();
 
-                startActivityForResult(signInIntent, RC_SIGN_IN);
+                }
             }
         });
+        mGoogleProgressDialog = new MaterialDialog.Builder(this)
+                .title("Connecting to Google API")
+                .content("Please wait")
+                .progress(true, 0)
+                .build();
 
         // Microsoft (Live) stuff
         final ImageButton oneDriveButton = (ImageButton) this.findViewById(R.id.msa_login);
@@ -656,8 +653,8 @@ public class RegisterActivity extends FragmentActivity
     protected void onStart() {
         super.onStart();
 
-        if( !Globals.googleApiClient.isConnected() )
-            Globals.googleApiClient.connect();
+//        if( !Globals.googleApiClient.isConnected() )
+//            Globals.googleApiClient.connect();
     }
 
     @Override
@@ -690,13 +687,10 @@ public class RegisterActivity extends FragmentActivity
             String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
             getTokenAndLogin(accountName);
 
-//            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-//            if( result != null ) {
-//                if( !googleHandleSignInResult(result) )
-//                    Toast.makeText(this, "Unable to process Google account", Toast.LENGTH_LONG).show();
-//            }
-
         } else if( requestCode == REQUEST_CODE_RESOLVE_ERR && resultCode == RESULT_OK ) {
+            // Make sure the app is not already connected or attempting to connect
+            if (!Globals.googleApiClient.isConnecting() &&
+                    !Globals.googleApiClient.isConnected())
             Globals.googleApiClient.connect();
         }
         else if( requestCode == TwitterAuthConfig.DEFAULT_AUTH_REQUEST_CODE ) {
@@ -709,6 +703,8 @@ public class RegisterActivity extends FragmentActivity
 
     private void getTokenAndLogin(String accountName) {
         final String GOOGLE_ID_TOKEN_SCOPE = GOOGLE_SCOPE_TAKE2 + getString(R.string.server_client_id);
+        // Getting Google token (thru the call to GoogleAuthUtil.getToken)
+        // requires the substantial network IO, and therefore it it running off the UI thread
         new GetTokenAndLoginTask(GOOGLE_ID_TOKEN_SCOPE, accountName).execute((Void)null);
 
     }
@@ -742,10 +738,23 @@ public class RegisterActivity extends FragmentActivity
                 mAccessToken = GoogleAuthUtil.getToken(getApplicationContext(), mEmail, mScope);
                 String userId = GoogleAuthUtil.getAccountId(getApplicationContext(), mEmail);
 
-                if( mNewUser != null ) {
-                    mNewUser.setEmail(mEmail);
-                    mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + userId);
+                mNewUser = new User();
+
+                mNewUser.setEmail(mEmail);
+                mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + userId);
+
+                Person person = Plus.PeopleApi.getCurrentPerson(Globals.googleApiClient);
+                if( person != null ) {
+                    if( person.hasImage() )
+                        mNewUser.setPictureURL(person.getImage().getUrl());
+                    if( person.hasName() ) {
+                        Person.Name _name =  person.getName();
+                        mNewUser.setFirstName(_name.getGivenName());
+                        mNewUser.setLastName(_name.getFamilyName());
+                    }
+
                 }
+
 
                 saveProviderAccessToken(Globals.GOOGLE_PROVIDER, userId);
 
@@ -782,8 +791,8 @@ public class RegisterActivity extends FragmentActivity
         editor.putString(Globals.REG_PROVIDER_PREF, provider);
         editor.putString(Globals.USERIDPREF, userID);
         editor.putString(Globals.TOKENPREF, mAccessToken);
-        if( mAcessTokenSecret != null && !mAcessTokenSecret.isEmpty() )
-            editor.putString(Globals.TOKENSECRETPREF, mAcessTokenSecret);
+        if( mAccessTokenSecret != null && !mAccessTokenSecret.isEmpty() )
+            editor.putString(Globals.TOKENSECRETPREF, mAccessTokenSecret);
 
         editor.apply();
     }
