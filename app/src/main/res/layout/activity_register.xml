@@ -50,7 +50,8 @@
             android:background="@color/msa_background"
             android:src="@drawable/msa_logo"
             android:layout_marginTop="16dp"
-            android:scaleType="center" />
+            android:scaleType="center"
+            android:visibility="gone" />
 
         <com.twitter.sdk.android.core.identity.TwitterLoginButton
             android:id="@+id/twitter_login"
