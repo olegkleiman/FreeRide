@@ -76,7 +76,7 @@ public class CameraCVActivity extends Activity
                     IUploader,
                     Handler.Callback {
 
-    private static final String LOG_TAG = "FR.CV";
+    private final String        LOG_TAG = getClass().getSimpleName();
 
     private Handler handle = new Handler(this);
     public Handler getHandler() { return handle; }
@@ -163,7 +163,8 @@ public class CameraCVActivity extends Activity
                 default:
                 {
                     super.onManagerConnected(status);
-                } break;
+                }
+                break;
             }
         }
     };

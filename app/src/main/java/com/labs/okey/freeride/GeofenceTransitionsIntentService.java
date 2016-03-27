@@ -25,11 +25,11 @@ import java.util.List;
  */
 public class GeofenceTransitionsIntentService extends IntentService {
 
-    protected static final String TAG = "FR.geofence-service";
+    protected static final String LOG_TAG = "FR.geofence-service";
 
     public GeofenceTransitionsIntentService() {
         // Use the TAG to name the worker thread.
-        super(TAG);
+        super(LOG_TAG);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
         if (geofencingEvent.hasError()) {
             String errorMessage = GeofenceErrorMessages.getErrorString(this,
                     geofencingEvent.getErrorCode());
-            Log.e(TAG, errorMessage);
+            Log.e(LOG_TAG, errorMessage);
             return;
         }
 
@@ -86,7 +86,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 Globals.clearRemindGeofenceEntrance();
             }
 
-            Log.i(TAG, geofenceTransitionString);
+            Log.i(LOG_TAG, geofenceTransitionString);
         } else if( geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL ) {
             List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
 
@@ -101,7 +101,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
             Globals.setMonitorStatus(geofenceTransitionString);
         } else {
             // Log the error.
-            Log.e(TAG, getString(R.string.geofence_transition_invalid_type, geofenceTransition));
+            Log.e(LOG_TAG, getString(R.string.geofence_transition_invalid_type, geofenceTransition));
         }
 
     }

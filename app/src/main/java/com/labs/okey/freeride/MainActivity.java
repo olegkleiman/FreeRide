@@ -47,11 +47,6 @@ import com.labs.okey.freeride.utils.Globals;
 import com.labs.okey.freeride.utils.IRecyclerClickListener;
 import com.labs.okey.freeride.utils.WAMSVersionTable;
 import com.labs.okey.freeride.utils.wamsUtils;
-import com.microsoft.live.LiveAuthClient;
-import com.microsoft.live.LiveAuthException;
-import com.microsoft.live.LiveAuthListener;
-import com.microsoft.live.LiveConnectSession;
-import com.microsoft.live.LiveStatus;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
@@ -64,7 +59,6 @@ import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
-import com.microsoft.windowsazure.notifications.NotificationsManager;
 import com.pkmmte.view.CircularImageView;
 
 import junit.framework.Assert;
@@ -73,7 +67,6 @@ import java.net.MalformedURLException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
@@ -467,8 +460,9 @@ public class MainActivity extends BaseActivity
         super.onDestroy();
         Log.d(LOG_TAG, "onDestroy");
 
-        NotificationsManager.stopHandlingNotifications(this);
+        //NotificationsManager.stopHandlingNotifications(this);
     }
+
 
 //    @Override
 //    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -685,34 +679,34 @@ public class MainActivity extends BaseActivity
                             public void run() {
                                 MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
                                 if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
-                                    if (Globals.liveAuthClient == null) {
-
-                                        Globals.liveAuthClient = new LiveAuthClient(getApplicationContext(),
-                                                                                Globals.MICROSOFT_CLIENT_ID);
-
-                                    }
-
-                                    Globals.liveAuthClient.login(MainActivity.this,
-                                            Arrays.asList(Globals.LIVE_SCOPES),
-                                            new LiveAuthListener() {
-                                                @Override
-                                                public void onAuthComplete(LiveStatus status,
-                                                                           LiveConnectSession session,
-                                                                           Object userState) {
-
-                                                    String accessToken = session.getAuthenticationToken();
-                                                    saveAccessTokenAfterRefresh(accessToken);
-                                                    latch.countDown();
-
-                                                    login(accessToken, "");
-
-                                                }
-
-                                                @Override
-                                                public void onAuthError(LiveAuthException exception, Object userState) {
-                                                    latch.countDown();
-                                                }
-                                            });
+//                                    if (Globals.liveAuthClient == null) {
+//
+//                                        Globals.liveAuthClient = new LiveAuthClient(getApplicationContext(),
+//                                                                                Globals.MICROSOFT_CLIENT_ID);
+//
+//                                    }
+//
+//                                    Globals.liveAuthClient.login(MainActivity.this,
+//                                            Arrays.asList(Globals.LIVE_SCOPES),
+//                                            new LiveAuthListener() {
+//                                                @Override
+//                                                public void onAuthComplete(LiveStatus status,
+//                                                                           LiveConnectSession session,
+//                                                                           Object userState) {
+//
+//                                                    String accessToken = session.getAuthenticationToken();
+//                                                    saveAccessTokenAfterRefresh(accessToken);
+//                                                    latch.countDown();
+//
+//                                                    login(accessToken, "");
+//
+//                                                }
+//
+//                                                @Override
+//                                                public void onAuthError(LiveAuthException exception, Object userState) {
+//                                                    latch.countDown();
+//                                                }
+//                                            });
 
 
                                 } else if (tokenProvider == MobileServiceAuthenticationProvider.Facebook) {

@@ -35,6 +35,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
@@ -60,7 +61,7 @@ import java.util.StringTokenizer;
 public class BaseActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener{
 
-    private static final String LOG_TAG = "FR.baseActivity";
+    private final String    LOG_TAG = getClass().getSimpleName();
     static final int REQUEST_CODE_RECOVER_PLAY_SERVICES = 1001;
 
     protected String[] mDrawerTitles;
@@ -138,6 +139,24 @@ public class BaseActivity extends AppCompatActivity
             mGoogleApiClient.disconnect();
 
         super.onDestroy();
+
+        unbindDrawables(findViewById(R.id.content_frame));
+        System.gc();
+    }
+
+    private void unbindDrawables(View view) {
+        if( view == null )
+            return;
+
+        if (view.getBackground() != null) {
+            view.getBackground().setCallback(null);
+        }
+        if (view instanceof ViewGroup) {
+            for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
+                unbindDrawables(((ViewGroup) view).getChildAt(i));
+            }
+            ((ViewGroup) view).removeAllViews();
+        }
     }
 
     protected synchronized void buildGoogleApiClient() {

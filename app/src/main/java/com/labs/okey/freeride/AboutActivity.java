@@ -23,11 +23,11 @@ import com.labs.okey.freeride.views.SlidingTabLayout;
 public class AboutActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener{
 
-    private static final String LOG_TAG = "FR.About";
-    AboutTabAdapter mTabAdapter;
-    private String titles[];
-    ViewPager mViewPager;
-    SlidingTabLayout slidingTabLayout;
+    private final String    LOG_TAG = getClass().getSimpleName();
+    AboutTabAdapter         mTabAdapter;
+    private String          titles[];
+    ViewPager               mViewPager;
+    SlidingTabLayout        slidingTabLayout;
 
     @Override
     @CallSuper

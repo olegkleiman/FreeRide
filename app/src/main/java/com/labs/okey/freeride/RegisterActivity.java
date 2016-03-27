@@ -53,17 +53,7 @@ import com.labs.okey.freeride.fragments.RegisterCarsFragment;
 import com.labs.okey.freeride.model.GeoFence;
 import com.labs.okey.freeride.model.User;
 import com.labs.okey.freeride.utils.Globals;
-import com.labs.okey.freeride.utils.JsonKeys;
 import com.labs.okey.freeride.utils.wamsUtils;
-import com.microsoft.live.LiveAuthClient;
-import com.microsoft.live.LiveAuthException;
-import com.microsoft.live.LiveAuthListener;
-import com.microsoft.live.LiveConnectClient;
-import com.microsoft.live.LiveConnectSession;
-import com.microsoft.live.LiveOperation;
-import com.microsoft.live.LiveOperationException;
-import com.microsoft.live.LiveOperationListener;
-import com.microsoft.live.LiveStatus;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
@@ -90,7 +80,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 public class RegisterActivity extends FragmentActivity
@@ -367,32 +356,12 @@ public class RegisterActivity extends FragmentActivity
         });
 
         // Google+ stuff
-//        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//                .requestEmail()
-//                .requestServerAuthCode(getString(R.string.server_client_id), false)
-//                .requestIdToken(getString(R.string.server_client_id))
-//                .build();
-//
-//        Globals.googleApiClient = new GoogleApiClient.Builder(this)
-////                .enableAutoManage(this /* FragmentActivity */,
-////                        new GoogleApiClient.OnConnectionFailedListener() {
-////                            @Override
-////                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-////                                Log.d(LOG_TAG, "onConnectionFailed:" + connectionResult);
-////                            }
-////                        })
-//                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-//                .build();
-//        Globals.googleApiClient.connect();
-
         Globals.googleApiClient = new GoogleApiClient.Builder(this)
                                 .addApi(Plus.API)
-                //.enableAutoManage(this, this)
                                 .addScope(Plus.SCOPE_PLUS_PROFILE)
-                                //.addScope(Plus.SCOPE_PLUS_LOGIN)
                                 .addConnectionCallbacks(this)
                                 .addOnConnectionFailedListener(this)
-                .build();
+                                .build();
 
         SignInButton googleSignInButton = (SignInButton)findViewById(R.id.google_login);
         googleSignInButton.setColorScheme(SignInButton.COLOR_DARK);
@@ -416,93 +385,93 @@ public class RegisterActivity extends FragmentActivity
 
         // Microsoft (Live) stuff
         final ImageButton oneDriveButton = (ImageButton) this.findViewById(R.id.msa_login);
-        oneDriveButton.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(final View v) {
-              Globals.liveAuthClient = new LiveAuthClient(getApplicationContext(),
-                                                          Globals.MICROSOFT_CLIENT_ID);
-
-              Globals.liveAuthClient.login(RegisterActivity.this,
-                        Arrays.asList(Globals.LIVE_SCOPES),
-                        new LiveAuthListener() {
-                          @Override
-                          public void onAuthComplete(LiveStatus status,
-                                                     LiveConnectSession session,
-                                                     Object userState) {
-                              if (status == LiveStatus.CONNECTED) {
-
-                                  mAccessToken = session.getAuthenticationToken();
-                                  LiveConnectClient connectClient = new LiveConnectClient(session);
-
-                                  mNewUser = new User();
-
-                                  connectClient.getAsync("me", new LiveOperationListener() {
-                                      @Override
-                                      public void onComplete(LiveOperation operation) {
-                                          JSONObject result = operation.getResult();
-                                          if (!result.has(JsonKeys.ERROR)) {
-
-                                              String userID = result.optString(JsonKeys.ID);
-                                              saveProviderAccessToken(Globals.MICROSOFT_PROVIDER, userID);
-
-                                              mNewUser.setRegistrationId(Globals.MICROSOFT_PROVIDER_FOR_STORE + userID);
-
-                                              mNewUser.setFirstName(result.optString(JsonKeys.FIRST_NAME));
-                                              mNewUser.setLastName(result.optString(JsonKeys.LAST_NAME));
-
-                                              JSONObject emails = result.optJSONObject(JsonKeys.EMAILS);
-                                              String email = emails.optString("account");
-                                              Log.e(LOG_TAG, email);
-                                              mNewUser.setEmail(email);
-
-                                              String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-                                              mNewUser.setDeviceId(android_id);
-                                              mNewUser.setPlatform(Globals.PLATFORM);
-                                          } else {
-                                              JSONObject error = result.optJSONObject(JsonKeys.ERROR);
-                                              String code = error.optString(JsonKeys.CODE);
-                                              String message = error.optString(JsonKeys.MESSAGE);
-                                              Toast.makeText(RegisterActivity.this, code + ": " + message, Toast.LENGTH_LONG).show();
-                                          }
-                                      }
-
-                                      @Override
-                                      public void onError(LiveOperationException exception, LiveOperation operation) {
-                                          Toast.makeText(RegisterActivity.this, exception.getLocalizedMessage(),
-                                                         Toast.LENGTH_LONG).show();
-                                          Log.e(LOG_TAG, exception.getLocalizedMessage());
-                                      }
-                                  });
-
-                                  connectClient.getAsync("me/picture", new LiveOperationListener() {
-                                      @Override
-                                      public void onComplete(LiveOperation operation) {
-                                          JSONObject result = operation.getResult();
-                                          if (!result.has(JsonKeys.ERROR)) {
-
-                                              String pictureURI = result.optString(JsonKeys.LOCATION);
-                                              mNewUser.setPictureURL(pictureURI);
-
-                                              new VerifyAccountTask().execute();
-                                          }
-                                      }
-
-                                      @Override
-                                      public void onError(LiveOperationException exception, LiveOperation operation) {
-                                          Log.e(LOG_TAG, exception.getLocalizedMessage());
-                                      }
-                                  });
-                              }
-                          }
-
-                          @Override
-                          public void onAuthError(LiveAuthException exception, Object userState) {
-                              Toast.makeText(RegisterActivity.this,
-                                      exception.getError(), Toast.LENGTH_LONG).show();
-                          }
-                        });
-          }
-        });
+//        oneDriveButton.setOnClickListener(new View.OnClickListener() {
+//          @Override
+//          public void onClick(final View v) {
+//              Globals.liveAuthClient = new LiveAuthClient(getApplicationContext(),
+//                                                          Globals.MICROSOFT_CLIENT_ID);
+//
+//              Globals.liveAuthClient.login(RegisterActivity.this,
+//                        Arrays.asList(Globals.LIVE_SCOPES),
+//                        new LiveAuthListener() {
+//                          @Override
+//                          public void onAuthComplete(LiveStatus status,
+//                                                     LiveConnectSession session,
+//                                                     Object userState) {
+//                              if (status == LiveStatus.CONNECTED) {
+//
+//                                  mAccessToken = session.getAuthenticationToken();
+//                                  LiveConnectClient connectClient = new LiveConnectClient(session);
+//
+//                                  mNewUser = new User();
+//
+//                                  connectClient.getAsync("me", new LiveOperationListener() {
+//                                      @Override
+//                                      public void onComplete(LiveOperation operation) {
+//                                          JSONObject result = operation.getResult();
+//                                          if (!result.has(JsonKeys.ERROR)) {
+//
+//                                              String userID = result.optString(JsonKeys.ID);
+//                                              saveProviderAccessToken(Globals.MICROSOFT_PROVIDER, userID);
+//
+//                                              mNewUser.setRegistrationId(Globals.MICROSOFT_PROVIDER_FOR_STORE + userID);
+//
+//                                              mNewUser.setFirstName(result.optString(JsonKeys.FIRST_NAME));
+//                                              mNewUser.setLastName(result.optString(JsonKeys.LAST_NAME));
+//
+//                                              JSONObject emails = result.optJSONObject(JsonKeys.EMAILS);
+//                                              String email = emails.optString("account");
+//                                              Log.e(LOG_TAG, email);
+//                                              mNewUser.setEmail(email);
+//
+//                                              String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+//                                              mNewUser.setDeviceId(android_id);
+//                                              mNewUser.setPlatform(Globals.PLATFORM);
+//                                          } else {
+//                                              JSONObject error = result.optJSONObject(JsonKeys.ERROR);
+//                                              String code = error.optString(JsonKeys.CODE);
+//                                              String message = error.optString(JsonKeys.MESSAGE);
+//                                              Toast.makeText(RegisterActivity.this, code + ": " + message, Toast.LENGTH_LONG).show();
+//                                          }
+//                                      }
+//
+//                                      @Override
+//                                      public void onError(LiveOperationException exception, LiveOperation operation) {
+//                                          Toast.makeText(RegisterActivity.this, exception.getLocalizedMessage(),
+//                                                         Toast.LENGTH_LONG).show();
+//                                          Log.e(LOG_TAG, exception.getLocalizedMessage());
+//                                      }
+//                                  });
+//
+//                                  connectClient.getAsync("me/picture", new LiveOperationListener() {
+//                                      @Override
+//                                      public void onComplete(LiveOperation operation) {
+//                                          JSONObject result = operation.getResult();
+//                                          if (!result.has(JsonKeys.ERROR)) {
+//
+//                                              String pictureURI = result.optString(JsonKeys.LOCATION);
+//                                              mNewUser.setPictureURL(pictureURI);
+//
+//                                              new VerifyAccountTask().execute();
+//                                          }
+//                                      }
+//
+//                                      @Override
+//                                      public void onError(LiveOperationException exception, LiveOperation operation) {
+//                                          Log.e(LOG_TAG, exception.getLocalizedMessage());
+//                                      }
+//                                  });
+//                              }
+//                          }
+//
+//                          @Override
+//                          public void onAuthError(LiveAuthException exception, Object userState) {
+//                              Toast.makeText(RegisterActivity.this,
+//                                      exception.getError(), Toast.LENGTH_LONG).show();
+//                          }
+//                        });
+//          }
+//        });
 
         // FB stuff
         mFBCallbackManager = CallbackManager.Factory.create();
@@ -754,7 +723,6 @@ public class RegisterActivity extends FragmentActivity
                     }
 
                 }
-
 
                 saveProviderAccessToken(Globals.GOOGLE_PROVIDER, userId);
 
