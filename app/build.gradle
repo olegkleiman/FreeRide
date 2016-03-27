@@ -41,6 +41,7 @@ buildscript {
 
 //apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.android.model.application'
+
 model {
 
     compileOptions.with {
@@ -64,83 +65,75 @@ model {
     }
 
     android.ndk {
-        moduleName = "fastcvUtils"
+            moduleName = "fastcvUtils"
 
-        abiFilters += ["armeabi", "armeabi-v7a"]
+            abiFilters.addAll("armeabi", "armeabi-v7a")
 
-        // Link with static OpenCV libraries: the order is important!
-        // The following order taken from OpenCV.mk
-        def opencv_modules = ["shape", "stitching", "objdetect", "superres", "videostab", "calib3d", "features2d", "highgui", "videoio", "imgcodecs", "video", "photo", "ml", "imgproc", "flann", "core", "hal", "tbb"]
+            // Link with static OpenCV libraries: the order is important!
+            // The following order taken from OpenCV.mk
+            def opencv_modules = ["shape", "stitching", "objdetect", "superres", "videostab", "calib3d", "features2d", "highgui", "videoio", "imgcodecs", "video", "photo", "ml", "imgproc", "flann", "core", "hal", "tbb"]
 
-        ldLibs += ["log", "stdc++", "dl", "z", "jnigraphics"]
+            ldLibs.addAll(["log", "stdc++", "dl", "z", "jnigraphics"])
 
-        abiFilters.each { targetAbi ->
-            println targetAbi
+            abiFilters.each { targetAbi ->
+                println targetAbi
 
-            opencv_modules.each { module ->
-                if (module.equals("tbb")) {
-                    ldLibs += file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/lib" + module + ".a"
-                } else {
-                    ldLibs += file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/libopencv_" + module + ".a"
+                opencv_modules.each { module ->
+
+                    if (module.equals("tbb")) {
+                        ldLibs.add(file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/lib" + module + ".a")
+                    } else {
+                        ldLibs.add(file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/libopencv_" + module + ".a")
+                    }
                 }
             }
+
+            cppFlags.addAll(["-std=c++11", "-Werror", "--debug", "-frtti", "-fexceptions", "-D_DEBUG"]);
+
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                def opencvhome = System.getenv("OPENCV_HOME")
+                cppFlags.add("-I" + opencvhome + "\\native\\jni\\include")
+            } else {
+                cppFlags.add("-I/Users/Oleg/Downloads/OpenCV-android-sdk/sdk/native/jni/include")
+            }
+
+
+            stl = "gnustl_static" //  GNU Standard C++ Library runtime
+            debuggable = true
         }
 
-        cppFlags += "-Werror"
-        cppFlags += "--debug"
-        cppFlags += "-frtti"
-        cppFlags += "-fexceptions"
-        cppFlags += "-D_DEBUG"
-
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            def opencvhome = System.getenv("OPENCV_HOME")
-            cppFlags += "-I" + opencvhome + "\\native\\jni\\include"
-        } else {
-            cppFlags += "-I/Users/Oleg/Downloads/OpenCV-android-sdk/sdk/native/jni/include"
-        }
-        cppFlags += "-std=c++11" // for lambda-expressions
-
-        stl = "gnustl_static"
-
-    }
+//        sources {
+//            main {
+//                java {
+//                    source {
+//                        srcDir "src"
+//                    }
+//                }
+//                jni {
+//                    exportedHeaders {
+//                        srcDir "src/main/headers"
+//                    }
+//                }
+//            }
+//        }
 
     android.buildTypes {
-        release {
-            minifyEnabled = true
-            proguardFiles += file('proguard-rules.pro')
-            debuggable = false
-            ndk.with {
+            release {
+                minifyEnabled = true
+                proguardFiles += file('proguard-rules.pro')
                 debuggable = false
+                ndk.with {
+                    debuggable = false
+                }
             }
-        }
 
-        debug {
-            debuggable = true
-            ndk.with {
+            debug {
                 debuggable = true
+                ndk.with {
+                    debuggable = true
+                }
             }
-        }
     }
-
-//    android.productFlavors {
-//        create("arm") {
-//            ndk.with {
-//
-//                abiFilters += "armeabi"
-//                println "*** building for arm"
-//            }
-//
-//        }
-//
-//        create("armv7") {
-//            ndk.with {
-//
-//                abiFilters += "armeabi-v7a"
-//                println "*** building for armv7"
-//            }
-//
-//        }
-//    }
 
 }
 
@@ -154,71 +147,71 @@ repositories {
     }
 }
 
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
-    //testCompile 'junit:junit:4.12'
-    //testCompile 'com.android.support:appcompat-v7:(23,24]'
+    compile project(':openCVLibrary310')
+    //compile project(':livesdk')
 
     // See here: https://developers.google.com/android/guides/setup
     // for detailed discussion about setting up GMS
     compile('com.afollestad.material-dialogs:core:0.8.5.6@aar') {
         transitive = true
     }
-    
-    compile project(':libraries:opencv')
-    compile 'com.android.volley:volley:1.0.0'
-    compile project(':livesdk')
-
     // Twitter
     compile('com.twitter.sdk.android:twitter:1.10.0@aar') {
         transitive = true;
     }
-    compile 'io.fabric.sdk.android:fabric:1.3.10'
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true
     }
     compile('com.crashlytics.sdk.android:crashlytics-ndk:1.1.2@aar') {
         transitive = true;
     }
-//    compile('com.digits.sdk.android:digits:1.9.1@aar') {
-//        transitive = true;
-//    }
-    //    compile 'com.github.glomadrian:loadingballs:1.1@aar'
-    compile 'com.android.support:support-v4:23.2.0'
-    compile 'com.android.support:design:23.2.0'
-    compile 'com.android.support:appcompat-v7:23.2.0'
-    compile 'com.android.support:cardview-v7:23.2'
-    compile 'com.android.support:recyclerview-v7:23.2.0'
-    compile 'com.facebook.android:facebook-android-sdk:4.9.0'
-    compile 'com.google.code.gson:gson:2.4'
-    compile 'com.google.guava:guava:18.0'
-    compile 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
-    // Uncomment this line when server backend be migrated to App Services
-    //compile 'com.microsoft.azure:azure-mobile-android:3.0'
-    //compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
-    compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
-    compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
+
     compile 'com.google.android.gms:play-services-gcm:8.1.0'
     compile 'com.google.android.gms:play-services-maps:8.1.0'
     compile 'com.google.android.gms:play-services-location:8.1.0'
     compile 'com.google.android.gms:play-services-plus:8.1.0'
-    // You may use play services 8.4.0 after
+    // You may use play-services 8.4.0 after
     // upgrading azure server side to App Service instead of WAMS
 //    compile 'com.google.android.gms:play-services-location:8.4.0'
 //    compile 'com.google.android.gms:play-services-gcm:8.4.0'
 //    compile 'com.google.android.gms:play-services-auth:8.4.0'
     //compile 'com.google.android.gms:play-services-analytics:8.4.0'
+
+    compile 'com.android.support:support-annotations:23.2.1'
+    compile 'com.android.support:support-v4:23.2.1'
+    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.android.support:design:23.2.1'
+    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.android.support:cardview-v7:23.2.1'
+    compile 'com.android.support:recyclerview-v7:23.2.1'
     compile 'com.android.support:multidex:1.0.1'
-    compile 'com.android.support:support-annotations:23.2'
-    compile 'org.jbundle.util.osgi.wrapped:org.jbundle.util.osgi.wrapped.org.apache.http.client:4.1.2'
-    compile 'net.steamcrafted:load-toast:1.0.9'
+
+    compile 'com.android.volley:volley:1.0.0'
+    compile 'io.fabric.sdk.android:fabric:1.3.10'
+
+    compile 'com.facebook.android:facebook-android-sdk:4.9.0'
+    compile 'com.google.code.gson:gson:2.4'
+    compile 'com.google.guava:guava:18.0'
+    // Uncomment this line when server backend be migrated to App Services
+    //compile 'com.microsoft.azure:azure-mobile-android:3.0'
+    //compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
+    compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
+    compile 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
+    compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
+
     compile 'com.microsoft.projectoxford:face:1.0.0'
+
+    compile 'org.jbundle.util.osgi.wrapped:org.jbundle.util.osgi.wrapped.org.apache.http.client:4.1.2'
+
+    compile 'net.steamcrafted:load-toast:1.0.9'
     compile 'com.github.brnunes:swipeablerecyclerview:1.0.1'
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.+'
     compile 'com.pkmmte.view:circularimageview:1.1'
     compile 'com.sothree.slidinguppanel:library:3.2.1'
-
 }
 
 
