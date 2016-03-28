@@ -1,2 +1,2 @@
-include ':app', ':livesdk'
-include ':libraries:opencv'
+include ':app'
+include ':openCVLibrary310'
