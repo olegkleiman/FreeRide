@@ -24,7 +24,7 @@ import java.security.InvalidKeyException;
  */
 public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
 
-    private static final String LOG_TAG = "FR.wamsUpload";
+    private final String    LOG_TAG = getClass().getSimpleName();
 
     URI publishedUri;
     Exception error;

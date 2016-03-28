@@ -9,11 +9,6 @@ import android.util.Log;
 import com.crashlytics.android.Crashlytics;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.microsoft.live.LiveAuthClient;
-import com.microsoft.live.LiveAuthException;
-import com.microsoft.live.LiveAuthListener;
-import com.microsoft.live.LiveConnectSession;
-import com.microsoft.live.LiveStatus;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
@@ -182,9 +177,9 @@ public class wamsUtils {
             com.facebook.login.LoginManager.getInstance().logOut();
         } else if( tokenProvider == MobileServiceAuthenticationProvider.Google) {
 
-            if( !Globals.googleApiClient.isConnected())
-                Globals.googleApiClient.connect();
-
+//            if( !Globals.googleApiClient.isConnected())
+//                Globals.googleApiClient.connect();
+//
 //            try {
 //                Auth.GoogleSignInApi.signOut(Globals.googleApiClient).setResultCallback(
 //                        new ResultCallback<Status>() {
@@ -198,21 +193,21 @@ public class wamsUtils {
 //                Log.e(LOG_TAG, ex.getMessage());
 //            }
         } else if( tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount ) {
-            if( Globals.liveAuthClient == null )
-                Globals.liveAuthClient = new LiveAuthClient(context,
-                        Globals.MICROSOFT_CLIENT_ID);
-
-            Globals.liveAuthClient.logout(new LiveAuthListener() {
-                @Override
-                public void onAuthComplete(LiveStatus status, LiveConnectSession session, Object userState) {
-
-                }
-
-                @Override
-                public void onAuthError(LiveAuthException exception, Object userState) {
-
-                }
-            });
+//            if( Globals.liveAuthClient == null )
+//                Globals.liveAuthClient = new LiveAuthClient(context,
+//                        Globals.MICROSOFT_CLIENT_ID);
+//
+//            Globals.liveAuthClient.logout(new LiveAuthListener() {
+//                @Override
+//                public void onAuthComplete(LiveStatus status, LiveConnectSession session, Object userState) {
+//
+//                }
+//
+//                @Override
+//                public void onAuthError(LiveAuthException exception, Object userState) {
+//
+//                }
+//            });
 
         } else if( tokenProvider == MobileServiceAuthenticationProvider.Twitter ) {
 //            TwitterAuthConfig authConfig =

@@ -32,7 +32,7 @@ import java.net.URI;
 
 public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
 
-    private static final String LOG_TAG = "FR.wamsAppeal";
+    private final String    LOG_TAG = getClass().getSimpleName();
 
     URI                                 publishedUri;
     Exception                           error;

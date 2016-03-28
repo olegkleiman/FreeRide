@@ -16,7 +16,6 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.labs.okey.freeride.model.PassengerFace;
 import com.labs.okey.freeride.model.User;
-import com.microsoft.live.LiveAuthClient;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 
@@ -27,6 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
+
+//import com.microsoft.live.LiveAuthClient;
 
 /**
  * Created by Oleg Kleiman on 22-Aug-15.
@@ -453,13 +454,13 @@ public class Globals {
 
     // Check out http://go.microsoft.com/fwlink/p/?LinkId=193157 to get your own client id
     public static final String MICROSOFT_CLIENT_ID = "0000000048137798";
-    public static LiveAuthClient liveAuthClient;
-    public static final String[] LIVE_SCOPES = {
-            "wl.signin",
-            "wl.basic",
-            "wl.emails",
-            "wl.offline_access"
-    };
+//    public static LiveAuthClient liveAuthClient;
+//    public static final String[] LIVE_SCOPES = {
+//            "wl.signin",
+//            "wl.basic",
+//            "wl.emails",
+//            "wl.offline_access"
+//    };
 
     public static GoogleApiClient googleApiClient;
 

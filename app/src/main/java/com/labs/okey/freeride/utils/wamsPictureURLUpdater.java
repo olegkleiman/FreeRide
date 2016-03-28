@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
 
-    private static final String LOG_TAG = "FR.wamsUrlUpdater";
+    private final String    LOG_TAG = getClass().getSimpleName();
 
     Context mContext;
     IUploader mUrlUpdater;
