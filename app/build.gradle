@@ -94,7 +94,7 @@ model {
                 def opencvhome = System.getenv("OPENCV_HOME")
                 cppFlags.add("-I" + opencvhome + "\\native\\jni\\include")
             } else {
-                cppFlags.add("-I/Users/Oleg/Downloads/OpenCV-android-sdk/sdk/native/jni/include")
+                cppFlags.add("-I/Users/Oleg/OpenCV-android-sdk/sdk/native/jni/include")
             }
 
 
@@ -151,7 +151,7 @@ repositories {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
-    compile project(':openCVLibrary310')
+    compile project(':openCVLibrary300')
     //compile project(':livesdk')
 
     // See here: https://developers.google.com/android/guides/setup
